@@ -1,14 +1,14 @@
 /*
-    Export_Cover.jsx         (A CoverBuilder Helper Script)
-    An InDesign JavaScript    (Tested in CS6)
+    CB_Export_Cover.jsx         (A CoverBuilder Helper Script)
+    An InDesign JavaScript      (Tested in CS6)
     
     Version 1.0
 
     Can exports multiple covers (Complete or front cover only):
     [PressReady PDF, HighRes PDF, MidRes PDF, LowRes PDF, HighRes JPG, LowRes JPG]
 
-    Bruno Herfst 2011
-    coverBuilder.brunoHerfst.com
+    Bruno Herfst 2012
+    coverbuilder.brunoHerfst.com
 
 
 ====================================================================================================
