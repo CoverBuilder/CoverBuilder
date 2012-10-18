@@ -29,9 +29,6 @@
  *Downsamling only
 =====================================================================================================
 
-WISHLIST:    Add package for backup (Native).
-WISHLIST:    Add settings button that opens back-end settings panel (including presets)
-
 */
 
 #target InDesign;
@@ -40,6 +37,7 @@ WISHLIST:    Add settings button that opens back-end settings panel (including p
 // GLOBAL VARIABLES //
 //////////////////////
 var myPresets = { thisVersion    : "V1.0" }
+
 
 main();
 
@@ -52,6 +50,16 @@ function main(){
     app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
     if (app.documents.length != 0){
         myPresets.doc = app.activeDocument;
+
+        var myPreflightProcess = myPresets.doc.activeProcess;
+        var result = myPreflightProcess.aggregatedResults;
+        if(result[2] != ""){
+            var PF = confirm("Preflight panel found errors!\nAre you sure you want to continue");
+            if(!PF){
+                return;
+            }
+        }
+
         myPresets.documentName = seperate(myPresets.doc.name,!myPresets.doc.name.match(/\./)); //get rid of extension if there is one
         myPresets.slug = myPresets.doc.documentPreferences.documentBleedTopOffset+5; //I could use slug but this is better for files not build with CoverBuilder
 
@@ -126,6 +134,7 @@ function main(){
                     }
                 }
             }//orders loop
+            alert("CoverBuilder Export\nYour files are ready!");
         } //orders check (else: user OKed without selection)
     } else {
         alert ("No documents are open.");
@@ -157,7 +166,7 @@ function exportPDF(myPresets){
     pdfpref.exportGuidesAndGrids        = false;                                //ADD TO SETTINGS (can be handy)
     pdfpref.exportLayers                = false;                                //ADD TO SETTINGS (can be handy)
     pdfpref.exportNonprintingObjects    = false;                                //ADD TO SETTINGS (can be handy)
-    pdfpref.exportWhichLayers           = ExportLayerOptions.EXPORT_ALL_LAYERS; //ADD TO SETTINGS (can be handy)
+    pdfpref.exportWhichLayers           = ExportLayerOptions.EXPORT_VISIBLE_PRINTABLE_LAYERS; //ADD TO SETTINGS (can be handy)
     pdfpref.generateThumbnails          = true;
     pdfpref.grayscaleBitmapCompression  = BitmapCompression.NONE;
     pdfpref.includeBookmarks            = false;                                //It’s a cover!
@@ -210,6 +219,7 @@ function exportPDF(myPresets){
             thresholdToCompressMonochrome       : HR_BMP;
             pdfpref.compressionType             = PDFCompressionType.COMPRESS_OBJECTS; //good for email
             pdfpref.cropMarks                   = false;
+            pdfpref.useDocumentBleedWithPDF     = false;
             pdfpref.registrationMarks           = false;
             pdfpref.generateThumbnails          = false;                               //good for email (smaller size)
             pdfpref.includeSlugWithPDF          = false;
@@ -256,6 +266,7 @@ function exportPDF(myPresets){
             thresholdToCompressGray             : HR_IMG;
             thresholdToCompressMonochrome       : HR_BMP;
             pdfpref.cropMarks                   = false;
+            pdfpref.useDocumentBleedWithPDF     = false;
             pdfpref.registrationMarks           = false;
             pdfpref.includeSlugWithPDF          = false;
             pdfpref.simulateOverprint           = true;
@@ -293,7 +304,8 @@ function exportPDF(myPresets){
     //-----------START PAGERANGE
     if(myPresets.order.name.match(/CVR1/)){
         pdfpref.pageRange = "3";
-        pdfpref.exportReaderSpreads = false;
+        pdfpref.exportReaderSpreads         = false;
+        pdfpref.useDocumentBleedWithPDF     = false;
         if(myPresets.documentName.match(/CVR/)){
             documentName.replace(/CVR/,"CVR1");
         } else {
@@ -335,6 +347,16 @@ function exportJPG(myPresets){
     jpgpref.jpegRenderingStyle          = JPEGOptionsFormat.BASELINE_ENCODING;
     jpgpref.simulateOverprint           = true;
     jpgpref.useDocumentBleeds           = false;
+
+    var eProofLayer = null; //If e-PROOF
+    try{
+        eProofLayer = myPresets.doc.layers.item("E-PROOF");
+        if(eProofLayer.isValid){
+            eProofLayer.printable = true;
+        }
+    } catch(e) {
+        alert(e.description);
+    }
 
     var HR_IMG; //resolution
     switch (myPresets.kind) {
@@ -383,6 +405,9 @@ function exportJPG(myPresets){
 
     //EXPORT JPG
     myPresets.doc.exportFile(ExportFormat.JPG, myFile, false);
+    if(eProofLayer != null){
+        eProofLayer.printable = false;
+    }
 }
 
 /////////////
