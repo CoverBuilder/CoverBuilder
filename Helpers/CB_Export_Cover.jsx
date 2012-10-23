@@ -52,12 +52,16 @@ function main(){
         myPresets.doc = app.activeDocument;
 
         var myPreflightProcess = myPresets.doc.activeProcess;
-        var result = myPreflightProcess.aggregatedResults;
-        if(result[2] != ""){
-            var PF = confirm("Preflight panel found errors!\nAre you sure you want to continue");
-            if(!PF){
-                return;
+        try{
+            var result = myPreflightProcess.aggregatedResults;
+            if(result[2] != ""){
+                var PF = confirm("Preflight panel found errors!\nAre you sure you want to continue");
+                if(!PF){
+                    return;
+                }
             }
+        } catch(e){
+            alert("Could not preflight document\n"+e.description);
         }
 
         myPresets.documentName = seperate(myPresets.doc.name,!myPresets.doc.name.match(/\./)); //get rid of extension if there is one
@@ -306,8 +310,8 @@ function exportPDF(myPresets){
         pdfpref.pageRange = "3";
         pdfpref.exportReaderSpreads         = false;
         pdfpref.useDocumentBleedWithPDF     = false;
-        if(myPresets.documentName.match(/CVR/)){
-            documentName.replace(/CVR/,"CVR1");
+        if(documentName.match(/CVR/)){
+            documentName = documentName.replace(/CVR/g,"CVR1");
         } else {
             documentName += "_CVR1_";
         }
