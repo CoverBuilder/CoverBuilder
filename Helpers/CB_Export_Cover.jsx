@@ -65,7 +65,8 @@ function main(){
         }
 
         myPresets.documentName = seperate(myPresets.doc.name,!myPresets.doc.name.match(/\./)); //get rid of extension if there is one
-        myPresets.slug = myPresets.doc.documentPreferences.documentBleedTopOffset+5; //I could use slug but this is better for files not build with CoverBuilder
+        myPresets.bleed = myPresets.doc.documentPreferences.documentBleedTopOffset;
+        myPresets.slug = myPresets.bleed+5; //I could use slug but this is better for files not build with CoverBuilder
 
         //check if cover is build with CoverBuilder
         var myDocXMP = myPresets.doc.metadataPreferences;
@@ -182,7 +183,7 @@ function exportPDF(myPresets){
     pdfpref.monochromeBitmapSampling    = Sampling.NONE;
     pdfpref.optimizePDF                 = false;                                //Compresses text and line art (Ugly screen viewing)
     pdfpref.pageInformationMarks        = false;                                //ADD TO SETTINGS (can be handy)
-    pdfpref.pageMarksOffset             = myPresets.slug;                       //should be the same as document bleed
+    pdfpref.pageMarksOffset             = myPresets.slug;                      //should be the same as document bleed
     pdfpref.pdfColorSpace               = PDFColorSpace.REPURPOSE_CMYK;            
     pdfpref.pdfMarkType                 = MarkTypes.DEFAULT_VALUE;              //preserve numbers
     pdfpref.printerMarkWeight           = PDFMarkWeight.P125PT;
