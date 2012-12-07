@@ -1,3 +1,5 @@
+[[https://raw.github.com/GitBruno/CoverBuilder/master/Pictures/CoverBuilder_icon_250x250.png]]
+
 CoverBuilder
 ============
 
