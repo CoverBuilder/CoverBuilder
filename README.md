@@ -1,7 +1,7 @@
 CoverBuilder
 ============
 
-Most book designers will receive a wide variety of templates supplied by the printer. Some exclude the hinge from the width but include the fold within the flaps. (huh?) The goal of the interface is to eliminate calculating with these values yourself. Therefore you can include(+) or exclude(-) measurements within reading direction and common sense. CoverBuilder makes the most awkward templates a no-brainer.
+Setting up a cover was always a tedious job. As you needed to calculate with the measurements of a wide variety of templates supplied by the printer. The goal of the interface is to eliminate calculating with these values yourself. Therefore you can include(+) or exclude(-) measurements within reading direction and common sense. CoverBuilder makes the most awkward templates a no-brainer.
 
 I found a bug/missing feature!
 ------------------------------
