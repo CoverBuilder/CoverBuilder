@@ -15,18 +15,18 @@
 #target InDesign;
 
 //global vars
-var docBleed, myCover = app.activeDocument;
-var myDocXMP = myCover.metadataPreferences;
 var destNamespace = "http://brunoherfst.com/";
 var destContName = "Settings";
     
 //Make certain that user interaction (display of dialogs, etc.) is turned on.
 app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
 
-if (app.documents.length != 0){
+if (app.documents.length != 0) {
+    var docBleed, myCover = app.activeDocument;
+    var myDocXMP = myCover.metadataPreferences;
     //check if cover is build with CoverBuilder
     var myOldSpine = myDocXMP.getProperty(destNamespace,destContName + "[3]");
-    if(myOldSpine == ""){
+    if(myOldSpine == "") {
         var visit = confirm("This document is not build with CoverBuilder.\nDo you want to download the latest version now?");
         if(visit){
             var linkJumper = File(Folder.temp.fullName+"/contact.html");
@@ -40,6 +40,8 @@ if (app.documents.length != 0){
     //try and do your job anyway
     docBleed = myCover.documentPreferences.documentBleedTopOffset;
     changeSpineWidth(myCover);
+} else {
+	alert("Can’t find any open documents.");
 }
 
 function changeSpineWidth(myCover) {
@@ -111,7 +113,6 @@ function changeSpineWidth(myCover) {
 		}
 	}
 	//Then let’s check for overrides.
-	
 	myDocXMP.setProperty(destNamespace, destContName + "[3]", String(newSpine));
 	return true;
 }
