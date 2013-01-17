@@ -36,8 +36,7 @@
 ///////////////////////
 // GLOBAL VARIABLES //
 //////////////////////
-var myPresets = { thisVersion    : "V1.1" }
-
+var myPresets = { thisVersion : "V1.1", preflight : true };
 
 main();
 
@@ -51,17 +50,19 @@ function main(){
     if (app.documents.length != 0){
         myPresets.doc = app.activeDocument;
 
-        try{
-            var myPreflightProcess = myPresets.doc.activeProcess;
-            var result = myPreflightProcess.aggregatedResults;
-            if(result[2] != ""){
-                var PF = confirm("Preflight panel found errors!\nAre you sure you want to continue");
-                if(!PF){
-                    return;
+        if(myPresets.preflight) {
+            try{
+                var myPreflightProcess = myPresets.doc.activeProcess;
+                var result = myPreflightProcess.aggregatedResults;
+                if(result[2] != ""){
+                    var PF = confirm("Preflight panel found errors!\nAre you sure you want to continue");
+                    if(!PF){
+                        return;
+                    }
                 }
+            } catch(e){
+                alert("Could not preflight document\n"+e.description);
             }
-        } catch(e){
-            alert("Could not preflight document\n"+e.description);
         }
 
         myPresets.documentName = seperate(myPresets.doc.name,!myPresets.doc.name.match(/\./)); //get rid of extension if there is one
