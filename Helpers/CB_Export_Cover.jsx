@@ -2,7 +2,7 @@
     CB_Export_Cover.jsx         (A CoverBuilder Helper Script)
     An InDesign JavaScript      (Tested in CS6)
     
-    Version 1.0
+    Version 1.1
 
     Can exports multiple covers (Complete or front cover only):
     [PressReady PDF, HighRes PDF, MidRes PDF, LowRes PDF, HighRes JPG, LowRes JPG]
@@ -36,7 +36,7 @@
 ///////////////////////
 // GLOBAL VARIABLES //
 //////////////////////
-var myPresets = { thisVersion    : "V1.0" }
+var myPresets = { thisVersion    : "V1.1" }
 
 
 main();
@@ -51,8 +51,8 @@ function main(){
     if (app.documents.length != 0){
         myPresets.doc = app.activeDocument;
 
-        var myPreflightProcess = myPresets.doc.activeProcess;
         try{
+            var myPreflightProcess = myPresets.doc.activeProcess;
             var result = myPreflightProcess.aggregatedResults;
             if(result[2] != ""){
                 var PF = confirm("Preflight panel found errors!\nAre you sure you want to continue");
