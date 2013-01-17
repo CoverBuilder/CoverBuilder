@@ -52,8 +52,7 @@ function main(){
 
         if(myPresets.preflight) {
             try{
-                var myPreflightProcess = myPresets.doc.activeProcess;
-                var result = myPreflightProcess.aggregatedResults;
+                var result = myPresets.doc.activeProcess.aggregatedResults;
                 if(result[2] != ""){
                     var PF = confirm("Preflight panel found errors!\nAre you sure you want to continue");
                     if(!PF){
@@ -68,23 +67,6 @@ function main(){
         myPresets.documentName = seperate(myPresets.doc.name,!myPresets.doc.name.match(/\./)); //get rid of extension if there is one
         myPresets.bleed = myPresets.doc.documentPreferences.documentBleedTopOffset;
         myPresets.slug = myPresets.bleed+5; //I could use slug but this is better for files not build with CoverBuilder
-
-        //check if cover is build with CoverBuilder
-        var myDocXMP = myPresets.doc.metadataPreferences;
-        var destNamespace = "http://brunoherfst.com/";
-        var destContName = "Settings";
-        var myXMP = myDocXMP.getProperty(destNamespace,destContName + "[1]");
-        if(myXMP == ""){
-            var visit = confirm("This document is not build with CoverBuilder.\nDo you want to download CoverBuilder now?");
-            if(visit){
-                var linkJumper = File(Folder.temp.fullName+"/contact.html");
-                linkJumper.open("w");
-                var linkBody = '<html><head><META HTTP-EQUIV=Refresh CONTENT="0; URL=http://coverbuilder.brunoherfst.com/"></head><body> <p></body></html>'
-                linkJumper.write(linkBody);
-                linkJumper.close();
-                linkJumper.execute();
-            }
-        }
 
         var orders = getOrders();
         
