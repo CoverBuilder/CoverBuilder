@@ -47,7 +47,7 @@ if (app.documents.length != 0) {
 function changeSpineWidth(myCover) {
 	//ref to spinepage
 	var mSpine = fetchPage(myCover, "CB-spine", 0);
-	
+
 	//let’s ask the user what the new spine should be
 	var newSpine = prompt("New spinewidth in MM:");
 	if(isNaN(newSpine)){
@@ -143,9 +143,15 @@ function fetchPage(myCover, myName, myPage){
 	mPage.name = myName;
 	try{
 		mPage.page = myCover.masterSpreads.item(mPage.name).pages[myPage];
-	} catch(e){
-		alert("Can’t find the spine!\nYou don’t seem to have master spread "+mPage.name+"?");
-		exit(); // I’m done here
+	} catch(e) {
+		try {
+			//old-school support for unofficial prereleases
+			mPage.name = mPage.name.replace(/CB-/g,"AU-");
+			mPage.page = myCover.masterSpreads.item(mPage.name).pages[myPage];
+		} catch(e) {
+			alert("Can’t find the spine!\nYou don’t seem to have master spread "+mPage.name+"?");
+			exit(); // I’m done here
+		}
 	}
 	if(!mPage.page.isValid){
 		alert("Can’t find the spine!\nWhat happend to master spread "+mPage.name+"?");
