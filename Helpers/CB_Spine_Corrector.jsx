@@ -4,7 +4,7 @@
 
 	CB_Spine_Corrector.jsx          (A CoverBuilder Helper Script)
 	An InDesign CS5 Javascript      (Tested in CS6)
-	Version 0.6 Alpha
+	Version 0.9 Beta
 	
 	Bruno Herfst 2012
 
@@ -27,7 +27,7 @@ if (app.documents.length != 0) {
     //check if cover is build with CoverBuilder
     var myOldSpine = myDocXMP.getProperty(destNamespace,destContName + "[3]");
     if(myOldSpine == "") {
-        var visit = confirm("This document is not build with CoverBuilder.\nDo you want to download the latest version now?");
+        var visit = confirm("This document is not build with the latest version of CoverBuilder.\nDo you want to download the latest version now?");
         if(visit){
             var linkJumper = File(Folder.temp.fullName+"/contact.html");
             linkJumper.open("w");
