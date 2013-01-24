@@ -50,8 +50,12 @@ function changeSpineWidth(myCover) {
 
 	//let’s ask the user what the new spine should be
 	var newSpine = prompt("New spinewidth in MM:");
-	if(isNaN(newSpine)){
+
+	if ( isNaN(newSpine) ){
 		alert("That was not a Number");
+	} else if (newSpine == null) {
+		//user pressed cancel
+		exit();
 	} else {
 		//Let’s start with changing the masterSpine
 		//But before we do that make sure facing pages is on so the spine will automaticly move the front and back cover.
