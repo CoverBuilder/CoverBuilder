@@ -29,7 +29,7 @@ doTextFrames = false;
 app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
 
 if (app.documents.length != 0) {
-	//global vars
+    //global vars
     var myCover = app.activeDocument;
     if(breakSpreadsOn(myCover)) {
     	alert("Done!");
@@ -166,7 +166,7 @@ function getBounds(myPage,selector){
 			return myBleedBounds;
 			break;
 		default: // Return pagebounds without bleed
-            return myPage.bounds;
-            break;
+			return myPage.bounds;
+			break;
 	}
 }
