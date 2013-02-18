@@ -1,16 +1,16 @@
 CoverBuilder
 ------------
 
-CoverBuilder is an extension that builds book cover templates
-in both InDesign and Photoshop. For more information visit:
-    http://coverbuilder.brunoherfst.com
-
+CoverBuilder is an extension that build book cover templates
+for both InDesign and Photoshop. For more information visit:
+    http://coverbuilder.brunoherfst.com/
 
 Installation
 ------------
 
-Coverbuilder comes with an installation file (CoverBuilder.zxp).
-Opening this file will start Adobe Extension Manager,
+Coverbuilder comes with an installation file (CoverBuilder.zxp) 
+containing the extensions to be installed by the Adobe Extension Manager. 
+Opening this file will start Adobe Extension Manager 
 guiding you through the installation process.
 
 
