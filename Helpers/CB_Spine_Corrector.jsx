@@ -69,51 +69,43 @@ function changeSpineWidth(myCover) {
 
 		//update spineinfo
 		mSpine = fetchPage(myCover, "CB-spine", 0);
-
+		
+		var myLayerName = "Registration";
+		var myLayer = myCover.layers.itemByName(myLayerName);
+		if(myLayer.isValid){
+			//check if it is locked
+			var myLock = myLayer.locked;
+			if(myLock){
+				//unlock
+				myLayer.locked = false;
+			}
+			//update width
+			var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
+			if(slugWidthFrame != null){
+				positionSlugWidth(mSpine, slugWidthFrame);
+			}
+			//Now update the CB_Cover master
+			var CVR1 = fetchPage(myCover, "CB-cover", 2);
+			//get height frame
+			slugHeightFrame = fetchItem(CVR1.page, "pageHeight");
+			if(slugHeightFrame != null){
+				positionSlugHeight(CVR1, slugHeightFrame);
+			} else {
+				alert("Couldn’t find page height info on CB_Cover");
+				return false;
+			}
+			if(myLock){
+				//lock
+				myLayer.locked = true;
+			}
+		} else {
+			alert("Could not find layer "+myLayerName);
+			return false;
+		}
+		
 		//set userPref back
 		if(!userFacingPages) {
 			myCover.documentPreferences.facingPages = false;
-		}
-		//move pageInfo to slug
-		var slugHeightFrame = fetchItem(mSpine.page, "pageHeight");
-
-		if(slugHeightFrame != null){
-			var myLayerName = "Registration";
-			var myLayer = myCover.layers.itemByName(myLayerName);
-			if(myLayer.isValid){
-				//check if it is locked
-				var myLock = myLayer.locked;
-				if(myLock){
-					//unlock
-					myLayer.locked = false;
-				}
-				positionSlugHeight(mSpine, slugHeightFrame);
-				//now update width
-				var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
-				if(slugWidthFrame != null){
-					positionSlugWidth(mSpine, slugWidthFrame);
-				}
-				//Now update the CB_Cover master
-				var CVR1 = fetchPage(myCover, "CB-cover", 2);
-				//get height frame
-				slugHeightFrame = fetchItem(CVR1.page, "pageHeight");
-				if(slugHeightFrame != null){
-					positionSlugHeight(CVR1, slugHeightFrame);
-				} else {
-					alert("Couldn’t find page height info on CB_Cover");
-					return false;
-				}
-				if(myLock){
-					//lock
-					myLayer.locked = true;
-				}
-			} else {
-				alert("Could not find layer "+myLayerName);
-				return false;
-			}
-		} else {
-			alert("Couldn’t find page height info on CB_Spine");
-			return false;
 		}
 	}
 	//Then let’s check for overrides.

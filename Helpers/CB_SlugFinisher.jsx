@@ -56,9 +56,9 @@ function main() {
     if (app.selection.length != 0) {
         mS = myDoc.selection[0];
         if (mS.constructor.name == "TextFrame") {
-            var swatchOBJ = finischUI(getSpotSwatches());
-            //alert(swatchOBJ.process);
-            setText(mS, swatchOBJ);
+            setText(mS);
+        } else if(mS.constructor.name == "Text" || mS.constructor.name == "InsertionPoint"){
+        	setText(mS.parent);
         } else {
             alert("This is a " + app.activeDocument.selection[0].constructor.name + "\nPlease select a TextFrame");
             exit();
@@ -177,11 +177,12 @@ function finischUI(mySpotSwatches) {
     }
 }
 
-function setText(tf, swatchOBJ) {
+function setText(tf) {
+	var swatchOBJ = finischUI(getSpotSwatches());
     var tempString = "";
     var first = true;
     tf.contents = "";
-
+    
     if (swatchOBJ.process.length > 0) {
         myColorAdd(myDoc, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
         myColorAdd(myDoc, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
@@ -244,11 +245,10 @@ function setText(tf, swatchOBJ) {
             addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                 tf.insertionPoints[-1]);
             addonText.fillColor = "Registration";
-            addonText.fontStyle = "Bold";
+            addonText.fontStyle = "Regular";
             var first = false;
         }
     }
-
 
 }
 
