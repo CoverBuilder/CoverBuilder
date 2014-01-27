@@ -1,12 +1,13 @@
 <ExtensionUpdateInformation>
-	<version>2.7.2</version>
-	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_272.zxp</download>
+	<version>2.9.0</version>
+	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_290.zxp</download>
 	<description url="http://coverbuilder.brunoherfst.com">
 	<![CDATA[
-			CoverBuilder: Binding interface fix 
-			CoverBuilder: Set custom font for registration 
-			CoverBuilderPS: Added progressbar 
-			CoverBuilderPS: Option to set dropshadow on/off 
+			CoverBuilder: Better margins support
+			CoverBuilder: Windows Support
+			CoverBuilderPS: Better margins support
+			CoverBuilderPS: Fixed interface bug
+			CoverBuilderPS: Windows Support
 		]]>
 	</description>
 </ExtensionUpdateInformation>
