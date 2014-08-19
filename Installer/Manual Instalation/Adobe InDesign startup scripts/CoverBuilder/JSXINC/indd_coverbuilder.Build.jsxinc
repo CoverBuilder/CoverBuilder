@@ -31,14 +31,15 @@
 	}
 	function cover(C, myApp){
 		if(C.measureUnit == 1){ //convert inches to mm as coverbuilder can’t handle inches yet
-			C.width *= 25.4;
-			C.height *= 25.4;
-			C.spine *= 25.4;
-			C.bleed *= 25.4;
-			C.hinge *= 25.4;
+			C.width   *= 25.4;
+			C.height  *= 25.4;
+			C.spine   *= 25.4;
+			C.bleed   *= 25.4;
+			C.hinge   *= 25.4;
 			C.binding *= 25.4;
-			C.flap *= 25.4;
-			C.fold *= 25.4;
+			C.flap    *= 25.4;
+			C.fold    *= 25.4;
+			C.wrap    *= 25.4;
 			C.measureUnit = 0;
 		}
 
@@ -46,8 +47,15 @@
 		C.margin = convertMargins(myApp, C.margin);
 
 		//now let’s fixup the sizes
+		if(C.inExCludeWrap == 1){
+			C.bleed += C.wrap;
+		} else {
+			C.bleed -= C.wrap;
+		}
 		if(C.inExCludeFold == 1){
 			C.flap += C.fold;
+		} else if(C.inExCludeFold == 2){
+			C.width -= C.fold;
 		}
 		if(C.inExCludeHinge == 1){
 			C.width += C.hinge;
@@ -107,7 +115,7 @@
 
 		//masterspread for cover
 		if(myCover.masterSpreads[0].pages.length > 1){
-			for(var pg = myCover.masterSpreads[0].pages.length-1; pg > 1; i--){
+			for(var pg = myCover.masterSpreads[0].pages.length-1; pg >= 1; pg--){
 				myCover.masterSpreads[0].pages[pg].remove();
 			}
 		}

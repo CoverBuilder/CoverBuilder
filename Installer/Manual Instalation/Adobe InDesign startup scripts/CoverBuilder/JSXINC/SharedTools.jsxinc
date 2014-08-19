@@ -18,13 +18,13 @@
         };
 
     var PresetObj = {"presets": [
-            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
-            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
-            {name:"AU-A", width:111, height:181, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
-            {name:"AU-B", width:128, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
-            {name:"AU-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
-            {name:"AU-D", width:138, height:208, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
-            {name:"-Last Used-", width:0, height:0, spine: 0, ppi:0, bleed:0, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:0}
+            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
+            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
+            {name:"AU-A", width:111, height:181, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
+            {name:"AU-B", width:128, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
+            {name:"AU-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
+            {name:"AU-D", width:138, height:208, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
+            {name:"-Last Used-", width:0, height:0, spine: 0, ppi:0, bleed:0, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0}
         ]};
 
 	//-----------------------------------------------------------------------------------
@@ -120,15 +120,15 @@
     function getPresets(myApp){
 		//read presets file
 		var f = File(myApp.PathTo.preferences);
-		
+
 		function resetPresets(){
 			return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, PresetObj);
 		}
-		
+
 		if(!f.exists){
 		    resetPresets();
 		}
-		
+
 		try {
 			f.open('r');
 			var jsontext = f.read();
@@ -216,7 +216,7 @@
     function reportBug(){
         visitURL("https://github.com/GitBruno/CoverBuilder/issues");
     }
-    
+
     ////////////
     // expose //
     ////////////

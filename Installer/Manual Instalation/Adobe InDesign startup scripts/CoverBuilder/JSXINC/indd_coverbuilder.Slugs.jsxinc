@@ -53,51 +53,6 @@
 
 		doHeight(myApp, myCover, myParagraphStyle);
 
-		//bottom
-		if(C.finish){ // check if object excist
-			var myFinish = "";
-			switch (C.finish){
-				case 1:
-					myFinish = "Gloss Lamination";
-					break;
-				case 2:
-					myFinish = "Matt Lamination";
-					break;
-				case 3:
-					myFinish = "Silk Lamination";
-					break;
-				case 4:
-					myFinish = "Satin Lamination";
-					break;
-				case 5:
-					myFinish = "UV Varnish";
-					break;
-				case 6:
-					myFinish = "Gloss Varnish";
-					break;
-				case 7:
-					myFinish = "Matt Varnish";
-					break;
-				default:
-					myFinish = "";
-					break;
-			}
-			if(myFinish != ""){
-				// we don’t want this on the masterpage
-				var len = myCover.spreads[0].pages.length-1;
-				if(C.flap  > 0.5){
-					var myPage = myCover.spreads[0].pages[len-1];
-				} else {
-					var myPage = myCover.spreads[0].pages[len];
-				}
-
-				var pageBounds = myPage.bounds;
-				var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
-				var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
-				var myFrameBounds = new Array (myPageHeight+myCover.documentPreferences.documentBleedBottomOffset,0,myPageHeight+myCover.documentPreferences.slugBottomOffset,myPageWidth);
-				addTextFrame(myPage, myFrameBounds, "+ "+myFinish, myParagraphStyle, 0,"finish");
-			}
-		}
 		myCover.layers[0].locked = true;
 	}
 
