@@ -1,13 +1,10 @@
 <ExtensionUpdateInformation>
-	<version>2.9.0</version>
-	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_290.zxp</download>
+	<version>2.9.2</version>
+	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_292.zxp</download>
 	<description url="http://coverbuilder.brunoherfst.com">
 	<![CDATA[
-			CoverBuilder: Better margins support
-			CoverBuilder: Windows Support
-			CoverBuilderPS: Better margins support
-			CoverBuilderPS: Fixed interface bug
-			CoverBuilderPS: Windows Support
+	        Added wrap support.
+			Minor bug-fixes.
 		]]>
 	</description>
 </ExtensionUpdateInformation>
