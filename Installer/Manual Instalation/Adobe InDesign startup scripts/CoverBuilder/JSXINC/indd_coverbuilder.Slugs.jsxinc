@@ -187,10 +187,12 @@
 	// expose //
 	////////////
 	return {
-		fetchItem         : fetchItem,
-		fetchPage         : fetchPage,
-		updateSpineSlug   : updateSpineSlug,
-		resetHeight       : resetHeight,
-		placeSizesInSlug  : placeSizesInSlug
+		fetchItem                : fetchItem,
+		fetchPage                : fetchPage,
+		updateSpineSlug          : updateSpineSlug,
+		resetHeight              : resetHeight,
+		placeSizesInSlug         : placeSizesInSlug,
+		getMeasureParagraphStyle : getMeasureParagraphStyle,
+		addTextFrame             : addTextFrame
 	};
 })();

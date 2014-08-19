@@ -44,11 +44,42 @@
 		var myPage = app.activeWindow.activeSpread.pages[2];
 		if(myPage.isValid){
 			var myTextFrame = myApp.Slugs.fetchItem(myPage,"finish");
+			if(myTextFrame == null){
+				myTextFrame = createFrame(app.activeWindow.activeSpread);
+			}
 			setText(myApp,myDoc,myTextFrame);
 		} else {
 			// Ask to create one?
 			alert("Could not find textframe with label 'finish'");
 		}
+	}
+
+	function createFrame(thisSpread){
+		var myCover = myApp.Core.getActiveCover(myApp);
+
+		if(!myCover){
+			exit();
+		}
+		//check if cover is build with CoverBuilder
+		var myOldSpine = parseFloat(myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]"));
+		if(myOldSpine <= 0) {
+			alert("Can’t find a spine!");
+		}
+		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+
+		var len = thisSpread.pages.length-1;
+
+		if(C.flap  > 0.5){
+			var myPage = thisSpread.pages[len-1];
+		} else {
+			var myPage = thisSpread.pages[len];
+		}
+		var pageBounds = myPage.bounds;
+		var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
+		var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
+		var myFrameBounds = new Array (myPageHeight+myCover.documentPreferences.documentBleedBottomOffset,0,myPageHeight+myCover.documentPreferences.slugBottomOffset,myPageWidth);
+		var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, myCover, "measurements");
+		return myApp.Slugs.addTextFrame(myPage, myFrameBounds, " ", myParagraphStyle, 0,"finish");
 	}
 
 	function getSpotSwatches(myDoc) {
