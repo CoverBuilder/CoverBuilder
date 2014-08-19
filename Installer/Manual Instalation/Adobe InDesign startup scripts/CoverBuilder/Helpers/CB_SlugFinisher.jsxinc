@@ -1,0 +1,243 @@
+/*
+
+--------------------------------------------
+
+	CB_SlugFinisher.jsx    			(A CoverBuilder Helper Script)
+	An InDesign CS5 Javascript      (Tested in CS6)
+	Version 1
+
+	Bruno Herfst 2013-2014
+
+--------------------------------------------
+
+*/
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+	var myCMYKSwatches = [{
+		name: "Cyan"
+	}, {
+		name: "Magenta"
+	}, {
+		name: "Yellow"
+	}, {
+		name: "Black"
+	}];
+	var myFinishes = [{
+		name: "Lamination (Gloss)"
+	}, {
+		name: "Lamination (Matte)"
+	}, {
+		name: "Lamination (Silk)"
+	}, {
+		name: "Lamination (Satin)"
+	}, {
+		name: "Varnish (Gloss)"
+	}, {
+		name: "Varnish (Matte)"
+	}];
+
+	function go(myApp) {
+		var myDoc = myApp.Core.getActiveCover(myApp);
+		var myPage = app.activeWindow.activeSpread.pages[2];
+		if(myPage.isValid){
+			var myTextFrame = myApp.Slugs.fetchItem(myPage,"finish");
+			setText(myApp,myDoc,myTextFrame);
+		} else {
+			// Ask to create one?
+			alert("Could not find textframe with label 'finish'");
+		}
+	}
+
+	function getSpotSwatches(myDoc) {
+		mySwatches = myDoc.swatches;
+		var i = mySwatches.length - 1;
+		var spotSwatches = [];
+		while (i--) {
+			if (mySwatches[i + 1].model == ColorModel.SPOT) {
+				spotSwatches.push(mySwatches[i + 1]);
+			}
+		}
+		return spotSwatches;
+	}
+
+	function finischUI(mySpotSwatches) {
+		var i = mySpotSwatches.length;
+		var mySpotCheckboxes = new Array();
+		var myCMYKCheckboxes = new Array();
+		var myFinishRadio = null;
+
+		var myDialog = app.dialogs.add({
+			name: "Insert Colours and Finish",
+			canCancel: true
+		});
+		with(myDialog) {
+			with(dialogColumns.add()) {
+				with(dialogRows.add()) {
+					// P R O C E S S
+					with(borderPanels.add()) {
+						staticTexts.add({
+							staticLabel: "PROCESS:"
+						});
+						with(dialogColumns.add()) {
+
+							for (myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
+								var myCheckbox;
+								myCMYKCheckboxes.push(myCheckbox);
+								myCMYKCheckboxes[myCounter] = checkboxControls.add({
+									staticLabel: myCMYKSwatches[myCounter].name,
+									checkedState: true
+								});
+							}
+						}
+					}
+					// S P O T
+					with(borderPanels.add()) {
+						staticTexts.add({
+							staticLabel: "SPOT:"
+						});
+						with(dialogColumns.add()) {
+							for (myCounter = 0; myCounter < i; myCounter++) {
+								var myCheckbox;
+								mySpotCheckboxes.push(myCheckbox);
+								mySpotCheckboxes[myCounter] = checkboxControls.add({
+									staticLabel: mySpotSwatches[myCounter].name,
+									checkedState: true
+								});
+							}
+						}
+					}
+					// F I N I S H
+					with(borderPanels.add()) {
+						staticTexts.add({
+							staticLabel: "FINISH:"
+						});
+						with(dialogColumns.add()) {
+							with(myFinishRadio = radiobuttonGroups.add()) {
+								for (myCounter = 0; myCounter < myFinishes.length; myCounter++) {
+									radiobuttonControls.add({
+										staticLabel: myFinishes[myCounter].name,
+										checkedState: false
+									});
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		//Display the dialog box.
+		if (myDialog.show() == true) {
+			//Get process
+			var i = myCMYKCheckboxes.length;
+			var processSwatches = [];
+			while (i--) {
+				if (myCMYKCheckboxes[i].checkedState == true) {
+					processSwatches.push(myCMYKSwatches[i].name);
+				}
+			}
+			//Get Spot
+			var i = mySpotCheckboxes.length;
+			var spotSwatches = [];
+			while (i--) {
+				if (mySpotCheckboxes[i].checkedState == true) {
+					spotSwatches.push(mySpotSwatches[i].name);
+				}
+			}
+			//Get Finish
+			var myFinishSelect = new Array();
+			if (myFinishRadio.selectedButton >= 0) {
+				myFinishSelect.push(myFinishes[myFinishRadio.selectedButton].name);
+			}
+			return {
+				process: processSwatches,
+				spot: spotSwatches,
+				finish: myFinishSelect
+			}
+		}
+	}
+
+	function setText(myApp,myDoc,tf) {
+		var swatchOBJ = finischUI(getSpotSwatches(myDoc));
+		var tempString = "";
+		var first = true;
+		tf.contents = "";
+
+		if (swatchOBJ.process.length > 0) {
+			myApp.Core.addColor(myDoc, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
+			myApp.Core.addColor(myDoc, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
+			myApp.Core.addColor(myDoc, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
+			myApp.Core.addColor(myDoc, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
+
+			var i = swatchOBJ.process.length;
+			while (i--) {
+				if (!first) {
+					insertPoint = tf.insertionPoints[-1].index;
+					tf.contents += " + ";
+					addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+						tf.insertionPoints[-1]);
+					addonText.fillColor = "Registration";
+					addonText.fontStyle = "Regular";
+				}
+				insertPoint = tf.insertionPoints[-1].index;
+				tf.contents += swatchOBJ.process[i];
+				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+					tf.insertionPoints[-1]);
+				addonText.fillColor = "CB_" + swatchOBJ.process[i];
+				addonText.fontStyle = "Bold";
+				var first = false;
+			}
+		}
+
+		if (swatchOBJ.spot.length > 0) {
+			var i = swatchOBJ.spot.length;
+			while (i--) {
+				if (!first) {
+					insertPoint = tf.insertionPoints[-1].index;
+					tf.contents += " + ";
+					addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+						tf.insertionPoints[-1]);
+					addonText.fillColor = "Registration";
+					addonText.fontStyle = "Regular";
+				}
+				insertPoint = tf.insertionPoints[-1].index;
+				tf.contents += swatchOBJ.spot[i];
+				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+					tf.insertionPoints[-1]);
+				addonText.fillColor = swatchOBJ.spot[i];
+				addonText.fontStyle = "Bold";
+				var first = false;
+			}
+		}
+		if (swatchOBJ.finish.length > 0) {
+			var i = swatchOBJ.finish.length;
+			while (i--) {
+				if (!first) {
+					insertPoint = tf.insertionPoints[-1].index;
+					tf.contents += " + ";
+					addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+						tf.insertionPoints[-1]);
+					addonText.fillColor = "Registration";
+					addonText.fontStyle = "Regular";
+				}
+				insertPoint = tf.insertionPoints[-1].index;
+				tf.contents += swatchOBJ.finish[i];
+				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+					tf.insertionPoints[-1]);
+				addonText.fillColor = "Registration";
+				addonText.fontStyle = "Regular";
+				var first = false;
+			}
+		}
+
+	}
+	////////////
+	// expose //
+	////////////
+	return {
+		go : go
+	};
+
+})();

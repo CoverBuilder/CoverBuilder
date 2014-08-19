@@ -1,0 +1,51 @@
+/*
+
+--------------------------------------------
+
+	CB_Send2Photoshop.jsxinc        (A CoverBuilder Helper Script)
+	An InDesign CS6 Javascript      (Tested in CS6)
+	Version 1
+
+	Bruno Herfst 2014
+
+--------------------------------------------
+
+*/
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+	function coverBuilderPS(myApp,C){
+		app.bringToFront();
+		var builder = $.evalFile(new File(myApp.Module.PSbuild));
+		builder.startBuilding(myApp,C);
+	}
+
+	function CreateBridgeTalkMessage(myApp, C) {
+		var script  = coverBuilderPS.toString() + "\r";
+			script += "coverBuilderPS("+myApp.JSON.stringify(myApp)+","+ myApp.JSON.stringify(C)+");";
+
+		var bt = new BridgeTalk();
+			bt.target = "photoshop";
+			bt.body = script;
+			bt.onError = function(errObj) {
+				$.writeln("Error: " + errObj.body);
+			};
+			bt.send();
+	}
+
+	function send2photoshop(myApp){
+		var myCover = myApp.Core.getActiveCover(myApp);
+		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+		CreateBridgeTalkMessage(myApp,C);
+	}
+
+	////////////
+	// expose //
+	////////////
+	return {
+		send2photoshop : send2photoshop
+	};
+
+})();

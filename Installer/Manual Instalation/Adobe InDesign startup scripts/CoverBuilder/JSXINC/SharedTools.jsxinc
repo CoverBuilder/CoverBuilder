@@ -1,0 +1,242 @@
+// SharedTools
+// Indesign helpers for CoverBuilder and CoverBuilderPS
+// Bruno Herfst 2014
+
+(function() {
+    //////////////
+    // privates //
+    //////////////
+    var ButtonTXT = {savePS : "Save Preset", clearPS : "Clear Preset"};
+    //-----------------------------------------------------------------------------------
+    //  PRESET TOOLS variables
+    //-----------------------------------------------------------------------------------
+    var MarginObj = {
+            CVR14 : {top : 10, outside_right : 10, inside_left : 10, bottom : 10, facing : true,  units : 0, linked : true, ps_guides : false},
+            Spine : {top : 10, outside_right : 0,  inside_left : 0,  bottom : 10, facing : false, units : 0, linked : true, ps_guides : false},
+            QB    : {top : 10, outside_right : 10, inside_left : 10, bottom : 10, facing : true,  units : 0, linked : true, ps_guides : false},
+            Flaps : {top : 10, outside_right : 10, inside_left : 10, bottom : 10, facing : true,  units : 0, linked : true, ps_guides : false}
+        };
+
+    var PresetObj = {"presets": [
+            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
+            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
+            {name:"AU-A", width:111, height:181, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
+            {name:"AU-B", width:128, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
+            {name:"AU-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
+            {name:"AU-D", width:138, height:208, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:1},
+            {name:"-Last Used-", width:0, height:0, spine: 0, ppi:0, bleed:0, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, margin:MarginObj, measureUnit:0, publisher:"Unknown", finish:0}
+        ]};
+
+	//-----------------------------------------------------------------------------------
+    //  PRESET TOOLS validator
+    //-----------------------------------------------------------------------------------
+	function sameProps( induceObj, sampleObj ) {
+		if (!Object.keys) {
+			Object.keys = (function () {
+				'use strict';
+				var hasOwnProperty = Object.prototype.hasOwnProperty,
+				hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+				dontEnums = [
+					'toString',
+					'toLocaleString',
+					'valueOf',
+					'hasOwnProperty',
+					'isPrototypeOf',
+					'propertyIsEnumerable',
+					'constructor'
+					],
+				dontEnumsLength = dontEnums.length;
+
+				return function (obj) {
+					if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+						throw new TypeError('Object.keys called on non-object');
+					}
+
+					var result = [], prop, i;
+
+					for (prop in obj) {
+						if (hasOwnProperty.call(obj, prop)) {
+							result.push(prop);
+						}
+					}
+
+					if (hasDontEnumBug) {
+						for (i = 0; i < dontEnumsLength; i++) {
+							if (hasOwnProperty.call(obj, dontEnums[i])) {
+								result.push(dontEnums[i]);
+							}
+						}
+					}
+					return result;
+				};
+			}());
+		}
+
+		var induceProps = Object.keys( induceObj ),
+			sampleProps = Object.keys( sampleObj );
+
+		if ( induceProps.length == sampleProps.length ) {
+			for (key in induceObj) {
+				if (sampleObj.hasOwnProperty(key)) {
+					if(induceObj[key].constructor != sampleObj[key].constructor){
+						return false;
+					}
+					switch(induceObj[key].constructor){
+						case Object:
+							if(!sameProps( induceObj[key], sampleObj[key])){
+								return false;
+							}
+							break;
+						case Array:
+							if(!sameKeys( induceObj[key], sampleObj[key])){
+								return false;
+							}
+							break;
+						default:
+							//do nothing
+					}
+				} else {
+					return false;
+				}
+			}
+		} else {
+			return false;
+		}
+		// Seems OK
+		return true;
+	}
+
+    //-----------------------------------------------------------------------------------
+    //  PRESET TOOLS get
+    //-----------------------------------------------------------------------------------
+    function getFile(filePath){
+    	var f = File(filePath);
+		if(!f.exists){
+			alert("Can't find file: " + myApp.PathTo.preferences);
+		} else {
+			return f;
+		}
+    }
+    function getPresets(myApp){
+		//read presets file
+		var f = File(myApp.PathTo.preferences);
+		
+		function resetPresets(){
+			return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, PresetObj);
+		}
+		
+		if(!f.exists){
+		    resetPresets();
+		}
+		
+		try {
+			f.open('r');
+			var jsontext = f.read();
+			f.close();
+		} catch(e){
+			alert(e.description);
+		}
+
+		//if it’s there parse it, otherwise create file
+		if (jsontext) {
+			try{
+			   MyPresets = myApp.JSON.parse(jsontext);
+			} catch(e) {
+				MyPresets = resetPresets();
+			}
+			// validate presets
+			var cp = sameProps(MyPresets, PresetObj);
+			if(cp != true){ //reset presets
+				MyPresets = resetPresets();
+			}
+		} else { //file does not exist
+			myApp.JSON.saveFile(myApp, PresetObj, f);
+			MyPresets = PresetObj;
+		}
+		return MyPresets;
+	}
+
+    //-----------------------------------------------------------------------------------
+    //  ARRAY TOOLS
+    //-----------------------------------------------------------------------------------
+    function sameKeys(induceArr, sampleArr){
+		// Note: we don't care about array length!
+		for (key in induceArr) {
+			 // we can’t have different types of contructors in arrays
+			 // but the array may be longer (That what arrays are for!)
+			if(induceArr[key].constructor == sampleArr[0].constructor){
+				switch(induceArr[key].constructor){
+					case Object:
+						if(!sameProps( induceArr[key], sampleArr[0])){
+							return false;
+						}
+						break;
+					case Array:
+						if(!sameKeys( induceArr[key], sampleArr[0])){
+							return false;
+						}
+						break;
+					default:
+						alert(induceArr[key].constructor);
+						//do nothing
+				}
+			} else { return false; }
+		}
+		// Seems OK
+		return true;
+	}
+    function getIndex(thisItem, thisArray){
+        for (var i = 0, j = thisArray.length; i < j; i++) {
+            if (thisArray[i] === thisItem) { return i; }
+        }
+        return -1;
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  LINK JUMPERS
+    //-----------------------------------------------------------------------------------
+    function emailTo(thisMAIL, thisURL){
+        var linkJumper = File(Folder.temp.fullName+"/contact.html");
+        linkJumper.open("w");
+        var linkBody = '<html><head><script>function load(){window.open("mailto:'+thisMAIL+'")}</script><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body onload="load()"></body></html>'
+        linkJumper.write(linkBody);
+        linkJumper.close();
+        linkJumper.execute();
+    }
+
+    function visitURL(thisURL){
+        var linkJumper = File(Folder.temp.fullName+"/contact.html");
+        linkJumper.open("w");
+        var linkBody = '<html><head><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body></body></html>'
+        linkJumper.write(linkBody);
+        linkJumper.close();
+        linkJumper.execute();
+    }
+
+    function reportBug(){
+        visitURL("https://github.com/GitBruno/CoverBuilder/issues");
+    }
+    
+    ////////////
+    // expose //
+    ////////////
+    // Return an object exposed to the public
+    return {
+        // Preset Tools
+        getFile        : getFile,
+        MarginObj      : MarginObj,
+        PresetObj      : PresetObj,
+        ButtonTXT      : ButtonTXT,
+        getPresets     : getPresets,
+        // Validator
+        sameProps      : sameProps,
+        sameProps      : sameProps,
+        // Array Tools
+        getIndex       : getIndex,
+        sameKeys       : sameKeys,
+        // Link Jumpers
+        reportBug      : reportBug,
+        emailTo        : emailTo,
+        visitURL       : visitURL
+    };
+})();

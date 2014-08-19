@@ -1,0 +1,156 @@
+// CoverBuilder Helpers
+// Bruno Herfst 2014
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+	// Install and/or update the menu/submenu and connect
+	// the corresponding menu actions if script files are available
+	// http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
+	function loadHelperMenu (FEATURES, MENU_NAME, APP) {
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		// NEW COVER INSTALLER
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		var cbHandlers = {
+			'onInvoke' : function(){
+				//prevent undo
+				if( 6 > parseFloat(app.version) ) {
+					APP.GO();
+				} else {
+					app.doScript(APP.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
+				}
+			}};
+
+		var cbMenuInstaller = cbMenuInstaller||
+		(function(mnuHandlers) {
+
+			var mnuAction = app.scriptMenuActions.add("Cover...");
+			var ev;
+			for( ev in mnuHandlers )
+				{
+				mnuAction.eventListeners.add(ev,mnuHandlers[ev]);
+				}
+
+			var fileMenu = app.menus.item("$ID/Main").submenus.item("$ID/&File").submenus.item("$ID/&New");
+			var refItem = fileMenu.menuItems.item("$ID/&Document...");
+
+			fileMenu.menuItems.add(mnuAction,LocationOptions.after,refItem);
+
+			return true;
+		})(cbHandlers);
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		// END NEW COVER INSTALLER
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+		// Settings and constants
+		// ---
+		var LO_END = LocationOptions.atEnd,
+			INDESIGN_ROOT_MENU = app.menus.item( '$ID/Main' ),
+			FEATURE_LOCATION_PATH = (function()
+				{
+				var f;
+				try{ f=app.activeScript; }
+				catch(_){ f=File(_.fileName); }
+				return f.parent.parent + '/';
+				})();
+
+		// (Re)set the actions
+		// Note: checks also whether script files are available
+		// ---
+		var t, f,
+			i = FEATURES.length;
+		while( i-- )
+			{
+			t = FEATURES[i];
+			if( t.separator ) continue;
+			if(t.fileName.constructor == Function) {
+				// The script file is a function => create the corresponding action
+				// ---
+				function makeFun(fn, app) {
+					return function () {
+						return fn(app);
+					}
+				}
+
+				fun = makeFun(t.fileName, APP);
+
+				(t.action = app.scriptMenuActions.add( t.caption )).
+					addEventListener('onInvoke', fun);
+				}
+			else if( (f=File(FEATURE_LOCATION_PATH + t.fileName)).exists )
+				{
+				// The script file exists => create the corresponding action
+				// ---
+				(t.action = app.scriptMenuActions.add( t.caption )).
+					addEventListener('onInvoke', f);
+				}
+			else
+				{
+				// The script file does not exist => remove that feature
+				// ---
+				FEATURES.splice(i,1);
+				}
+			}
+
+		// ---
+		// Create/reset the custom menu container *if necessary*
+		// Note:  menus/submenus are application-persistent
+		// ---
+		var mnu = INDESIGN_ROOT_MENU.submenus.itemByName( MENU_NAME );
+		if( !mnu.isValid )
+			{
+			// Our custom menu hasn't been created yet
+			// ---
+			if( !FEATURES.length ) return;
+			mnu = INDESIGN_ROOT_MENU.submenus.add(
+				MENU_NAME,
+				LocationOptions.after,
+				INDESIGN_ROOT_MENU.submenus.item( '$ID/&Window' )
+				);
+			}
+		else
+			{
+			// Our custom menu already exists, but we must clear
+			// any sub element in order to rebuild a fresh structure
+			// ---
+			mnu.menuElements.everyItem().remove();
+
+			// If FEATURES is empty, remove the menu itself
+			// ---
+			if( !FEATURES.length ){ mnu.remove(); return; }
+			}
+
+		// ---
+		// Now, let's fill mnu with respect to FEATURES' order
+		// (Possible submenus are specified in .subName and created on the fly)
+		// ---
+		var s,
+			n = FEATURES.length,
+			subs = {},
+			sub = null;
+		for( i=0 ; i < n ; ++i )
+			{
+			t = FEATURES[i];
+
+			// Target the desired submenu
+			// ---
+			sub = (s=t.subName) ?
+				( subs[s] || (subs[s]=mnu.submenus.add( s, LO_END )) ) :
+				mnu;
+
+			// Connect the related action OR create a separator
+			// ---
+			if( t.separator )
+				sub.menuSeparators.add( LO_END);
+			else
+				sub.menuItems.add( t.action, LO_END );
+			}
+	}
+	////////////
+	// expose //
+	////////////
+  	return {
+  		loadHelperMenu : loadHelperMenu
+	};
+})();

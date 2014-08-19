@@ -1,0 +1,59 @@
+// NumConversion
+// Bruno Herfst 2014
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+	function mm2pt(num) {
+		//1 millimetre = 2.83464567 PostScript points
+		return num*2.83464567;
+	}
+	function mm2inch(num) {
+		//1 inch = 25.4 millimetres
+		return num/25.4;
+	}
+	function inch2mm(num) {
+		//1 inch = 25.4 millimetres
+		return num*25.4;
+	}
+	function inch2pt(num) {
+		//1 inch = 72 postscript points
+		return num*72;
+	}
+	function pt2inch(num) {
+		//1 inch = 72 postscript points
+		return num/72;
+	}
+	function pt2mm(num) {
+		//1 millimetre = 2.83464567 PostScript points
+		return num/2.83464567;
+	}
+
+	function NaN20(num){
+		if(isNaN(num)){
+			return 0;
+		} else {
+			return num;
+		}
+	}
+
+	function doRound(num, roundDec) {
+		var roundMulit = Math.pow(10,roundDec);
+		return Math.round(num*roundMulit)/roundMulit;
+	}
+
+	////////////
+	// expose //
+	////////////
+	return {
+		mm2pt          : mm2pt,
+		mm2inch        : mm2inch,
+		inch2mm        : inch2mm,
+		inch2pt        : inch2pt,
+		pt2inch        : pt2inch,
+		pt2mm          : pt2mm,
+		NaN20          : NaN20,
+		doRound        : doRound
+	};
+})();

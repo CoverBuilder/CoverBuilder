@@ -1,0 +1,82 @@
+/*
+
+--------------------------------------------
+
+	CB_Spine_Corrector.jsxinc       (A CoverBuilder Helper Script)
+	An InDesign CS5 Javascript      (Tested in CS6)
+	Version 1.0
+
+	Bruno Herfst 2014
+
+--------------------------------------------
+
+*/
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+	function changeSpine(myApp) {
+		var myCover = myApp.Core.getActiveCover(myApp);
+		if(!myCover){
+			exit();
+		}
+		//check if cover is build with CoverBuilder
+		var myOldSpine = parseFloat(myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]"));
+		if(myOldSpine <= 0) {
+			alert("Can’t find a spine!");
+		}
+		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+
+		// Tidy.
+		var docBleed = myCover.documentPreferences.documentBleedTopOffset;
+		// Update data if changed
+		C.bleed = docBleed;
+
+		//ref to spinepage
+		var mSpine = myApp.Slugs.fetchPage(myApp, myCover, "CB-spine", 0);
+
+		//let’s ask the user what the new spine should be
+		var newSpine = prompt("New spine-width in MM:");
+
+		if ( isNaN(newSpine) ){
+			alert("That was not a Number");
+		} else if (newSpine == null) {
+			//user pressed cancel or has allready been notified.
+			exit();
+		} else if (newSpine < 0.5){
+			alert("Spine-width should be at least 0.5mm.");
+			changeSpine(myApp);
+			exit();
+		} else {
+			C.spine = parseFloat(newSpine);
+			// Make sure facing pages is on
+			// so the spine will automaticly move the front and back cover.
+			var userFacingPages = myCover.documentPreferences.facingPages;
+			if(!userFacingPages) {
+				myCover.documentPreferences.facingPages = true;
+			}
+
+			mSpine.page.resize(CoordinateSpaces.INNER_COORDINATES,
+				AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
+				[myApp.NumCon.mm2pt(newSpine), myApp.NumCon.mm2pt(mSpine.h)]); //Width * Height in postscript points
+
+			myApp.Slugs.updateSpineSlug(myApp,myCover,C,newSpine);
+
+			// Update XMP
+			myApp.XMP.safeCoverObject(myApp, myCover, C );
+
+			//set userPref back
+			if(!userFacingPages) {
+				myCover.documentPreferences.facingPages = false;
+			}
+		}
+	}
+	////////////
+	// expose //
+	////////////
+	return {
+		changeSpine : changeSpine
+	};
+
+})();

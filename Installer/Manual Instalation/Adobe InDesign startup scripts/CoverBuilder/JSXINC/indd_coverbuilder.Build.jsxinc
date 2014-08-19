@@ -1,0 +1,363 @@
+// CoverBuilder Module: Build
+
+(function () {
+	//////////////
+	// privates //
+	//////////////
+	function convertMargins(myApp, thisM){
+	    var nc = myApp.NumCon;
+		for(var k in thisM){
+			switch (k.units) {
+				case 1: //inch
+					k.top 				= nc.doRound(nc.inch2mm(k.top),3);
+					k.outside_right		= nc.doRound(nc.inch2mm(k.outside_right),3);
+					k.inside_left 		= nc.doRound(nc.inch2mm(k.inside_left),3);
+					k.bottom 			= nc.doRound(nc.inch2mm(k.bottom),3);
+					k.units 			= 0;
+					break;
+				case 2: //pt
+					k.top 				= nc.doRound(nc.pt2mm(k.top),3);
+					k.outside_right 	= nc.doRound(nc.pt2mm(k.outside_right),3);
+					k.inside_left 		= nc.doRound(nc.pt2mm(k.inside_left),3);
+					k.bottom 			= nc.doRound(nc.pt2mm(k.bottom),3);
+					k.units 			= 0;
+					break;
+				default: //mm
+					// do nothing
+					break;
+			}
+		}
+		return thisM;
+	}
+	function cover(C, myApp){
+		if(C.measureUnit == 1){ //convert inches to mm as coverbuilder can’t handle inches yet
+			C.width *= 25.4;
+			C.height *= 25.4;
+			C.spine *= 25.4;
+			C.bleed *= 25.4;
+			C.hinge *= 25.4;
+			C.binding *= 25.4;
+			C.flap *= 25.4;
+			C.fold *= 25.4;
+			C.measureUnit = 0;
+		}
+
+		//always convert margins
+		C.margin = convertMargins(myApp, C.margin);
+
+		//now let’s fixup the sizes
+		if(C.inExCludeFold == 1){
+			C.flap += C.fold;
+		}
+		if(C.inExCludeHinge == 1){
+			C.width += C.hinge;
+			if(C.binding > 0){
+				C.binding += C.hinge;
+			}
+		}
+		if(C.inExCludeQB == 0){
+			C.width += C.binding;
+		}
+		if(C.height < 0.5 || C.width < 0.5 || C.spine < 0.5){
+			alert("A pagesize can’t be smaller than 0.5");
+			return;
+		}
+		if(C.binding < C.hinge && C.binding != 0){
+			alert("Quarter binding can’t be smaller than hinge.");
+			return;
+		}
+
+		//Save the current application default margin preferences.
+		//then set the application default to zero.
+		with (app.marginPreferences){
+			var M = {};
+			M.Y1 = top, M.X1 = left, M.Y2 = bottom, M.X2 = right;
+			top = 0, left = 0, bottom = 0, right = 0;
+		}
+
+		//Create a new cover and hides it’s window
+		//myCover = app.documents.add(false);
+		myCover = app.documents.add(true);
+
+		//Set up the new cover.
+		with(myCover.viewPreferences){
+			horizontalMeasurementUnits = MeasurementUnits.millimeters;
+			verticalMeasurementUnits = MeasurementUnits.millimeters;
+			rulerOrigin = RulerOrigin.pageOrigin;
+		}
+		with(myCover.documentPreferences){
+			facingPages = true; //so we can stuff the pages together
+			horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+			verticalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+			//Set page size
+			pageHeight = C.height;
+			pageWidth = C.width;
+			//Bleed & Slug
+			documentBleedUniformSize = true;
+			documentBleedTopOffset = C.bleed;
+			documentSlugUniformSize = true;
+			slugTopOffset = C.bleed+5;
+			pagesPerDocument = 1;
+		}
+
+		//Reset the application default margin preferences to their former state.
+		with (app.marginPreferences){
+			top = M.Y1, left = M.X1, bottom = M.Y2, right = M.X2;
+		}
+
+		//masterspread for cover
+		if(myCover.masterSpreads[0].pages.length > 1){
+			for(var pg = myCover.masterSpreads[0].pages.length-1; pg > 1; i--){
+				myCover.masterSpreads[0].pages[pg].remove();
+			}
+		}
+
+		myCover.masterSpreads[0].namePrefix = "CB";
+		myCover.masterSpreads[0].baseName = "WxH";
+		if(C.height > C.margin.CVR14.top + C.margin.CVR14.bottom){
+			myCover.masterSpreads[0].pages[0].marginPreferences.top =  C.margin.CVR14.top;
+			myCover.masterSpreads[0].pages[0].marginPreferences.bottom = C.margin.CVR14.bottom;
+		}
+		if(C.width > C.margin.CVR14.outside_right + C.margin.CVR14.inside_left){
+			myCover.masterSpreads[0].pages[0].marginPreferences.left = C.margin.CVR14.inside_left;
+			myCover.masterSpreads[0].pages[0].marginPreferences.right = C.margin.CVR14.outside_right;
+		}
+
+		//Create a new masterspread for spine
+		myCover.masterSpreads.add(1,{namePrefix:"CB", baseName:"spine"});
+		with(myCover.masterSpreads.item("CB-spine")){
+			with(pages.item(0)){
+				with(marginPreferences){
+					columnCount = 1;
+					columnGutter = 0;
+					if(C.height > C.margin.Spine.top + C.margin.Spine.bottom){
+						bottom = C.margin.Spine.bottom;
+						top = C.margin.Spine.top;
+					}
+					if(C.spine > C.margin.Spine.outside_right + C.margin.Spine.inside_left){
+						left = C.margin.Spine.inside_left;
+						right = C.margin.Spine.outside_right;
+					}
+				}
+				//Set the spine width
+				resize(CoordinateSpaces.INNER_COORDINATES,
+					AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
+					//1 millimetre = 2.83464567 PostScript points
+					[C.spine*2.83464567, C.height*2.83464567]);
+			}
+		}
+
+		//Create a new masterspread for flap
+		if(C.flap > 0.5){ //0.5 is minimum pagewidth for indesign
+			myCover.masterSpreads.add(1,{namePrefix:"CB", baseName:"flap"});
+			with(myCover.masterSpreads.item("CB-flap")){
+				with(pages.item(0)){
+					with(marginPreferences){
+						columnCount = 1;
+						columnGutter = 0;
+						if(C.height > C.margin.Flaps.top + C.margin.Flaps.bottom){
+							bottom = C.margin.Flaps.bottom;
+							top = C.margin.Flaps.top;
+						}
+						if(C.flap > C.margin.Flaps.outside_right + C.margin.Flaps.inside_left){
+							left = C.margin.Flaps.inside_left;
+							right = C.margin.Flaps.outside_right;
+						}
+					}
+					//Set the flap width
+					resize(CoordinateSpaces.INNER_COORDINATES,
+						AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
+						//1 millimetre = 2.83464567 PostScript points
+						[C.flap*2.83464567, C.height*2.83464567]);
+				}
+			}
+		//Create a new masterspread for binding
+		} else if(C.binding > 0.5){ //0.5 is minimum pagewidth for indesign
+			myCover.masterSpreads.add(1,{namePrefix:"CB", baseName:"binding"});
+			with(myCover.masterSpreads.item("CB-binding")){
+				with(pages.item(0)){
+					with(marginPreferences){
+						columnCount = 1;
+						columnGutter = 0;
+						if(C.height > C.margin.QB.top + C.margin.QB.bottom){
+							bottom = C.margin.QB.bottom;
+							top = C.margin.QB.top;
+						}
+						if(C.binding > C.margin.QB.outside_right + C.margin.QB.inside_left){
+							left = C.margin.QB.inside_left;
+							right = C.margin.QB.outside_right;
+						}
+					}
+					//Set the QB width
+					resize(CoordinateSpaces.INNER_COORDINATES,
+						AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
+						//1 millimetre = 2.83464567 PostScript points
+						[C.binding*2.83464567, C.height*2.83464567]);
+				}
+			}
+		}
+
+		//page tracker
+		var pt = {  L_cover    : { pp: 0, label: "CVRL" , master: "CB-WxH"   },
+					R_cover    : { pp: 2, label: "CVRR" , master: "CB-WxH"   },
+					spine      : { pp: 1, label: "Spine", master: "CB-spine" },
+					L_flapbind : { pp: 0, label: "FlapL", master: "CB-flap"  },
+					R_flapbind : { pp: 4, label: "FlapR", master: "CB-flap"  },
+					pageCount  : 3 };
+
+		if(C.flap  > 0.5 || C.binding  > 0.5){
+			pt.pageCount  += 2;
+			pt.L_cover.pp  = 1;
+			pt.R_cover.pp  = 3;
+			pt.spine.pp    = 2;
+
+			if(C.binding  > 0.5){
+				pt.L_cover.pp = 0;
+				pt.R_cover.pp = 4;
+
+				pt.L_flapbind.master = "CB-binding";
+				pt.R_flapbind.master = "CB-binding";
+
+				pt.L_flapbind.label = "BindL";
+				pt.R_flapbind.label = "BindR";
+
+				pt.L_flapbind.pp = 1;
+				pt.R_flapbind.pp = 3;
+			}
+		}
+
+		//Create masterspread for cover
+		myCover.masterSpreads.add(pt.pageCount,{namePrefix:"CB", baseName:"cover"});
+
+		with(myCover.masterSpreads.item("CB-cover")){
+			for (i=0;i<=myCover.masterSpreads.item("CB-cover").pages.length-1;i++){
+				with(pages.item(i)){
+					with(marginPreferences){
+						columnCount = 1;
+						columnGutter = 0;
+						bottom = 0;
+						top = 0;
+						left = 0;
+						right = 0;
+						left = 0;
+						right = 0;
+					}
+				}
+			}
+		}
+
+		//apply masters to pages
+		var myPages = myCover.masterSpreads.item("CB-cover").pages;
+
+		myPages.item(pt.L_cover.pp).appliedMaster   = myCover.masterSpreads.item(pt.L_cover.master);
+		myPages.item(pt.L_cover.pp).label           = pt.L_cover.label;
+		myPages.item(pt.R_cover.pp).appliedMaster   = myCover.masterSpreads.item(pt.R_cover.master);
+		myPages.item(pt.R_cover.pp).label           = pt.R_cover.label;
+		myPages.item(pt.spine.pp).appliedMaster     = myCover.masterSpreads.item(pt.spine.master);
+		myPages.item(pt.spine.pp).label             = pt.spine.label;
+
+		//reverse margins
+		var ml = myPages.item(pt.L_cover.pp).marginPreferences.left;
+		var mr = myPages.item(pt.L_cover.pp).marginPreferences.right;
+		myPages.item(pt.L_cover.pp).marginPreferences.right = ml;
+		myPages.item(pt.L_cover.pp).marginPreferences.left  = mr;
+
+		//apply binding or flaps to masterspread
+		if(C.flap  > 0.5 || C.binding  > 0.5){
+			myPages.item(pt.L_flapbind.pp).appliedMaster = myCover.masterSpreads.item(pt.L_flapbind.master);
+			myPages.item(pt.L_flapbind.pp).label         = pt.L_flapbind.label;
+			myPages.item(pt.R_flapbind.pp).appliedMaster = myCover.masterSpreads.item(pt.R_flapbind.master);
+			myPages.item(pt.R_flapbind.pp).label         = pt.R_flapbind.label;
+			//reverse margins
+			var ml = myPages.item(pt.L_flapbind.pp).marginPreferences.left;
+			var mr = myPages.item(pt.L_flapbind.pp).marginPreferences.right;
+			myPages.item(pt.L_flapbind.pp).marginPreferences.right = ml;
+			myPages.item(pt.L_flapbind.pp).marginPreferences.left  = mr;
+		}
+
+		//Do Hinge
+		if(C.hinge > 0){
+			function fitmargin(backHinge, frontHinge, fit){
+				if(fit){
+					backHinge.marginPreferences.right += C.hinge;
+					frontHinge.marginPreferences.left += C.hinge;
+				} else {
+					backHinge.marginPreferences.right = C.hinge;
+					backHinge.marginPreferences.left = 0;
+					frontHinge.marginPreferences.left = C.hinge;
+					frontHinge.marginPreferences.right = 0;
+				}
+			}
+			if(C.binding  > 0){
+				var backHinge = myPages.item(pt.L_flapbind.pp);
+				var frontHinge = myPages.item(pt.R_flapbind.pp);
+				var myLocation = C.binding-C.hinge;
+				//margins
+				if( (C.hinge + C.margin.QB.outside_right + C.margin.QB.inside_left) < C.binding){
+					fitmargin(backHinge, frontHinge, true);
+				} else if(C.hinge < C.binding){
+					fitmargin(backHinge, frontHinge, false);
+				}
+			} else {
+				var backHinge = myPages.item(pt.L_cover.pp);
+				var frontHinge = myPages.item(pt.R_cover.pp);
+				var myLocation = C.width-C.hinge;
+				//margins
+				if( (C.hinge + C.margin.CVR14.outside_right + C.margin.CVR14.inside_left) < C.width){
+					fitmargin(backHinge, frontHinge, true);
+				} else if(C.hinge < C.width){
+					fitmargin(backHinge, frontHinge, false);
+				}
+			}
+			backHinge.guides.add({orientation:HorizontalOrVertical.vertical,location:myLocation, guideColor:UIColors.LIGHT_GRAY});
+			frontHinge.guides.add({orientation:HorizontalOrVertical.vertical,location:C.hinge, guideColor:UIColors.LIGHT_GRAY});
+		}
+
+		//Do FoldOver
+		if(C.fold > 0){
+			var flapL = myPages.item(pt.L_flapbind.pp);
+			var flapR = myPages.item(pt.R_flapbind.pp);
+
+			flapL.marginPreferences.right += C.fold;
+			flapL.guides.add({orientation:HorizontalOrVertical.vertical,location:C.flap-C.fold, guideColor:UIColors.gray});
+			flapR.marginPreferences.left  += C.fold;
+			flapR.guides.add({orientation:HorizontalOrVertical.vertical,location:C.fold, guideColor:UIColors.gray});
+		}
+
+		//Do first spread
+		var myCoverspead = myCover.spreads.item(0);
+		myCoverspead.allowPageShuffle = false;
+
+		for (i=1;i<pt.pageCount;i++){
+			myCover.pages.add(LocationOptions.AFTER,myCoverspead.pages.item(0));
+		}
+		for (i=0;i<=myCoverspead.pages.length-1;i++){
+			myCoverspead.pages.item(i).appliedMaster = myCover.masterSpreads.item("CB-cover");
+			// Pass on tags so we can easely retrieve pages back rather then relying on position
+			myCoverspead.pages.item(i).label = myCover.masterSpreads.item("CB-cover").pages.item(i).label;
+		}
+
+		//add XMP data
+		myApp.XMP.newXMP(myApp,myCover,C);
+
+		//Set sizes in slug
+		myApp.Slugs.placeSizesInSlug(myApp,C,myCover);
+
+		// Move registration layer to top of doc
+		myCover.layers.item("Registration").move(LocationOptions.AT_BEGINNING);
+
+		myCover.documentPreferences.facingPages = false;
+
+		//select most bottom layer (Art)
+		myCover.activeLayer = myCover.layers[myCover.layers.length-1];
+		return myCover;
+	}
+
+	////////////
+	// expose //
+	////////////
+  	return {
+  		cover: cover
+	};
+
+})();

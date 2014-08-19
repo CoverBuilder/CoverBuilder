@@ -1,0 +1,111 @@
+// CoreTools for InDesign
+// Indesign helpers for CoverBuilder
+// Bruno Herfst 2014
+
+(function() {
+    //////////////
+    // privates //
+    //////////////
+
+    //-----------------------------------------------------------------------------------
+    //  LAYER TOOLS
+    //-----------------------------------------------------------------------------------
+    function getSelectAndMoveLayer(doc, name, afterlayerNo){
+        return moveLayer(getAndSelectLayer(doc, name), afterlayerNo);
+    }
+    function getAndSelectLayer(doc, name) {
+        return selectLayer(doc, getLayer(doc, name));
+    }
+    function getLayer(doc, name) {
+        for (i=0; i<doc.layers.length; i++) {
+            if (doc.layers[i].name==name) return doc.layers[i];
+        }
+        return doc.layers.add({name:name});
+    }
+    function selectLayer(doc, layer){
+        doc.activeLayer = layer;
+        return layer;
+    }
+    function moveLayer(layer, afterlayerNo){
+        try {
+            layer.move(LocationOptions.AFTER,layer.parent.layers[afterlayerNo]);
+            return layer
+        } catch (e) {
+            alert("CoverBuilder.CoreTools MoveLayer\n" + e.description);
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  PAGE TOOLS
+    //-----------------------------------------------------------------------------------
+    function getActiveCover(myApp){
+        //Make certain that user interaction (display of dialogs, etc.) is turned on.
+        app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
+
+        if (app.documents.length <= 0) {
+            alert("Open a cover before using this script.");
+            exit();
+        }
+
+        var myCover = app.activeDocument;
+        //check if cover is build with CoverBuilder
+        var myOldSpine = myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]");
+        if(myOldSpine == "") {
+            var visit = confirm("This document is not build with the latest version of CoverBuilder.\nDo you want to download the latest version now?");
+            if(visit){
+                myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
+            }
+            exit();
+        }
+        return myCover;
+    }
+    //-----------------------------------------------------------------------------------
+    //  COLOUR TOOLS
+    //-----------------------------------------------------------------------------------
+    //This awesome function found here: http://tomaxxi.com/2010/09/quicktip-add-custom-cmykrgbhex-colors-to-document/
+    //Example: myColorAdd(myDoc, "My New Colour", ColorModel.PROCESS, [16,0,0,55]);
+    function addColor(myDocument, myColorName, myColorModel, myColorValue, forceColor) {
+        if (myColorValue instanceof Array == false) {
+            myColorValue = [(parseInt(myColorValue, 16) >> 16) & 0xff, (parseInt(myColorValue, 16) >> 8) & 0xff, parseInt(myColorValue, 16) & 0xff];
+            myColorSpace = ColorSpace.RGB;
+        } else {
+            if (myColorValue.length == 3)
+                myColorSpace = ColorSpace.RGB;
+            else
+                myColorSpace = ColorSpace.CMYK;
+        }
+        try {
+            myColor = myDocument.colors.item(myColorName);
+            myName = myColor.name;
+        } catch (myError) {
+            myColor = myDocument.colors.add();
+            forceColor = true;
+        }
+        if(forceColor){
+            myColor.properties = {
+                name: myColorName,
+                model: myColorModel,
+                space: myColorSpace,
+                colorValue: myColorValue
+            };
+        }
+        return myColor;
+    }
+
+    ////////////
+    // expose //
+    ////////////
+    // Return an object exposed to the public
+    return {
+        // LayerTools
+        moveLayer             : moveLayer,
+        selectLayer           : selectLayer,
+        getLayer              : getLayer,
+        getAndSelectLayer     : getAndSelectLayer,
+        getSelectAndMoveLayer : getSelectAndMoveLayer,
+        // PageTools
+        getActiveCover        : getActiveCover,
+        // ColourTools
+        addColor              : addColor
+    };
+})();

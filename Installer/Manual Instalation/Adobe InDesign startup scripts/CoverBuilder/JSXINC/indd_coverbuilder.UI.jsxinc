@@ -1,0 +1,712 @@
+// CoverBuilder UI
+// Bruno Herfst 2014
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+	function CoverOrder(myApp){
+		var C = null; // The Cover Object this function will return
+		var presetChange = false;
+		var savePS    = myApp.STools.ButtonTXT.savePS;
+        var clearPS   = myApp.STools.ButtonTXT.clearPS;
+        var MarginObj = myApp.STools.MarginObj;
+		var MyPresets = myApp.STools.getPresets(myApp);
+		var f = myApp.STools.getFile(myApp.PathTo.preferences);
+
+	    //////////////
+		//  window  //
+		//////////////
+		var myWindow = new Window ("dialog", "CoverBuilder " + myApp.Settings.version);
+		///////////////////////////////////////////////////////////////////////////// START WINDOW
+		var globalGroup = myWindow.add ("group");
+			globalGroup.spacing = 177; //design
+
+			var presets = globalGroup.add ("dropdownlist", undefined, ["[Presets]"]);
+			for (var i=0,len=MyPresets.presets.length;i<len;i++) {
+				if(MyPresets.presets[i].name.length <= 4){
+					var mt = "\t\t\t(";
+				} else if (MyPresets.presets[i].name.length <= 6){
+					var mt = "\t\t(";
+				} else {
+					var mt = "\t("; //my tabs
+				}
+				presets.add('item', MyPresets.presets[i].name+mt+MyPresets.presets[i].width+"x"+MyPresets.presets[i].height+")");
+			};
+			presets.selection = 0;
+			presets.preferredSize.width = 237; //design
+			var mminch = globalGroup.add ("dropdownlist", undefined, ["mm","inch"]);
+			mminch.selection = 0;
+
+		/////////////////////////////////////////////////////////////////////////////
+		var minimalGroup = myWindow.add ("group");
+			minimalGroup.margins = [20,0,20,0];
+			minimalGroup.add ("statictext", undefined, "Width:");
+				var myWidth = minimalGroup.add ("edittext", undefined, "0");
+				myWidth.characters = 6;
+
+			minimalGroup.add ("statictext", undefined, "Height:");
+				var myHeight = minimalGroup.add ("edittext", undefined, "0");
+				myHeight.characters = 6;
+
+			minimalGroup.add ("statictext", undefined, "Spine:");
+				var mySpine = minimalGroup.add ("edittext", undefined, "0");
+				mySpine.characters = 6;
+
+			minimalGroup.add ("statictext", undefined, "Bleed:");
+				var myBleed = minimalGroup.add ("edittext", undefined, "0");
+				myBleed.characters = 6;
+
+		/////////////////////////////////////////////////////////////////////////////
+		var optionalGroup = myWindow.add ("group");
+			var optionalInputpanel = optionalGroup.add ("panel");
+				optionalInputpanel.orientation =  "column";
+				optionalInputpanel.margins = 20;
+				optionalInputpanel.alignChildren =  "left";
+				//optionalInputpanel.text = "Optional Settings";
+				optionalInputpanel.preferredSize.width = 525; //design
+
+				var optional1Group = optionalInputpanel.add ("group");
+					optional1Group.orientation =  "row";
+					optional1Group.margins = [0,0,0,5];
+					var flapQBDropdown = optional1Group.add ("dropdownlist", undefined, ["Flaps:","- Binding:","+ Binding:"]);
+					flapQBDropdown.selection = 0;
+					flapQBDropdown.preferredSize.width = 170; //design
+					var myFlapQB = optional1Group.add ("edittext", undefined, "0");
+					myFlapQB.characters = 6;
+
+					var foldDropdown = optional1Group.add ("dropdownlist", undefined, ["- Fold:","+ Fold:"]);
+					foldDropdown.selection = 0;
+					foldDropdown.preferredSize.width = 160; //design
+					foldDropdown.visible = false;
+
+					var myFold = optional1Group.add ("edittext", undefined, "0");
+					myFold.characters = 6;
+					myFold.visible = false;
+
+				var optional2Group = optionalInputpanel.add ("group");
+					optional2Group.orientation =  "row";
+					optional2Group.margins = [0,0,0,5];
+					var hingeDropdown = optional2Group.add ("dropdownlist", undefined, ["- Hinge:","+ Hinge:"]);
+					hingeDropdown.selection = 0;
+					hingeDropdown.preferredSize.width = 170; //design
+					var myHinge = optional2Group.add ("edittext", undefined, "0");
+					myHinge.characters = 6;
+
+				var optional3Group = optionalInputpanel.add ("group");
+					optional3Group.orientation =  "row";
+					optional3Group.margins = [0,0,0,5];
+
+					//margin button
+					var marginButAuto   = "Margins: Auto",
+						marginButPreset = "Margins: Preset",
+						marginButCustom = "Margins: Custom";
+
+					var marginBut = optional3Group.add ("button", undefined, "Set Margin");
+						marginBut.preferredSize.width = 170; //design
+						var marginText = optional3Group.add ("statictext", undefined, "Getting Data...");
+
+						function updateMarginText(){
+							marginText.text = "Top: "+MarginObj.CVR14.top+", Out: "+MarginObj.CVR14.outside_right+", Bot: "+MarginObj.CVR14.bottom+", Ins: "+MarginObj.CVR14.inside_left+" (Cover 1-4)";
+						}
+						updateMarginText();
+
+						try{
+							marginText.graphics.font = ScriptUI.newFont ("Verdana", "Regular", 11);
+						} catch(_){
+							//do nothing
+						}
+
+						marginText.graphics.foregroundColor = marginText.graphics.newPen (myWindow.graphics.PenType.SOLID_COLOR, [0.5, 0.5, 0.5], 1);
+
+						marginBut.onClick = function () {
+							if(showMarginWindow()){
+								marginBut.text = marginButCustom;
+								updateMarginText();
+								if(presetChange == false){
+									presetBut.text = savePS;
+								}
+							}
+						}
+
+				var optional4Group = optionalInputpanel.add ("group");
+					optional4Group.orientation =  "row";
+					optional4Group.margins = [0,0,0,5];
+
+					var finishDropdown = optional4Group.add ("dropdownlist", undefined, ["[Finish]","Lamination (Gloss)","Lamination (Matte)","Lamination (Silk)","Lamination (Satin)","Varnish (UV)","Varnish (Gloss)","Varnish (Matte)"]);
+					finishDropdown.selection = 0;
+					finishDropdown.preferredSize.width = 170; //design
+
+		/////////////////////////////////////////////////////////////////////////////
+		var myButtonGroup = myWindow.add ("group");
+			myButtonGroup.margins = [20,5,20,15];
+			myButtonGroup.alignment = "right";
+
+			//register button
+			var registerBut = myButtonGroup.add ("button", undefined, "Help");
+				registerBut.onClick = function () {
+					myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
+				}
+
+			//save load preset button
+			var presetBut = myButtonGroup.add ("button", undefined, savePS);
+			//OK CANCEL buttons
+			var cancelBut = myButtonGroup.add ("button", undefined, "Cancel");
+			var buildBut = myButtonGroup.add ("button", undefined, "Build");
+		///////////////////////////////////////////////////////////////////////////// END WINDOW
+
+		////////////// dialog functionality
+		buildBut.onClick = function () {
+			var ms = parseFloat(mySpine.text);
+			var mw = parseFloat(myWidth.text);
+			var mh = parseFloat(myHeight.text);
+			var mm = "mm";
+			var noprobs = true;
+			if(flapQBDropdown.selection != 0){
+
+				 var thisQB = parseFloat(myFlapQB.text);
+
+				 if(thisQB < parseFloat(myHinge.text) && thisQB != 0){
+					 noprobs = false;
+				  }
+			 }
+			switch(mminch.selection.text){
+				case "mm":
+					var minSize = 0.5;
+					break;
+				case "inch":
+					var mm = "inch";
+					var minSize = myApp.NumCon.doRound(myApp.NumCon.mm2inch(0.5), 3);
+					break
+			}
+			if(noprobs){
+				if(ms >= minSize && mw >= minSize && mh >= minSize){
+					// Let’s safe these settings to Last Used preset
+					// Easiest to start from scratch and delete any "Last Used" objects in presets array
+					var plen = MyPresets.presets.length-1;
+					for (var i = 0; i <= plen; i++) {
+						if(MyPresets.presets[i].name == "-Last Used-"){
+							MyPresets.presets.splice(i,1);
+							//delete MyPresets.presets[i];
+						}
+					}
+					if(add2Presets("-Last Used-")){
+						myApp.JSON.saveFile(myApp, MyPresets, f);
+						C = MyPresets.presets[MyPresets.presets.length-1];
+					} else {
+						alert("Sorry!\nI'm having trouble saving last used settings");
+					}
+					myWindow.close();
+				} else {
+					alert("SPINE, WIDTH and HEIGHT should be at least "+minSize+" "+mm);
+				}
+			} else {
+				alert("Quarter Binding should cover the hinge.");
+			}
+		}
+		presetBut.onClick = function () {
+			if(presetBut.text == 'Save Preset'){
+				//create preset
+				//var newName = prompt("Name:");
+				var cp = add2Presets(prompt("Name:"));
+				if(cp == "error"){
+					//User is allready up-to-date!
+				} else if(cp != true){ //reset presets
+					alert("Error creating presets \nplease check input fields");
+				} else {
+					//update dialog
+					var i = MyPresets.presets.length-1;
+					if(MyPresets.presets[i].name.length <= 4){
+						var mt = "\t\t\t(";
+					} else if (MyPresets.presets[i].name.length < 8){
+						var mt = "\t\t(";
+					} else {
+						var mt = "\t("; //my tabs
+					}
+					presets.add('item', MyPresets.presets[i].name+mt+MyPresets.presets[i].width+"x"+MyPresets.presets[i].height+")");
+					presets.items[MyPresets.presets.length].selected = true; //no need to subtract 1 as array includes --save presets-- item at 0
+					try{
+						myApp.JSON.saveFile(myApp, MyPresets, f);
+					} catch(e){
+						alert("Error saving presets \n"+e.description);
+					}
+				}
+
+			} else if(presetBut.text == clearPS){
+				//delete preset
+				var index = parseInt(presets.selection);
+				MyPresets.presets.splice(index-1,1);
+				presets.remove(presets.selection);
+				presets.selection = 0;
+				myApp.JSON.saveFile(myApp, MyPresets, f);
+			}
+		}
+
+		//--------------------------------------------------------------------------------------------------- START MARGIN WINDOW
+		function showMarginWindow(){
+			var marginWindow = new Window ("dialog", "Set Margins");
+			marginWindow.orientation =  "column";
+			var CoverGroup = marginWindow.add ("Group");
+			CoverGroup.orientation =  "row";
+
+			// create page panels
+			var pagePanels = new Array(),
+				pagePanelBool = new Object(),
+				CVR14Panel;
+
+			// Do not call this function twice, we safe only one setting for both the front and the back!
+			function insertCVR14(){
+				CVR14Panel = new panel(CoverGroup, "Front + Back Cover", MarginObj.CVR14);
+				pagePanels.push(CVR14Panel);
+				pagePanelBool.CVR14Panel = true;
+			}
+
+			// start creating the panels
+			// there is not always a spine
+			if(parseFloat(mySpine.text) > 0){
+				//insert spine panel
+				var SpinePanel = new panel(CoverGroup, "Spine", MarginObj.Spine);
+				pagePanels.push(SpinePanel);
+				pagePanelBool.SpinePanel = true;
+				// check if there is a flap or quarter binding
+				if(parseFloat(myFlapQB.text) > 0){
+					if( parseInt(flapQBDropdown.selection) == 0){
+						insertCVR14();
+						var FlapsPanel = new panel(CoverGroup, "Flap", MarginObj.Flaps);
+						pagePanels.push(FlapsPanel);
+						pagePanelBool.FlapsPanel = true;
+						pagePanelBool.QBPanel = false;
+					} else {
+						var QBPanel = new panel(CoverGroup, "Quarter Binding", MarginObj.QB);
+						pagePanels.push(QBPanel);
+						pagePanelBool.QBPanel = true;
+						pagePanelBool.FlapsPanel = false;
+						insertCVR14();
+					}
+				} else {
+					insertCVR14();
+				}
+			} else {
+				insertCVR14();
+			}
+
+			//update panels in class so they can interact
+			for(i=pagePanels.length-1; i >= 0; i--){
+				pagePanels[i].linkPanels(pagePanels);
+			}
+
+			// BUTTONS ///////////////////////////////////////////////
+			var myButtonGroup = marginWindow.add ("group");
+				myButtonGroup.margins = [20,5,20,15];
+				myButtonGroup.alignment = "center";
+				myButtonGroup.add ("button", undefined, "Cancel");
+				myButtonGroup.add ("button", undefined, "OK");
+			// BUTTONS ///////////////////////////////////////////////
+
+			var myResult = marginWindow.show();
+
+			if(myResult == true){
+				//update margin obj
+				if(pagePanelBool.CVR14Panel){
+					MarginObj.CVR14 = CVR14Panel.getSettings();
+				}
+				if(pagePanelBool.SpinePanel){
+					MarginObj.Spine = SpinePanel.getSettings();
+				}
+				if(pagePanelBool.QBPanel){
+					MarginObj.QB = QBPanel.getSettings();
+				}
+				if(pagePanelBool.FlapsPanel){
+					MarginObj.Flaps = FlapsPanel.getSettings();
+				}
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		function panel(thisGroup, panelName, theseMargins) {
+			this.changeInternal = false;
+
+			// panel class
+			this.name = panelName;
+			this.linkedPanels = new Array();
+
+			if(theseMargins.facing){
+				this.inside_left_text = "inside";
+				this.outside_right_text = "outside";
+			} else {
+				this.inside_left_text = "left";
+				this.outside_right_text = "right";
+			}
+
+			this.Group = thisGroup.add ('panel', undefined, this.name);
+			this.Group.margins = [15,20,15,20];
+			this.Group.orientation =  "row";
+			this.Group.alignment = "top";
+
+			// C O L U M N - 1
+			this.Row1 = this.Group.add ("group");
+			this.Row1.orientation =  "column";
+			this.Row1.alignment = "top";
+
+			this.Row1.add ("statictext", undefined, " ");
+			this.Row1.add ("statictext", undefined, " ");
+
+			 //CVR1 Outside
+			this.Row1.add ("statictext", undefined, this.inside_left_text);
+			this.inside_left = this.Row1.add ("edittext", undefined, theseMargins.inside_left);
+			this.inside_left.characters = 6;
+
+			// C O L U M N - 2
+			this.Row2 = this.Group.add ("group");
+			this.Row2.orientation =  "column";
+			this.Row2.alignment = "top";
+
+			//CVR1 Top
+			this.Row2.add ("statictext", undefined, "top");
+			this.top = this.Row2.add ("edittext", undefined, theseMargins.top);
+			this.top.characters = 6;
+
+			this.Row2.add ("statictext", undefined, " ");
+			//this.Row2.add ("statictext", undefined, " ");
+			this.unit = this.Row2.add ("dropdownlist", undefined, ["mm","inch","pt"]);
+			this.unit.selection = theseMargins.units;
+
+			//CVR1 Bottom
+			this.Row2.add ("statictext", undefined, "bottom");
+			this.bottom = this.Row2.add ("edittext", undefined, theseMargins.bottom);
+			this.bottom.characters = 6;
+
+			this.Row2.add ("statictext", undefined, " ");
+			this.link = this.Row2.add ("checkbox", undefined, "Link");
+			this.link.value = theseMargins.linked;
+
+			// C O L U M N - 3
+			this.Row3 = this.Group.add ("group");
+			this.Row3.orientation =  "column";
+			this.Row3.alignment = "top";
+
+			this.Row3.add ("statictext", undefined, " ");
+			this.Row3.add ("statictext", undefined, " ");
+
+			//CVR1 Inside
+			this.Row3.add ("statictext", undefined, this.outside_right_text);
+			this.outside_right = this.Row3.add ("edittext", undefined, theseMargins.outside_right);
+			this.outside_right.characters = 6;
+
+			this.getSettings = function(){
+				return {
+					top             : myApp.NumCon.NaN20(parseFloat(this.top.text)),
+					outside_right   : myApp.NumCon.NaN20(parseFloat(this.outside_right.text)),
+					inside_left     : myApp.NumCon.NaN20(parseFloat(this.inside_left.text)),
+					bottom          : myApp.NumCon.NaN20(parseFloat(this.bottom.text)),
+					facing          : theseMargins.facing,
+					units           : parseInt(this.unit.selection),
+					linked          : this.link.value,
+					ps_guides		: false
+				}
+			}
+
+			this.linkPanels = function(panelArray){
+				this.linkedPanels = panelArray;
+			}
+
+			this.upDate = function(ReplaceMargins){
+				this.changeInternal = true; //prevent recursion
+				if(this.link.value){
+					this.top.text           = ReplaceMargins.top;
+					this.outside_right.text = ReplaceMargins.outside_right;
+					this.inside_left.text   = ReplaceMargins.inside_left;
+					this.bottom.text        = ReplaceMargins.bottom;
+					this.unit.selection 	= ReplaceMargins.units;
+				}
+				this.changeInternal = false;
+			}
+
+			var self = this;
+			self.changeLinked = function(){
+				if(self.link.value){
+					var marginupdate = self.getSettings();
+					for(i=self.linkedPanels.length-1; i >= 0; i--){
+						if(self.name != self.linkedPanels[i].name){
+							self.linkedPanels[i].upDate(marginupdate);
+						}
+					}
+				}
+			}
+
+			self.getLinkData = function(){
+				if(self.link.value){
+					for(i=self.linkedPanels.length-1; i >= 0; i--){
+						if(self.name != self.linkedPanels[i].name){
+							if(self.linkedPanels[i].link.value){
+								self.upDate(self.linkedPanels[i].getSettings());
+								return;
+							}
+						}
+					}
+				}
+			}
+			self.link.onClick           = function(){self.getLinkData()}
+			self.unit.onChange          = function(){if(!self.changeInternal){self.changeLinked()}}
+			self.inside_left.onChange   = function(){self.changeLinked()}
+			self.outside_right.onChange = function(){self.changeLinked()}
+			self.top.onChange           = function(){self.changeLinked()}
+			self.bottom.onChange        = function(){self.changeLinked()}
+
+		}
+
+		//--------------------------------------------------------------------------------------------------- END MARGIN WINDOW
+
+		function add2Presets(newName){
+			if(typeof newName == 'string'){
+				if(newName != "-Last Used-"){
+					//check if newName is allready in list, if so remove the old one
+					var plen = MyPresets.presets.length-1;
+					for (var i = plen; i >= 0; i--) {
+					  if(MyPresets.presets[i].name == newName){
+						//ask if the user wants to overwrite this preset
+						var cool = confirm("There is allready a preset with that name.\nDo you want to overwrite it?");
+						if(cool){
+							MyPresets.presets.splice(i,1);
+							presets.remove(i+1);
+						} else {
+							return "error";
+						}
+					  }
+					}
+				}
+
+				var newFlap, newFold, newQB, newInExQB = 0;
+				if(flapQBDropdown.selection == 0){
+					newFlap = myApp.NumCon.NaN20(parseFloat(myFlapQB.text));
+					if(myFold.visible){
+						newFold = myApp.NumCon.NaN20(parseFloat(myFold.text));
+					} else {
+						newFold = 0;
+					}
+					newQB = 0;
+				} else {
+					newFlap = 0;
+					newFold = 0;
+					newQB = myApp.NumCon.NaN20(parseFloat(myFlapQB.text));
+					if(flapQBDropdown.selection == 2){
+						newInExQB++;
+					}
+				}
+				MyPresets.presets.push({
+					name: newName,
+					width: myApp.NumCon.NaN20(parseFloat(myWidth.text)),
+					height: myApp.NumCon.NaN20(parseFloat(myHeight.text)),
+					spine: myApp.NumCon.NaN20(parseFloat(mySpine.text)),
+					ppi: myApp.Settings.standardDPI,
+					bleed: myApp.NumCon.NaN20(parseFloat(myBleed.text)),
+					hinge: myApp.NumCon.NaN20(parseFloat(myHinge.text)),
+					inExCludeHinge: myApp.NumCon.NaN20(parseFloat(hingeDropdown.selection)),
+					binding: newQB,
+					inExCludeQB:newInExQB,
+					flap: newFlap,
+					fold: newFold,
+					inExCludeFold: myApp.NumCon.NaN20(parseFloat(foldDropdown.selection)),
+					margin: MarginObj,
+					measureUnit: myApp.NumCon.NaN20(parseFloat(mminch.selection)),
+					publisher: "Unknown", //Legacy support
+					finish: myApp.NumCon.NaN20(parseFloat(finishDropdown.selection))
+				});
+
+				return myApp.STools.sameProps(MyPresets, myApp.STools.PresetObj); //report back if it went well
+			} //end check for string
+			return "error";
+		}
+
+		presets.onChange = function () {
+			presetChange = true;
+			if(presets.selection-1 >= 0){
+				//make sure user can’t delete last used settings
+				if(MyPresets.presets[presets.selection-1].name != "-Last Used-"){
+					presetBut.text = clearPS;
+				} else {
+					presetBut.text = savePS;
+				}
+
+				mminch.selection = MyPresets.presets[presets.selection-1].measureUnit;
+				myWidth.text = MyPresets.presets[presets.selection-1].width;
+				myHeight.text = MyPresets.presets[presets.selection-1].height;
+				mySpine.text = MyPresets.presets[presets.selection-1].spine;
+				myBleed.text = MyPresets.presets[presets.selection-1].bleed;
+				hingeDropdown.selection = MyPresets.presets[presets.selection-1].inExCludeHinge;
+				myHinge.text = MyPresets.presets[presets.selection-1].hinge;
+				foldDropdown.selection = MyPresets.presets[presets.selection-1].inExCludeFold;
+				MarginObj = MyPresets.presets[presets.selection-1].margin;
+				marginBut.text = marginButPreset;
+				updateMarginText();
+
+				if(MyPresets.presets[presets.selection-1].binding > 0){
+					foldDropdown.visible = false;
+					myFold.visible = false;
+					if(MyPresets.presets[presets.selection-1].inExCludeQB == 0){
+						flapQBDropdown.selection = 1;
+					} else { //inexclude === 1
+						flapQBDropdown.selection = 2;
+					}
+					myFlapQB.text = MyPresets.presets[presets.selection-1].binding;
+				} else {
+					flapQBDropdown.selection = 0;
+					myFlapQB.text = MyPresets.presets[presets.selection-1].flap;
+
+					myFold.text = MyPresets.presets[presets.selection-1].fold;
+
+					if(myFlapQB.text > 0){
+						myFold.visible = true;
+						foldDropdown.visible = true;
+					} else {
+						myFold.visible = false;
+						foldDropdown.visible = false;
+					}
+				}
+				finishDropdown.selection = MyPresets.presets[presets.selection-1].finish;
+			} else {
+				presetBut.text = savePS;
+			}
+			presetChange = false;
+		}
+		mminch.onChange = function () {
+			if(presetChange == false){
+				presets.selection = 0;
+				presetBut.text = savePS;
+				//ask user if he wants to convert numbers
+				if(confirm("Do you want to convert numbers?")===true){
+					convert2(mminch.selection.text);
+				}
+			}
+		}
+		myWidth.onChange = function () {
+			presets.selection = 0;
+			presetBut.text = savePS;
+			myWidth.text = parseFloat(myWidth.text.replace(",", "."));
+			if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
+				hingeDropdown.selection = 1;
+			}
+		}
+		myHeight.onChange = function () {
+			presets.selection = 0;
+			presetBut.text = savePS;
+			myHeight.text = parseFloat(myHeight.text.replace(",", "."))
+		}
+		mySpine.onChange = function () {
+			presetBut.text = savePS;
+			mySpine.text = parseFloat(mySpine.text.replace(",", "."));
+		}
+		myBleed.onChange = function () {
+			presetBut.text = savePS;
+			myBleed.text = parseFloat(myBleed.text.replace(",", "."));
+		}
+		myFlapQB.onChange = function () {
+			if(presetChange == false){
+			   presets.selection = 0;
+			   presetBut.text = savePS;
+			   myFlapQB.text = parseFloat(myFlapQB.text.replace(",", "."));
+			   if(parseFloat(myFlapQB.text) > 0 && flapQBDropdown.selection == 0){
+					foldDropdown.visible = true;
+					myFold.visible = true;
+				} else {
+					foldDropdown.visible = false;
+					myFold.visible = false;
+				}
+			}
+		}
+		hingeDropdown.onChange = function () {
+			if(presetChange == false){
+				presets.selection = 0;
+				presetBut.text = savePS;
+			}
+			if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
+				hingeDropdown.selection = 1;
+				alert("Can’t subtract hinge from cover!\nCover not wide enough...");
+			}
+		}
+		flapQBDropdown.onChange = function () {
+			if(presetChange == false){
+				presets.selection = 0;
+				presetBut.text = savePS;
+				if(this.selection != 0){
+					foldDropdown.visible = false;
+					myFold.visible = false;
+				} else {
+					if(parseFloat(myFlapQB.text) > 0){
+						foldDropdown.visible = true;
+						myFold.visible = true;
+					}
+				}
+			}
+		}
+		foldDropdown.onChange = function () {
+			if(presetChange == false){
+				presets.selection = 0;
+				presetBut.text = savePS;
+				if(parseFloat(myFlapQB.text) <= parseFloat(myFold.text) && flapQBDropdown.selection == 0 && this.selection == 0){
+					this.selection = 1;
+					alert("Can’t subtract Fold-Over from Flaps!\nFlaps not wide enough...");
+				}
+			}
+		}
+		myHinge.onChange = function () {
+			presets.selection = 0;
+			myHinge.text = parseFloat(myHinge.text.replace(",", "."));
+			if(parseFloat(myHinge.text) >= parseFloat(myWidth.text)){
+				hingeDropdown.selection = 1;
+			}
+		}
+		myFold.onChange = function () {
+			presetBut.text = savePS;
+			myFold.text = parseFloat(myFold.text.replace(",", "."));
+			if(parseFloat(myFold.text) >= parseFloat(myFlapQB.text)){
+				foldDropdown.selection = 1;
+			}
+		}
+		function resetPresetDrop(){
+			if(presetChange === false){
+				dlg.presetDrop.items[0].selected = true;
+			}
+		}
+		function convert2(unit){
+			switch(unit){
+				case "mm":
+					myWidth.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myWidth.text),2);
+					myHeight.text   = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myHeight.text),2);
+					mySpine.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(mySpine.text),2);
+					myBleed.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myBleed.text),2);
+					myFlapQB.text   = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myFlapQB.text),2);
+					myHinge.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myHinge.text),2);
+					myFold.text     = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myFold.text),2);
+					break;
+				case "inch":
+					myWidth.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myWidth.text),3);
+					myHeight.text   = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myHeight.text),3);
+					mySpine.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(mySpine.text),3);
+					myBleed.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myBleed.text),3);
+					myFlapQB.text   = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myFlapQB.text),3);
+					myHinge.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myHinge.text),3);
+					myFold.text     = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myFold.text),3);
+					break;
+				default:
+					alert("Unable to convert values");
+			}
+		}
+
+		if(myApp.Settings.autoload_last_used_settings){
+			presets.selection = MyPresets.presets.length;
+		}
+
+		myWindow.show();
+
+		return C;
+	}
+	////////////
+	// expose //
+	////////////
+  	return {
+		CoverOrder : CoverOrder
+	};
+})();
