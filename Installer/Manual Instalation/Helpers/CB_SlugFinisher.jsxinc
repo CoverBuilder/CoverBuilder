@@ -4,7 +4,7 @@
 
 	CB_SlugFinisher.jsx    			(A CoverBuilder Helper Script)
 	An InDesign CS5 Javascript      (Tested in CS6)
-	Version 1
+	Version 1.1
 
 	Bruno Herfst 2013-2014
 
@@ -43,14 +43,16 @@
 		var myDoc = myApp.Core.getActiveCover(myApp);
 		var myPage = app.activeWindow.activeSpread.pages[2];
 		if(myPage.isValid){
-			var myTextFrame = myApp.Slugs.fetchItem(myPage,"finish");
-			if(myTextFrame == null){
-				myTextFrame = createFrame(app.activeWindow.activeSpread);
-			}
-			setText(myApp,myDoc,myTextFrame);
+			var swatchOBJ = finischUI(getSpotSwatches(myDoc));
+			if(swatchOBJ != undefined){
+				var myTextFrame = myApp.Slugs.fetchItem(myPage,"finish");
+				if(myTextFrame == null){
+					myTextFrame = createFrame(app.activeWindow.activeSpread);
+				}
+				setText(myApp,myDoc,myTextFrame, swatchOBJ);
+			} // else user canceled
 		} else {
-			// Ask to create one?
-			alert("Could not find textframe with label 'finish'");
+			alert("Could not find front cover.");
 		}
 	}
 
@@ -190,8 +192,7 @@
 		}
 	}
 
-	function setText(myApp,myDoc,tf) {
-		var swatchOBJ = finischUI(getSpotSwatches(myDoc));
+	function setText(myApp,myDoc,tf, swatchOBJ) {
 		var tempString = "";
 		var first = true;
 		tf.contents = "";
