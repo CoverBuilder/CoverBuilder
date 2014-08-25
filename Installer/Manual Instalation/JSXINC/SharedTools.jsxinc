@@ -212,6 +212,9 @@
     function reportBug(){
         visitURL("https://github.com/GitBruno/CoverBuilder/issues");
     }
+    function createBarcode(){
+        visitURL("http://barcode.brunoherfst.com/");
+    }
 
     ////////////
     // expose //
@@ -232,6 +235,7 @@
         sameKeys       : sameKeys,
         // Link Jumpers
         reportBug      : reportBug,
+        createBarcode  : createBarcode,
         emailTo        : emailTo,
         visitURL       : visitURL
     };
