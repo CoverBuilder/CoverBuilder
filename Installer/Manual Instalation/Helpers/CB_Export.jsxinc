@@ -34,9 +34,8 @@
 	//////////////
 	// privates //
 	//////////////
-	var myPresets = { thisVersion : "V1.3", preflight : true };
+	var myPresets = { thisVersion : "V1.4", preflight : true };
 	var myErrr = false;
-
 
 	// START DIALOG ------------------------------------------------------------
 	function getOrders() {
@@ -68,7 +67,7 @@
 	            td00.orientation = "column";
 	            td00.alignChildren = "right";
 	            var whichSpread = td00.add ("dropdownlist",   [0,0,150,20], ["All Spreads","Current Spread"]);
-	            	whichSpread.selection = 0;
+	            	whichSpread.selection = 1;
 	            td00.add ("statictext", [0,0,150,20], "PDF Press-Ready");
 	            td00.add ("statictext", [0,0,150,20], "PDF High-Res");
 	            td00.add ("statictext", [0,0,150,20], "JPG High-Res");
@@ -106,16 +105,81 @@
 	                orders.splice (order, 1);
 	            }
 	        }
+	        myPresets.pageCount = myPresets.doc.pages.length;
+	        myPresets.spreadCount = myPresets.doc.spreads.length;
+
 	        if(whichSpread.selection == 0){
 	        	myPresets.pageRange = "All";
+	        	myPresets.allSpreads = true;
 	        } else {
-	        	var myPages = app.activeWindow.activeSpread.pages;
+	        	myPresets.currSpread = app.activeWindow.activeSpread;
+	        	var myPages = myPresets.currSpread.pages;
 	        	myPresets.pageRange = myPages[0].name + "-" + myPages[-1].name;
+	        	myPresets.allSpreads = false;
 	        }
 	    }
 	    return orders;
 	}
 	// END DIALOG --------------------------------------------------------------
+
+	function updatePageRange(myPresets){
+		if(myPresets.allSpreads){
+			var range = function(start, end, step) {
+				var range = [];
+				var typeofStart = typeof start;
+				var typeofEnd = typeof end;
+				if (step === 0) {
+					throw TypeError("Step cannot be zero.");
+				}
+				if (typeofStart == "undefined" || typeofEnd == "undefined") {
+					throw TypeError("Must pass start and end arguments.");
+				} else if (typeofStart != typeofEnd) {
+					throw TypeError("Start and end arguments must be of same type.");
+				}
+				typeof step == "undefined" && (step = 1);
+
+				if (end < start) {
+					step = -step;
+				}
+				if (typeofStart == "number") {
+
+					while (step > 0 ? end >= start : end <= start) {
+						range.push(start);
+						start += step;
+					}
+				} else if (typeofStart == "string") {
+
+					if (start.length != 1 || end.length != 1) {
+						throw TypeError("Only strings with one character are supported.");
+					}
+					start = start.charCodeAt(0);
+					end = end.charCodeAt(0);
+
+					while (step > 0 ? end >= start : end <= start) {
+						range.push(String.fromCharCode(start));
+						start += step;
+					}
+				} else {
+					throw TypeError("Only string and number types are supported");
+				}
+				return range;
+			}
+
+			var pageStepper = myPresets.CVR1PN;
+			if(pageStepper == 4){
+				//book has flaps and CVR 1 is not the last page in spread
+				pageStepper += 1;
+			}
+
+			var pagesToExport = range(myPresets.CVR1PN, myPresets.pageCount, pageStepper);
+			alert(pagesToExport);
+			myPresets.pageRange = pagesToExport.toString(); //Needs to be string
+
+		} else {
+			myPresets.pageRange = myPresets.currSpread.pages[myPresets.CVR1PN-1].name;
+		}
+		return myPresets;
+	}
 
 	function seperate(myFileName,extension) {
 	    if (extension == true){
@@ -299,9 +363,11 @@
 	    //////////////
 	    //-----------START PAGERANGE
 	    if(myPresets.order.name.match(/CVR1/)){
-	        pdfpref.pageRange = "3";
-	        pdfpref.exportReaderSpreads         = false;
-	        pdfpref.useDocumentBleedWithPDF     = false;
+			myPresets = updatePageRange(myPresets);
+			pdfpref.pageRange                 = myPresets.pageRange
+	        pdfpref.exportReaderSpreads       = false;
+	        pdfpref.useDocumentBleedWithPDF   = false;
+
 	        if(documentName.match(/CVR/)){
 	            documentName = documentName.replace(/CVR/g,"CVR1");
 	        } else {
@@ -378,8 +444,9 @@
 	    //////////////
 	    //-----------START PAGERANGE
     	if(myPresets.order.name.match(/CVR1/)){
+    		myPresets = updatePageRange(myPresets);
 	        jpgpref.jpegExportRange         = ExportRangeOrAllPages.EXPORT_RANGE;
-	        jpgpref.pageString              = "3";
+	        jpgpref.pageString              = myPresets.pageRange;
 	        jpgpref.exportingSpread         = false;
 	        if(myPresets.documentName.match(/CVR/)){
 	            documentName.replace(/CVR/,"CVR1");
@@ -414,7 +481,8 @@
 	function exportCover(myApp){
 		//Make certain that user interaction (display of dialogs, etc.) is turned on.
     	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
-    	myPresets.doc = myApp.Core.getActiveCover(myApp);
+    	myPresets.doc    = myApp.Core.getActiveCover(myApp);
+		myPresets.CVR1PN = myApp.Core.getCVR1pageNo(myApp);
 
         if(myPresets.preflight) {
             try{

@@ -59,6 +59,19 @@
         }
         return myCover;
     }
+
+    function getCVR1pageNo(myApp){
+    	var myCover = myApp.Core.getActiveCover(myApp);
+    	var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+    	if(C.flap > 0){
+    		return 4;
+    	} else if (C.binding > 0){
+    		return 5;
+    	} else {
+    		return 3;
+    	}
+    }
+
     //-----------------------------------------------------------------------------------
     //  COLOUR TOOLS
     //-----------------------------------------------------------------------------------
@@ -105,6 +118,7 @@
         getSelectAndMoveLayer : getSelectAndMoveLayer,
         // PageTools
         getActiveCover        : getActiveCover,
+        getCVR1pageNo         : getCVR1pageNo,
         // ColourTools
         addColor              : addColor
     };
