@@ -40,8 +40,9 @@
 	}];
 
 	function go(myApp) {
-		var myDoc = myApp.Core.getActiveCover(myApp);
-		var myPage = app.activeWindow.activeSpread.pages[2];
+		var myDoc  = myApp.Core.getActiveCover(myApp);
+		var CVR1PN = myApp.Core.getCVR1pageNo(myApp);
+		var myPage = app.activeWindow.activeSpread.pages[CVR1PN-1];
 		if(myPage.isValid){
 			var swatchOBJ = finischUI(getSpotSwatches(myDoc));
 			if(swatchOBJ != undefined){
