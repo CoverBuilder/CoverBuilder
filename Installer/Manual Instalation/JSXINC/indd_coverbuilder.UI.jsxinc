@@ -159,7 +159,8 @@
 			var presetBut = myButtonGroup.add ("button", undefined, savePS);
 			//OK CANCEL buttons
 			var cancelBut = myButtonGroup.add ("button", undefined, "Cancel");
-			var buildBut = myButtonGroup.add ("button", undefined, "Build");
+			var buildBut = myButtonGroup.add ("button", undefined, "OK");
+            
 		///////////////////////////////////////////////////////////////////////////// END WINDOW
 
 		////////////// dialog functionality
