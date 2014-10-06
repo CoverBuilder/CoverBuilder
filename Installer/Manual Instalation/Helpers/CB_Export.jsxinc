@@ -172,7 +172,7 @@
 			}
 
 			var pagesToExport = range(myPresets.CVR1PN, myPresets.pageCount, pageStepper);
-			alert(pagesToExport);
+
 			myPresets.pageRange = pagesToExport.toString(); //Needs to be string
 
 		} else {
