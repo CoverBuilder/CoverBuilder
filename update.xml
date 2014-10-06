@@ -1,9 +1,12 @@
 <ExtensionUpdateInformation>
-	<version>2.9.2</version>
-	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_292.zxp</download>
+	<version>2.9.3</version>
+	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_293.zxp</download>
 	<description url="http://coverbuilder.brunoherfst.com">
 	<![CDATA[
-	        Added wrap support.
+	        Build button the default active one.
+	        Introduce Save As menu item.
+	        Introduce Barcode Creator as menu item.
+	        Added plugin sample.
 			Minor bug-fixes.
 		]]>
 	</description>
