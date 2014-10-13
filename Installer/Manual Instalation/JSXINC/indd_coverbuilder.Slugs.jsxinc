@@ -105,9 +105,10 @@
 	}
 
 	function fetchPage(myApp, myCover, myName, myPage){
-		var mPage = new Object(); //master spine
-		mPage.name = myName;
-		mPage.page = myCover.masterSpreads.item(mPage.name).pages[myPage];
+		var mPage    = new Object(); //master spine
+		mPage.name   = myName;
+		mPage.spread = myCover.masterSpreads.item(mPage.name);
+		mPage.page   = mPage.spread.pages[myPage];
 
 		if(!mPage.page.isValid){
 			alert("Can’t find the requested page!\nWhat happend to master spread "+mPage.name+"?");
@@ -155,7 +156,6 @@
 				//lock
 				myLayer.locked = true;
 			}
-
 			resetHeight(myApp,myCover);
 		} else {
 			alert("Could not find layer "+myLayerName);
@@ -164,25 +164,49 @@
 	}
 
 	function resetHeight(myApp,myCover){
-		var CVR4 = fetchPage(myApp, myCover, "CB-cover", 0);
-		var groupFix = fetchItem(CVR4.page, "forcePageHeightGroup");
-		var myLayer = groupFix.itemLayer;
-		if(myLayer.isValid){
-			//check if it is locked
-			var myLock = myLayer.locked;
-			if(myLock){
-				//unlock
-				myLayer.locked = false;
-			}
-			var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
-			groupFix.remove();
-			doHeight(myApp, myCover, myParaS);
-			if(myLock){
-				//lock
-				myLayer.locked = true;
-			}
+        try {
+            var CVR4 = fetchPage(myApp, myCover, "CB-cover", 0);
+            var groupFix = fetchItem(CVR4.page, "forcePageHeightGroup");
+            var myLayer = groupFix.itemLayer;
+            if(myLayer.isValid){
+                //check if it is locked
+                var myLock = myLayer.locked;
+                if(myLock){
+                    //unlock
+                    myLayer.locked = false;
+                }
+                var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
+                groupFix.remove();
+                doHeight(myApp, myCover, myParaS);
+                if(myLock){
+                    //lock
+                    myLayer.locked = true;
+                }
+            }
+		} catch(e) {
+		    removeOldMeasurements(myApp, myCover,["CB-WxH","CB-spine","CB-cover"]);
+		    try{
+		        var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
+		        doHeight(myApp, myCover, myParaS);
+		    } catch(e) {
+		        alert(e.description);
+		    }
 		}
 	}
+	function removeOldMeasurements(myApp, myCover, masters){
+	    for (var m=0; masters.length > m; m++){
+            // get ref to first page
+            var mys    = fetchPage(myApp, myCover, masters[m], 0); // my spread
+            var allpg  = mys.spread.allPageItems; // all pages
+            for (var pp=0; allpg.length > pp; pp++){
+                try{
+                    var myi = fetchItem(allpg[pp], "pageHeight");
+                        myi.remove();
+                }catch(nothing){};
+            }
+	    }
+	}
+	
 	////////////
 	// expose //
 	////////////
