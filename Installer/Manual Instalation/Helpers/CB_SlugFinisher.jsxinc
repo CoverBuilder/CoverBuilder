@@ -102,6 +102,8 @@
 		var mySpotCheckboxes = new Array();
 		var myCMYKCheckboxes = new Array();
 		var myFinishRadio = null;
+		var myNoteCheckbox = null;
+		var myNoteTextField = null;
 
 		var myDialog = app.dialogs.add({
 			name: "Insert Colours and Finish",
@@ -159,6 +161,16 @@
 							}
 						}
 					}
+					// C U S T O M
+					with(borderPanels.add()) {
+						myNoteCheckbox = checkboxControls.add({
+									staticLabel: "NOTE:",
+									checkedState: false
+								});
+						with(dialogColumns.add()) {
+							myNoteTextField = textEditboxes.add();
+						}
+					}
 				}
 			}
 		}
@@ -185,10 +197,16 @@
 			if (myFinishRadio.selectedButton >= 0) {
 				myFinishSelect.push(myFinishes[myFinishRadio.selectedButton].name);
 			}
+			//Get Finish
+			var myNoteText = new Array();
+			if (myNoteCheckbox.checkedState == true) {
+				myNoteText.push(myNoteTextField.editContents);
+			}
 			return {
 				process: processSwatches,
-				spot: spotSwatches,
-				finish: myFinishSelect
+				spot:    spotSwatches,
+				finish:  myFinishSelect,
+				note:    myNoteText
 			}
 		}
 	}
@@ -220,7 +238,7 @@
 					tf.insertionPoints[-1]);
 				addonText.fillColor = "CB_" + swatchOBJ.process[i];
 				addonText.fontStyle = "Bold";
-				var first = false;
+				first = false;
 			}
 		}
 
@@ -241,7 +259,7 @@
 					tf.insertionPoints[-1]);
 				addonText.fillColor = swatchOBJ.spot[i];
 				addonText.fontStyle = "Bold";
-				var first = false;
+				first = false;
 			}
 		}
 		if (swatchOBJ.finish.length > 0) {
@@ -261,10 +279,26 @@
 					tf.insertionPoints[-1]);
 				addonText.fillColor = "Registration";
 				addonText.fontStyle = "Regular";
-				var first = false;
+				first = false;
 			}
 		}
-
+		if (swatchOBJ.note.length > 0) {
+			if (!first) {
+				insertPoint = tf.insertionPoints[-1].index;
+				tf.contents += " + ";
+				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+					tf.insertionPoints[-1]);
+				addonText.fillColor = "Registration";
+				addonText.fontStyle = "Regular";
+			}
+			insertPoint = tf.insertionPoints[-1].index;
+			tf.contents += swatchOBJ.note[0];
+			addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+				tf.insertionPoints[-1]);
+			addonText.fillColor = "Registration";
+			addonText.fontStyle = "Bold";
+			first = false;
+		}
 	}
 	////////////
 	// expose //
