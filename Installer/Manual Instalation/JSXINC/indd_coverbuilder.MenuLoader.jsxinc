@@ -1,5 +1,6 @@
 // CoverBuilder Helpers
 // Bruno Herfst 2014
+// Version 2.0.1
 
 (function() {
 	//////////////
@@ -9,36 +10,41 @@
 	// the corresponding menu actions if script files are available
 	// http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
 	function loadHelperMenu (FEATURES, MENU_NAME, APP) {
+		
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		// NEW COVER INSTALLER
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-		var cbHandlers = {
-			'onInvoke' : function(){
-				//prevent undo
-				if( 6 > parseFloat(app.version) ) {
-					APP.GO();
-				} else {
-					app.doScript(APP.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
-				}
-			}};
+		try{
+            var cbHandlers = {
+                'onInvoke' : function(){
+                    //prevent undo
+                    if( 6 > parseFloat(app.version) ) {
+                        APP.GO();
+                    } else {
+                        app.doScript(APP.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
+                    }
+                }};
 
-		var cbMenuInstaller = cbMenuInstaller||
-		(function(mnuHandlers) {
+            var cbMenuInstaller = cbMenuInstaller||
+            (function(mnuHandlers) {
 
-			var mnuAction = app.scriptMenuActions.add("Cover...");
-			var ev;
-			for( ev in mnuHandlers )
-				{
-				mnuAction.eventListeners.add(ev,mnuHandlers[ev]);
-				}
+                var mnuAction = app.scriptMenuActions.add("Cover...");
+                var ev;
+                for( ev in mnuHandlers )
+                    {
+                    mnuAction.eventListeners.add(ev,mnuHandlers[ev]);
+                    }
 
-			var fileMenu = app.menus.item("$ID/Main").submenus.item("$ID/&File").submenus.item("$ID/&New");
-			var refItem = fileMenu.menuItems.item("$ID/&Document...");
+                var fileMenu = app.menus.item("$ID/Main").submenus.item("$ID/&File").submenus.item("$ID/&New");
+                var refItem = fileMenu.menuItems.item("$ID/Document...");
 
-			fileMenu.menuItems.add(mnuAction,LocationOptions.after,refItem);
+                fileMenu.menuItems.add(mnuAction,LocationOptions.after,refItem);
 
-			return true;
-		})(cbHandlers);
+                return true;
+            })(cbHandlers);
+        } catch (e) {
+            // Don't tell the germans
+        }
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		// END NEW COVER INSTALLER
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
