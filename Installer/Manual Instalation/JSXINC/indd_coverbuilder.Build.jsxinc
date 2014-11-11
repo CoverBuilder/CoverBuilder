@@ -29,7 +29,7 @@
 		}
 		return thisM;
 	}
-	function cover(C, myApp){
+	function cover(myApp, C){
 		if(C.measureUnit == 1){ //convert inches to mm as coverbuilder can’t handle inches yet
 			C.width   *= 25.4;
 			C.height  *= 25.4;

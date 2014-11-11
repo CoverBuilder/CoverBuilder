@@ -10,7 +10,7 @@
 	// the corresponding menu actions if script files are available
 	// http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
 	function loadHelperMenu (FEATURES, MENU_NAME, APP) {
-		
+
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		// NEW COVER INSTALLER
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

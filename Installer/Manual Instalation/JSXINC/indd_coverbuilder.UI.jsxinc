@@ -5,13 +5,24 @@
 	//////////////
 	// privates //
 	//////////////
-	function CoverOrder(myApp){
-		var C = null; // The Cover Object this function will return
+	function CoverOrder(myApp, CoverObject){
+		// The Cover Object this function will return
+		var C = null;
+
 		var presetChange = false;
 		var savePS    = myApp.STools.ButtonTXT.savePS;
         var clearPS   = myApp.STools.ButtonTXT.clearPS;
         var MarginObj = myApp.STools.MarginObj;
 		var MyPresets = myApp.STools.getPresets(myApp);
+
+		var LoadCoverObject = false;
+		var CoverObject = CoverObject || null;
+		if(CoverObject != null){
+			// Try and load settings!
+			LoadCoverObject = true;
+			var Cool = myApp.STools.Cparser(myApp, CoverObject);
+		}
+
 		var f = myApp.STools.getFile(myApp.PathTo.preferences);
 
 	    //////////////
@@ -160,54 +171,58 @@
 			//OK CANCEL buttons
 			var cancelBut = myButtonGroup.add ("button", undefined, "Cancel");
 			var buildBut = myButtonGroup.add ("button", undefined, "OK");
-            
+
 		///////////////////////////////////////////////////////////////////////////// END WINDOW
 
 		////////////// dialog functionality
 		buildBut.onClick = function () {
-			var ms = parseFloat(mySpine.text);
-			var mw = parseFloat(myWidth.text);
-			var mh = parseFloat(myHeight.text);
-			var mm = "mm";
-			var noprobs = true;
-			if(flapQBDropdown.selection != 0){
-				 var thisQB = parseFloat(myFlapQB.text);
-				 if(thisQB < parseFloat(myHinge.text) && thisQB != 0){
-					 noprobs = false;
-				  }
-			 }
-			switch(mminch.selection.text){
-				case "mm":
-					var minSize = 0.5;
-					break;
-				case "inch":
-					var mm = "inch";
-					var minSize = myApp.NumCon.doRound(myApp.NumCon.mm2inch(0.5), 3);
-					break
-			}
-			if(noprobs){
-				if(ms >= minSize && mw >= minSize && mh >= minSize){
-					// Let's safe these settings to Last Used preset
-					// Easiest to start from scratch and delete any "Last Used" objects in presets array
-					var plen = MyPresets.presets.length-1;
-					for (var i = 0; i <= plen; i++) {
-						if(MyPresets.presets[i].name == "-Last Used-"){
-							MyPresets.presets.splice(i,1);
-							//delete MyPresets.presets[i];
-						}
-					}
-					if(add2Presets("-Last Used-")){
-						myApp.JSON.saveFile(myApp, MyPresets, f);
-						C = MyPresets.presets[MyPresets.presets.length-1];
-					} else {
-						alert("Sorry!\nI'm having trouble saving last used settings");
-					}
-					myWindow.close();
-				} else {
-					alert("SPINE, WIDTH and HEIGHT should be at least "+minSize+" "+mm);
+			try{
+				var ms = parseFloat(mySpine.text);
+				var mw = parseFloat(myWidth.text);
+				var mh = parseFloat(myHeight.text);
+				var mm = "mm";
+				var noprobs = true;
+				if(flapQBDropdown.selection != 0){
+					 var thisQB = parseFloat(myFlapQB.text);
+					 if(thisQB < parseFloat(myHinge.text) && thisQB != 0){
+						 noprobs = false;
+					  }
+				 }
+				switch(mminch.selection.text){
+					case "mm":
+						var minSize = 0.5;
+						break;
+					case "inch":
+						var mm = "inch";
+						var minSize = myApp.NumCon.doRound(myApp.NumCon.mm2inch(0.5), 3);
+						break
 				}
-			} else {
-				alert("Quarter Binding should cover the hinge.");
+				if(noprobs){
+					if(ms >= minSize && mw >= minSize && mh >= minSize){
+						// Let's safe these settings to Last Used preset
+						// Easiest to start from scratch and delete any "Last Used" objects in presets array
+						var plen = MyPresets.presets.length-1;
+						for (var i = 0; i <= plen; i++) {
+							if(MyPresets.presets[i].name == "-Last Used-"){
+								MyPresets.presets.splice(i,1);
+								//delete MyPresets.presets[i];
+							}
+						}
+						if(add2Presets("-Last Used-")){
+							myApp.JSON.saveFile(myApp, MyPresets, f);
+							C = MyPresets.presets[MyPresets.presets.length-1];
+						} else {
+							alert("Sorry!\nI'm having trouble saving last used settings");
+						}
+						myWindow.close();
+					} else {
+						alert("SPINE, WIDTH and HEIGHT should be at least "+minSize+" "+mm);
+					}
+				} else {
+					alert("Quarter Binding should cover the hinge.");
+				}
+			} catch(err){
+				alert(err);
 			}
 		}
 		presetBut.onClick = function () {
@@ -527,6 +542,47 @@
 			return "error";
 		}
 
+		function loadUIdata(thisC){
+			// This function loads a Cover object into the menu
+			mminch.selection        = thisC.measureUnit;
+			myWidth.text            = thisC.width;
+			myHeight.text           = thisC.height;
+			mySpine.text            = thisC.spine;
+			myBleed.text            = thisC.bleed;
+			hingeDropdown.selection = thisC.inExCludeHinge;
+			myHinge.text            = thisC.hinge;
+			wrapDropdown.selection  = thisC.inExCludeWrap;
+			myWrap.text             = thisC.wrap;
+			foldDropdown.selection  = thisC.inExCludeFold;
+			MarginObj               = thisC.margin;
+			marginBut.text          = marginButPreset;
+			updateMarginText();
+
+			if(thisC.binding > 0){
+				foldDropdown.visible = false;
+				myFold.visible = false;
+				if(thisC.inExCludeQB == 0){
+					flapQBDropdown.selection = 1;
+				} else { //inexclude === 1
+					flapQBDropdown.selection = 2;
+				}
+				myFlapQB.text = thisC.binding;
+			} else {
+				flapQBDropdown.selection = 0;
+				myFlapQB.text = thisC.flap;
+
+				myFold.text = thisC.fold;
+
+				if(myFlapQB.text > 0){
+					myFold.visible = true;
+					foldDropdown.visible = true;
+				} else {
+					myFold.visible = false;
+					foldDropdown.visible = false;
+				}
+			}
+		}
+
 		presets.onChange = function () {
 			presetChange = true;
 			if(presets.selection-1 >= 0){
@@ -536,44 +592,8 @@
 				} else {
 					presetBut.text = savePS;
 				}
-
-				mminch.selection = MyPresets.presets[presets.selection-1].measureUnit;
-				myWidth.text = MyPresets.presets[presets.selection-1].width;
-				myHeight.text = MyPresets.presets[presets.selection-1].height;
-				mySpine.text = MyPresets.presets[presets.selection-1].spine;
-				myBleed.text = MyPresets.presets[presets.selection-1].bleed;
-				hingeDropdown.selection = MyPresets.presets[presets.selection-1].inExCludeHinge;
-				myHinge.text = MyPresets.presets[presets.selection-1].hinge;
-				wrapDropdown.selection = MyPresets.presets[presets.selection-1].inExCludeWrap;
-				myWrap.text = MyPresets.presets[presets.selection-1].wrap;
-				foldDropdown.selection = MyPresets.presets[presets.selection-1].inExCludeFold;
-				MarginObj = MyPresets.presets[presets.selection-1].margin;
-				marginBut.text = marginButPreset;
-				updateMarginText();
-
-				if(MyPresets.presets[presets.selection-1].binding > 0){
-					foldDropdown.visible = false;
-					myFold.visible = false;
-					if(MyPresets.presets[presets.selection-1].inExCludeQB == 0){
-						flapQBDropdown.selection = 1;
-					} else { //inexclude === 1
-						flapQBDropdown.selection = 2;
-					}
-					myFlapQB.text = MyPresets.presets[presets.selection-1].binding;
-				} else {
-					flapQBDropdown.selection = 0;
-					myFlapQB.text = MyPresets.presets[presets.selection-1].flap;
-
-					myFold.text = MyPresets.presets[presets.selection-1].fold;
-
-					if(myFlapQB.text > 0){
-						myFold.visible = true;
-						foldDropdown.visible = true;
-					} else {
-						myFold.visible = false;
-						foldDropdown.visible = false;
-					}
-				}
+				// Loading presets in UI
+				loadUIdata(MyPresets.presets[presets.selection-1]);
 			} else {
 				presetBut.text = savePS;
 			}
@@ -727,7 +747,10 @@
 			}
 		}
 
-		if(myApp.Settings.autoload_last_used_settings){
+		if(LoadCoverObject){
+			// Fill the dialog with data
+			loadUIdata(Cool);
+		} else if(myApp.Settings.autoload_last_used_settings){
 			presets.selection = MyPresets.presets.length;
 		}
 

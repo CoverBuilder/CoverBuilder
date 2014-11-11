@@ -1,0 +1,38 @@
+
+/*
+
+--------------------------------------------
+
+	CB_LoadSettingsDoc.jsxinc   (A CoverBuilder Helper Script)
+	An InDesign CS5 Javascript      (Tested in CS6)
+	Version 0.1 Alpha
+
+	Bruno Herfst 2014
+
+	This script loads settings from current document into coverbuilder
+
+--------------------------------------------
+
+*/
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+
+	function loadsettings(myApp) {
+		var myCover = myApp.Core.getActiveCover(myApp);
+		var C = myApp.UI.CoverOrder(myApp, myApp.XMP.retrieveCoverObject(myApp, myCover));
+		if(C != null){
+			myApp.Build.cover(myApp, C);
+		}
+	}
+
+	////////////
+	// expose //
+	////////////
+	return {
+		loadsettings : loadsettings
+	};
+
+})();

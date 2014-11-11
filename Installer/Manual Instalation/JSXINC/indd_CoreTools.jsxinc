@@ -43,7 +43,7 @@
         app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
 
         if (app.documents.length <= 0) {
-            alert("Open a cover before using this script.");
+            alert("Open a cover before using this function.");
             exit();
         }
 
