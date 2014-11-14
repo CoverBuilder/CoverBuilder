@@ -20,197 +20,211 @@
     var PresetObj = {"presets": [
             {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
             {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
-			{name:"-Last Used-", width:0, height:0, spine: 0, ppi:0, bleed:0, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0}
+            {name:"-Last Used-", width:0, height:0, spine: 0, ppi:0, bleed:0, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0}
         ]};
 
-	function Cparser(myApp, C){
-		if( C !== null && typeof C === 'object' ){
-			// This function tries to create a valid C object from a C object from an older version.
-			// TODO: Make a Margin validator
-			var Cool = {
-				name:           (String(     C.name)           || "Undefined"),
-				width:          (parseFloat( C.width)          || 0),
-				height:         (parseFloat( C.height)         || 0),
-				spine:          (parseFloat( C.spine)          || 0),
-				ppi:            (parseInt(   C.ppi)            || 600),
-				bleed:          (parseFloat( C.bleed)          || 0),
-				hinge:          (parseFloat( C.hinge)          || 0),
-				inExCludeHinge: (parseFloat( C.inExCludeHinge) || 0),
-				binding:        (parseFloat( C.binding)        || 0),
-				inExCludeQB:    (parseInt(   C.inExCludeQB)    || 0),
-				flap:           (parseFloat( C.flap)           || 0),
-				fold:           (parseFloat( C.fold)           || 0),
-				inExCludeFold:  (parseInt(   C.inExCludeFold)  || 0),
-				wrap:           (parseFloat( C.wrap)           || 0),
-				inExCludeWrap:  (parseInt(   C.inExCludeWrap)  || 0),
-				margin:         (C.margin                      || MarginObj),
-				measureUnit:    (parseInt(   C.measureUnit)    || 0)
-			}
-			//alert(myApp.JSON.stringify(C));
-			//alert(myApp.JSON.stringify(Cool));
-			return Cool;
-		}
-		return null
-	}
+    function Cparser(myApp, C){
+        if( C !== null && typeof C === 'object' ){
+            // This function tries to create a valid C object from a C object from an older version.
+            // TODO: Make a Margin validator
+            var Cool = {
+                name:           (String(     C.name)           || "undefined"),
+                width:          (parseFloat( C.width)          || 0),
+                height:         (parseFloat( C.height)         || 0),
+                spine:          (parseFloat( C.spine)          || 0),
+                ppi:            (parseInt(   C.ppi)            || 600),
+                bleed:          (parseFloat( C.bleed)          || 0),
+                hinge:          (parseFloat( C.hinge)          || 0),
+                inExCludeHinge: (parseFloat( C.inExCludeHinge) || 0),
+                binding:        (parseFloat( C.binding)        || 0),
+                inExCludeQB:    (parseInt(   C.inExCludeQB)    || 0),
+                flap:           (parseFloat( C.flap)           || 0),
+                fold:           (parseFloat( C.fold)           || 0),
+                inExCludeFold:  (parseInt(   C.inExCludeFold)  || 0),
+                wrap:           (parseFloat( C.wrap)           || 0),
+                inExCludeWrap:  (parseInt(   C.inExCludeWrap)  || 0),
+                margin:         (C.margin                      || MarginObj),
+                measureUnit:    (parseInt(   C.measureUnit)    || 0)
+            }
+            //alert(myApp.JSON.stringify(C));
+            //alert(myApp.JSON.stringify(Cool));
+            return Cool;
+        }
+        return null
+    }
 
-	//-----------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------
     //  PRESET TOOLS validator
     //-----------------------------------------------------------------------------------
-	function sameProps( induceObj, sampleObj ) {
-		if (!Object.keys) {
-			Object.keys = (function () {
-				'use strict';
-				var hasOwnProperty = Object.prototype.hasOwnProperty,
-				hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
-				dontEnums = [
-					'toString',
-					'toLocaleString',
-					'valueOf',
-					'hasOwnProperty',
-					'isPrototypeOf',
-					'propertyIsEnumerable',
-					'constructor'
-					],
-				dontEnumsLength = dontEnums.length;
+    function sameProps( induceObj, sampleObj ) {
+        if (!Object.keys) {
+            Object.keys = (function () {
+                'use strict';
+                var hasOwnProperty = Object.prototype.hasOwnProperty,
+                hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+                dontEnums = [
+                    'toString',
+                    'toLocaleString',
+                    'valueOf',
+                    'hasOwnProperty',
+                    'isPrototypeOf',
+                    'propertyIsEnumerable',
+                    'constructor'
+                    ],
+                dontEnumsLength = dontEnums.length;
 
-				return function (obj) {
-					if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
-						throw new TypeError('Object.keys called on non-object');
-					}
+                return function (obj) {
+                    if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+                        throw new TypeError('Object.keys called on non-object');
+                    }
 
-					var result = [], prop, i;
+                    var result = [], prop, i;
 
-					for (prop in obj) {
-						if (hasOwnProperty.call(obj, prop)) {
-							result.push(prop);
-						}
-					}
+                    for (prop in obj) {
+                        if (hasOwnProperty.call(obj, prop)) {
+                            result.push(prop);
+                        }
+                    }
 
-					if (hasDontEnumBug) {
-						for (i = 0; i < dontEnumsLength; i++) {
-							if (hasOwnProperty.call(obj, dontEnums[i])) {
-								result.push(dontEnums[i]);
-							}
-						}
-					}
-					return result;
-				};
-			}());
-		}
+                    if (hasDontEnumBug) {
+                        for (i = 0; i < dontEnumsLength; i++) {
+                            if (hasOwnProperty.call(obj, dontEnums[i])) {
+                                result.push(dontEnums[i]);
+                            }
+                        }
+                    }
+                    return result;
+                };
+            }());
+        }
 
-		var induceProps = Object.keys( induceObj ),
-			sampleProps = Object.keys( sampleObj );
+        var induceProps = Object.keys( induceObj ),
+            sampleProps = Object.keys( sampleObj );
 
-		if ( induceProps.length == sampleProps.length ) {
-			for (key in induceObj) {
-				if (sampleObj.hasOwnProperty(key)) {
-					if(induceObj[key].constructor != sampleObj[key].constructor){
-						return false;
-					}
-					switch(induceObj[key].constructor){
-						case Object:
-							if(!sameProps( induceObj[key], sampleObj[key])){
-								return false;
-							}
-							break;
-						case Array:
-							if(!sameKeys( induceObj[key], sampleObj[key])){
-								return false;
-							}
-							break;
-						default:
-							//do nothing
-					}
-				} else {
-					return false;
-				}
-			}
-		} else {
-			return false;
-		}
-		// Seems OK
-		return true;
-	}
+        if ( induceProps.length == sampleProps.length ) {
+            for (key in induceObj) {
+                if (sampleObj.hasOwnProperty(key)) {
+                    if(induceObj[key].constructor != sampleObj[key].constructor){
+                        return false;
+                    }
+                    switch(induceObj[key].constructor){
+                        case Object:
+                            if(!sameProps( induceObj[key], sampleObj[key])){
+                                return false;
+                            }
+                            break;
+                        case Array:
+                            if(!sameKeys( induceObj[key], sampleObj[key])){
+                                return false;
+                            }
+                            break;
+                        default:
+                            //do nothing
+                    }
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+        // Seems OK
+        return true;
+    }
 
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS get
     //-----------------------------------------------------------------------------------
     function getFile(filePath){
-    	var f = File(filePath);
-		if(!f.exists){
-			alert("Can't find file: " + myApp.PathTo.preferences);
-		} else {
-			return f;
-		}
+        var f = File(filePath);
+        if(!f.exists){
+            alert("Can't find file: " + myApp.PathTo.preferences);
+        } else {
+            return f;
+        }
     }
     function getPresets(myApp){
-		//read presets file
-		var f = File(myApp.PathTo.preferences);
+        //read presets file
+        var f = File(myApp.PathTo.preferences);
 
-		function resetPresets(){
-			return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, PresetObj);
-		}
+        function resetPresets(){
+            return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, PresetObj);
+        }
 
-		if(!f.exists){
-		    resetPresets();
-		}
+        if(!f.exists){
+            // file does not exist: create it!
+            myApp.JSON.saveFile(myApp, PresetObj, f);
+        }
 
-		try {
-			f.open('r');
-			var jsontext = f.read();
-			f.close();
-		} catch(e){
-			alert(e.description);
-		}
+        try {
+            f.open('r');
+            var jsontext = f.read();
+            f.close();
+        } catch(e){
+            alert(e.description);
+        }
 
-		//if it’s there parse it, otherwise create file
-		if (jsontext) {
-			try{
-			   MyPresets = myApp.JSON.parse(jsontext);
-			} catch(e) {
-				MyPresets = resetPresets();
-			}
-			// validate presets
-			var cp = sameProps(MyPresets, PresetObj);
-			if(cp != true){ //reset presets
-				MyPresets = resetPresets();
-			}
-		} else { //file does not exist
-			myApp.JSON.saveFile(myApp, PresetObj, f);
-			MyPresets = PresetObj;
-		}
-		return MyPresets;
-	}
+        //if it’s there parse it, otherwise create file
+        if (jsontext) {
+            try{
+                MyPresets = myApp.JSON.parse(jsontext);
+            } catch(e) {
+                MyPresets = resetPresets();
+            }
+            // validate presets
+            var cp = sameProps(MyPresets, PresetObj);
+            if(cp != true){                                         // Presets are not valid or out of date
+                MyPresets = updatePresets(myApp, MyPresets, f);     // Let's try and update them!
+            }
+        } else { //file not valid
+            MyPresets = resetPresets();
+        }
+        return MyPresets;
+    }
+    function updatePresets(myApp, MyPresets, f){
+        if (MyPresets.presets !== undefined){
+            // There seems to be presets from an older version
+            // Let's try and get safe previous presets
+            var newPresetObj = {"presets": []};
+            for (i in MyPresets.presets) {
+                newPresetObj.presets.push( myApp.STools.Cparser(myApp, MyPresets.presets[i]) );
+            }
+            if(sameProps(newPresetObj, PresetObj)){
+                return newPresetObj;
+            }
+        }
+        return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, PresetObj);
+    }
 
     //-----------------------------------------------------------------------------------
     //  ARRAY TOOLS
     //-----------------------------------------------------------------------------------
     function sameKeys(induceArr, sampleArr){
-		// Note: we don't care about array length!
-		for (key in induceArr) {
-			 // we can’t have different types of contructors in arrays
-			 // but the array may be longer (That what arrays are for!)
-			if(induceArr[key].constructor == sampleArr[0].constructor){
-				switch(induceArr[key].constructor){
-					case Object:
-						if(!sameProps( induceArr[key], sampleArr[0])){
-							return false;
-						}
-						break;
-					case Array:
-						if(!sameKeys( induceArr[key], sampleArr[0])){
-							return false;
-						}
-						break;
-					default:
-						alert(induceArr[key].constructor);
-						//do nothing
-				}
-			} else { return false; }
-		}
-		// Seems OK
-		return true;
-	}
+        // Note: we don't care about array length!
+        for (key in induceArr) {
+             // we can’t have different types of contructors in arrays
+             // but the array may be longer (That what arrays are for!)
+            if(induceArr[key].constructor == sampleArr[0].constructor){
+                switch(induceArr[key].constructor){
+                    case Object:
+                        if(!sameProps( induceArr[key], sampleArr[0])){
+                            return false;
+                        }
+                        break;
+                    case Array:
+                        if(!sameKeys( induceArr[key], sampleArr[0])){
+                            return false;
+                        }
+                        break;
+                    default:
+                        alert(induceArr[key].constructor);
+                        //do nothing
+                }
+            } else { return false; }
+        }
+        // Seems OK
+        return true;
+    }
     function getIndex(thisItem, thisArray){
         for (var i = 0, j = thisArray.length; i < j; i++) {
             if (thisArray[i] === thisItem) { return i; }

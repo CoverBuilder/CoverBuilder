@@ -208,7 +208,7 @@
 								//delete MyPresets.presets[i];
 							}
 						}
-						if(add2Presets("-Last Used-")){
+						if(add2Presets(myApp, "-Last Used-")){
 							myApp.JSON.saveFile(myApp, MyPresets, f);
 							C = MyPresets.presets[MyPresets.presets.length-1];
 						} else {
@@ -229,7 +229,7 @@
 			if(presetBut.text == 'Save Preset'){
 				//create preset
 				//var newName = prompt("Name:");
-				var cp = add2Presets(prompt("Name:"));
+				var cp = add2Presets(myApp, prompt("Name:"));
 				if(cp == "error"){
 					//User is allready up-to-date!
 				} else if(cp != true){ //reset presets
@@ -480,7 +480,7 @@
 
 		//--------------------------------------------------------------------------------------------------- END MARGIN WINDOW
 
-		function add2Presets(newName){
+		function add2Presets(myApp, newName){
 			if(typeof newName == 'string'){
 				if(newName != "-Last Used-"){
 					//check if newName is allready in list, if so remove the old one
@@ -516,7 +516,6 @@
 						newInExQB++;
 					}
 				}
-
 				MyPresets.presets.push({
 					name: newName,
 					width: myApp.NumCon.NaN20(parseFloat(myWidth.text)),
