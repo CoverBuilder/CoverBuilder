@@ -1,6 +1,7 @@
 // CoreTools for InDesign
 // Indesign helpers for CoverBuilder
 // Bruno Herfst 2014
+// Version 1.0.1
 
 (function() {
     //////////////
@@ -38,12 +39,20 @@
     //-----------------------------------------------------------------------------------
     //  PAGE TOOLS
     //-----------------------------------------------------------------------------------
-    function getActiveCover(myApp){
+    function getActiveCover(myApp, myDoc){
+        // Check if we want to return Active Document if it is not a cover
+        var returnDoc = myDoc || false;
+        if(returnDoc.constructor != Boolean){
+            returnDoc =  false;
+            //I want to know if we receive something unexpected
+            alert("Something went wrong! \nindd_CoreTools.jsxinc -> getActiveCover -> Expected Boolean" );
+        }
+
         //Make certain that user interaction (display of dialogs, etc.) is turned on.
         app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
 
         if (app.documents.length <= 0) {
-            alert("Open a cover before using this function.");
+            alert("Open a document before using this function.");
             exit();
         }
 
@@ -51,25 +60,52 @@
         //check if cover is build with CoverBuilder
         var myOldSpine = myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]");
         if(myOldSpine == "") {
-            var visit = confirm("This document is not build with the latest version of CoverBuilder.\nDo you want to download the latest version now?");
-            if(visit){
-                myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
+            if(!returnDoc){
+                var visit = confirm("This document is not build with the latest version of CoverBuilder.\nDo you want to download the latest version now?");
+                if(visit){
+                    myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
+                }
+                exit();
             }
-            exit();
         }
         return myCover;
     }
 
     function getCVR1pageNo(myApp){
-    	var myCover = myApp.Core.getActiveCover(myApp);
-    	var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-    	if(C.flap > 0){
-    		return 4;
-    	} else if (C.binding > 0){
-    		return 5;
-    	} else {
-    		return 3;
-    	}
+        var myCover = myApp.Core.getActiveCover(myApp);
+        var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+        if(C.flap > 0){
+            return 4;
+        } else if (C.binding > 0){
+            return 5;
+        } else {
+            return 3;
+        }
+    }
+
+    function createPageObject(myApp, myCover, myPage){
+    	//returns a page object
+    	with (myCover.viewPreferences){
+			var myOldXUnits = horizontalMeasurementUnits;
+			var myOldYUnits = verticalMeasurementUnits;
+			horizontalMeasurementUnits = MeasurementUnits.millimeters;
+			verticalMeasurementUnits = MeasurementUnits.millimeters;
+		}
+    	var P = new Object;
+    		P.page   = myPage;
+    		P.bounds = myPage.bounds;
+            P.width  = myPage.bounds[3] - myPage.bounds[1];
+            P.height = myPage.bounds[2] - myPage.bounds[0];
+
+        with (myCover.viewPreferences){
+			try {
+				horizontalMeasurementUnits = myOldXUnits;
+				verticalMeasurementUnits   = myOldYUnits;
+			} catch(myError) {
+				alert("Could not reset custom measurement units.");
+			}
+		}
+        return P;
     }
 
     //-----------------------------------------------------------------------------------
@@ -119,6 +155,7 @@
         // PageTools
         getActiveCover        : getActiveCover,
         getCVR1pageNo         : getCVR1pageNo,
+        createPageObject      : createPageObject,
         // ColourTools
         addColor              : addColor
     };

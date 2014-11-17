@@ -2,50 +2,83 @@
 
 --------------------------------------------
 
-	CB_Send2Photoshop.jsxinc        (A CoverBuilder Helper Script)
-	An InDesign CS6 Javascript      (Tested in CS6)
-	Version 1
+    CB_Send2Photoshop.jsxinc        (A CoverBuilder Helper Script)
+    An InDesign CS6 Javascript      (Tested in CS6)
+    Version 1.1
 
-	Bruno Herfst 2014
+    Bruno Herfst 2014
+
+    // TODO ask for PPI
 
 --------------------------------------------
 
 */
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
-	function coverBuilderPS(myApp,C){
-		app.bringToFront();
-		var builder = $.evalFile(new File(myApp.Module.PSbuild));
-		builder.startBuilding(myApp,C);
-	}
+    //////////////
+    // privates //
+    //////////////
+    function coverBuilderPS(myApp,C,addSpine){
+        app.bringToFront();
+        var builder = $.evalFile(new File(myApp.Module.PSbuild));
+        builder.startBuilding(myApp,C,addSpine);
+    }
 
-	function CreateBridgeTalkMessage(myApp, C) {
-		var script  = coverBuilderPS.toString() + "\r";
-			script += "coverBuilderPS("+myApp.JSON.stringify(myApp)+","+ myApp.JSON.stringify(C)+");";
+    function CreateBridgeTalkMessage(myApp, C, addSpine) {
+        var script  = coverBuilderPS.toString() + "\r";
+            script += "coverBuilderPS("+myApp.JSON.stringify(myApp)+","+ myApp.JSON.stringify(C)+","+addSpine.toString()+");";
 
-		var bt = new BridgeTalk();
-			bt.target = "photoshop";
-			bt.body = script;
-			bt.onError = function(errObj) {
-				$.writeln("Error: " + errObj.body);
-			};
-			bt.send();
-	}
+        var bt = new BridgeTalk();
+            bt.target = "photoshop";
+            bt.body = script;
+            bt.onError = function(errObj) {
+                $.writeln("Error: " + errObj.body);
+            };
+            bt.send();
+    }
 
-	function send2photoshop(myApp){
-		var myCover = myApp.Core.getActiveCover(myApp);
-		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-		CreateBridgeTalkMessage(myApp,C);
-	}
+    function send2photoshop(myApp){
+        var myCover = myApp.Core.getActiveCover(myApp, true);
+        var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+		var addSpine = true;
 
-	////////////
-	// expose //
-	////////////
-	return {
-		send2photoshop : send2photoshop
-	};
+        if(C == null){ // Not a cover build with CoverBuilder
+			// get doc bleed settings //this can be improved
+            var currSpread = app.activeWindow.activeSpread;
+            var myBleed    = myCover.documentPreferences.documentBleedTopOffset;
+
+			var myPages = new Array();
+			for (i = 0; i < currSpread.pages.length; i++) {
+				myPages.push(myApp.Core.createPageObject(myApp, myCover, currSpread.pages[i]));
+			}
+			if(myPages.length == 1){
+            	//var myPage = myApp.Core.createPageObject(myApp, myCover, currPages[0]);
+                var newC = {name:"Send to Photoshop",width:myPages[0].width,height:myPages[0].height,spine:0,ppi:600,bleed:myBleed,measureUnit:0};
+				C = myApp.STools.Cparser(myApp, newC);
+            } else if(myPages.length == 2){
+            	// Check if both pages are the same size
+            	if( (myPages[0].width == myPages[1].width) && (myPages[0].height == myPages[1].height) ){
+            		var newC = {name:"Send to Photoshop",width:myPages[0].width,height:myPages[0].height,spine:0,ppi:600,bleed:myBleed,measureUnit:0};
+					C = myApp.STools.Cparser(myApp, newC);
+					addSpine = false;
+            	} else {
+            		alert("Sending pages that are not covers is still under development");
+            		exit();
+            	}
+            } else {
+                alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to hurry him along.");
+                exit();
+            }
+        }
+        // We have a valid Cover object
+        CreateBridgeTalkMessage(myApp,C,addSpine);
+    }
+
+    ////////////
+    // expose //
+    ////////////
+    return {
+        send2photoshop : send2photoshop
+    };
 
 })();

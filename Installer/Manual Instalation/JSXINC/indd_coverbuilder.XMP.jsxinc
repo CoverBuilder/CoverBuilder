@@ -1,4 +1,5 @@
 // CoverBuilder XMPTools
+// Version 1.1
 // Bruno Herfst 2014
 
 (function() {
@@ -38,34 +39,34 @@
 		return C;
 	}
 	function safeCoverObject(myApp, myCover, C){
-		C.JSONstring = myApp.JSON.stringify(C);
-		setBags(myCover, C);
+		var newC = myApp.STools.Cparser(myApp, C);
+		newC.JSONstring = myApp.JSON.stringify(newC);
+		return setBags(myCover, newC);
 	}
 	function retrieveCoverObject(myApp, myCover){
 		try{
 			var C = myApp.JSON.parse(myCover.metadataPreferences.getProperty(destNamespace,destContName + "[5]"));
-		} catch(e){
-		    var C = undefined;
-            try {
-                // This should be done elaborately 
-                var C = { width:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[1]"),
-                          height:      myCover.metadataPreferences.getProperty(destNamespace,destContName + "[2]"),
-                          spine:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]"),
-                          flap:        undefined,
-                          JSONstring:  undefined,
-                          binding:     undefined};
-    
-                safeCoverObject(myApp, myCover, C);
-            } catch(f){
-                alert("Could not parse original settings from document.");
-            }
+		} catch(e1){
+			// There is not such bag
+			var mySpine = myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]") || 0;
+			if(mySpine > 0){
+				try {
+					var C = { width:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[1]"),
+						      height:      myCover.metadataPreferences.getProperty(destNamespace,destContName + "[2]"),
+							  spine:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]")};
+					    C = safeCoverObject(myApp, myCover, C);
+				} catch(f){
+					var C = {name:"None"};
+					alert("Could not parse original settings from document.");
+				}
+			}
 		}
-		return C;
+		return myApp.STools.Cparser(myApp, C); // returns valid C object or null
 	}
 	function newXMP(myApp, myCover, C){
 		var myXML = new XML("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:CoverBuilder=\"http://brunoherfst.com/\"><CoverBuilder:contact>mail@brunoherfst.com</CoverBuilder:contact></rdf:Description></rdf:RDF></x:xmpmeta>");
 		var myXMLfile = File('TEMP_XMP.xml');
-		if ( myXMLfile.open('e') ){
+		if( myXMLfile.open('e') ){
 			myXMLfile.write(myXML);
 			myXMLfile.close();
 			myCover.metadataPreferences.append(myXMLfile);
