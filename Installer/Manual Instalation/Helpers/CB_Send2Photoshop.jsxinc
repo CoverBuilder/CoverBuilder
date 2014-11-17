@@ -4,7 +4,7 @@
 
     CB_Send2Photoshop.jsxinc        (A CoverBuilder Helper Script)
     An InDesign CS6 Javascript      (Tested in CS6)
-    Version 1.1
+    Version 1.1.1
 
     Bruno Herfst 2014
 
@@ -57,12 +57,12 @@
 				C = myApp.STools.Cparser(myApp, newC);
             } else if(myPages.length == 2){
             	// Check if both pages are the same size
-            	if( (myPages[0].width == myPages[1].width) && (myPages[0].height == myPages[1].height) ){
+            	if( (parseFloat(myPages[0].width) == parseFloat(myPages[1].width)) && (parseFloat(myPages[0].height) == parseFloat(myPages[1].height)) ){
             		var newC = {name:"Send to Photoshop",width:myPages[0].width,height:myPages[0].height,spine:0,ppi:600,bleed:myBleed,measureUnit:0};
 					C = myApp.STools.Cparser(myApp, newC);
 					addSpine = false;
             	} else {
-            		alert("Sending pages that are not covers is still under development");
+            		alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to hurry him along.");
             		exit();
             	}
             } else {
