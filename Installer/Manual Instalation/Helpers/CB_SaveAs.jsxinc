@@ -21,9 +21,20 @@
 	//////////////
 
 	function saveas(myApp) {
-		var myCover = myApp.Core.getActiveCover(myApp);
+		var myCover = myApp.Core.getActiveCover(myApp, true);
 		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-
+        if(C != null){
+            var myType = "_CVR_";
+            var myW    = C.width;
+            var myH    = C.height;
+            var myS    = "x" + Math.floor(C.spine);
+        } else { // Not a cover
+            var myType = "_TXT_";
+            var myW    = Math.floor(myCover.documentPreferences.pageWidth);
+            var myH    = Math.floor(myCover.documentPreferences.pageHeight);
+            var myS    = ""; // No spine
+        }
+		
 		// Get or create doc name
 		if(myCover.metadataPreferences.documentTitle == ""){
 			myCover.metadataPreferences.documentTitle = prompt("What is the title of the book?");
@@ -31,7 +42,7 @@
 		}
 
 		// Create temp-file with the right name
-		var fileName = booktitle + "_CVR_" + C.width + "x" + C.height + "x" + Math.floor(C.spine) + "_MU00.indd";
+		var fileName = booktitle + myType + myW + "x" + myH + myS + "_MU00.indd";
 		var tempfile = File(myApp.PathTo.settingsFolder + fileName);
 		myCover.save(tempfile);
 
@@ -39,7 +50,6 @@
 		var fileMenu = myMenu.menuElements.item("File");
 		var mySaveAsMenu = fileMenu.menuItems.item("Save As...");
 		mySaveAsMenu.associatedMenuAction.invoke(tempfile.remove());
-
 	}
 
 	////////////

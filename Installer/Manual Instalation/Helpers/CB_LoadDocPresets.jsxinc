@@ -25,6 +25,8 @@
 		var C = myApp.UI.CoverOrder(myApp, myApp.XMP.retrieveCoverObject(myApp, myCover));
 		if(C != null){
 			myApp.Build.cover(myApp, C);
+		} else {
+		   alert("Could not load cover details.");
 		}
 	}
 
