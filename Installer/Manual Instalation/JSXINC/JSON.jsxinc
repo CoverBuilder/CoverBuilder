@@ -344,23 +344,23 @@
 		}
 	}());
 
-	JSON.saveFile = function (myApp, obj, f){
+	JSON.saveFile = function (myApp, f, obj){
 		var objStr = myApp.JSON.stringify(obj);
 		f.open('w');
 		var ok = f.write(objStr);
 		if (ok) {
 			ok = f.close();
 		}
-		if (! ok) {
+		if (!ok) {
 			alert("Error saving JSON :( \n" + f.error);
 			f.close();
 		}
 	}
 
-	JSON.ask2Safe = function (myApp, question, file, data){
+	JSON.ask2Safe = function (myApp, question, f, obj){
 		var save = confirm(question);
 		if(save){
-			myApp.JSON.saveFile(myApp, data, file);
+			myApp.JSON.saveFile(myApp, f, obj);
 		}
 		return data;
 	}

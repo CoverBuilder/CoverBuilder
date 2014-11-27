@@ -153,7 +153,7 @@
 
         if(!f.exists){
             // file does not exist: create it!
-            myApp.JSON.saveFile(myApp, PresetObj, f);
+            myApp.JSON.saveFile(myApp, f, PresetObj);
         }
 
         try {
