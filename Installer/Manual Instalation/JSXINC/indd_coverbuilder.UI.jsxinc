@@ -37,7 +37,7 @@
             //hbpb.preferredSize.width = 115; //design
             //hbpb.selection = 0;
 
-            var presets = globalGroup.add ("dropdownlist", undefined, ["[Presets]"]);
+            var presets = globalGroup.add ("dropdownlist", undefined, ["-Presets-"]);
             for (var i=0,len=MyPresets.presets.length;i<len;i++) {
                 if(MyPresets.presets[i].name.length <= 4){
                     var mt = "\t\t\t(";
@@ -182,11 +182,12 @@
                 var mh = parseFloat(myHeight.text);
                 var mm = "mm";
                 var noprobs = true;
+                
                 if(flapQBDropdown.selection != 0){
                     var thisQB = parseFloat(myFlapQB.text);
                     if(thisQB < parseFloat(myHinge.text) && thisQB != 0){
                         noprobs = false;
-                    }
+                     }
                 }
                 switch(mminch.selection.text){
                     case "mm":
@@ -201,14 +202,17 @@
                     if(ms >= minSize && mw >= minSize && mh >= minSize){
                         // Let's safe these settings to Last Used preset
                         // Easiest to start from scratch and delete any "Last Used" objects in presets array
+                        
+                        /* this seems to be the problem as -last used- is not the last in the array.
                         var plen = MyPresets.presets.length-1;
                         for (var i = 0; i <= plen; i++) {
                             if(MyPresets.presets[i].name == "-Last Used-"){
                                 MyPresets.presets.splice(i,1);
-                                //delete MyPresets.presets[i];
                             }
                         }
-                        if(add2Presets(myApp, "-Last Used-")){
+                        */
+                        
+                        if(add2Presets(myApp, "-Last Used-", true)){
                             myApp.JSON.saveFile(myApp, f, MyPresets);
                             C = MyPresets.presets[MyPresets.presets.length-1];
                         } else {
@@ -479,22 +483,32 @@
 
         //--------------------------------------------------------------------------------------------------- END MARGIN WINDOW
 
-        function add2Presets(myApp, newName){
+        function add2Presets(myApp, newName, overwriteLastUsed){
+            var overwriteLastUsed = overwriteLastUsed || false;
+            if(overwriteLastUsed.constructor != Boolean){
+                overwriteLastUsed =  false;
+                //I want to know if we receive something unexpected
+                alert("Something went wrong! \nindd_coverbuilder.UI.jsxinc -> add2Presets -> Expected Boolean" );
+            }
             if(typeof newName == 'string'){
-                if(newName != "-Last Used-"){
+                if( (newName != "-Last Used-") || overwriteLastUsed){
                     //check if newName is allready in list, if so remove the old one
                     var plen = MyPresets.presets.length-1;
                     for (var i = plen; i >= 0; i--) {
-                      if(MyPresets.presets[i].name == newName){
-                        //ask if the user wants to overwrite this preset
-                        var cool = confirm("There is allready a preset with that name.\nDo you want to overwrite it?");
-                        if(cool){
-                            MyPresets.presets.splice(i,1);
-                            presets.remove(i+1);
-                        } else {
-                            return "error";
+                        if(MyPresets.presets[i].name == newName){
+                          //ask if the user wants to overwrite this preset
+                          if(overwriteLastUsed){
+                              var cool = true;
+                          } else {
+                              var cool = confirm("There is allready a preset with that name.\nDo you want to overwrite it?");
+                          }
+                          if(cool){
+                              MyPresets.presets.splice(i,1);
+                              presets.remove(i+1);
+                          } else {
+                              return "error";
+                          }
                         }
-                      }
                     }
                 }
 
