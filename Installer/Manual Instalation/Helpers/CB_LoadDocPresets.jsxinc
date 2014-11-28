@@ -22,12 +22,17 @@
 
 	function loadsettings(myApp) {
 		var myCover = myApp.Core.getActiveCover(myApp);
-		var C = myApp.UI.CoverOrder(myApp, myApp.XMP.retrieveCoverObject(myApp, myCover));
-		if(C != null){
-			myApp.Build.cover(myApp, C);
+		var C       = myApp.XMP.retrieveCoverObject(myApp, myCover);
+
+		if( C != null ){
+			C  = myApp.UI.CoverOrder(myApp, C);
 		} else {
 		   alert("Could not load cover details.");
+		   return;
 		}
+		if(C != null){
+			myApp.Build.cover(myApp, C);
+		} // else user pressed cancel
 	}
 
 	////////////

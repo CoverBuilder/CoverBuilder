@@ -355,6 +355,7 @@
 			alert("Error saving JSON :( \n" + f.error);
 			f.close();
 		}
+		return obj;
 	}
 
 	JSON.ask2Safe = function (myApp, question, f, obj){
@@ -362,7 +363,7 @@
 		if(save){
 			myApp.JSON.saveFile(myApp, f, obj);
 		}
-		return data;
+		return obj;
 	}
 
     return JSON;
