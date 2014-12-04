@@ -37,7 +37,7 @@
 		var mSpine = myApp.Slugs.fetchPage(myApp, myCover, "CB-spine", 0);
 
 		//let’s ask the user what the new spine should be
-		var newSpine = prompt("New spine-width in MM:");
+		var newSpine = parseFloat(prompt("New spine-width in MM:"));
 
 		if ( isNaN(newSpine) ){
 			alert("That was not a Number");
