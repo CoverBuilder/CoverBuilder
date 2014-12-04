@@ -4,47 +4,226 @@
 	//////////////
 	// privates //
 	//////////////
-	function convertMargins(myApp, thisM){
-	    var nc = myApp.NumCon;
-		for(var k in thisM){
+	function convertMargins(myApp, thisM, to_unit){
+
+	    // Create reference to number conversion tool
+		var nc = myApp.NumCon;
+		var err = null;
+
+		for(var key in thisM){
+			var k = thisM[key];
 			switch (k.units) {
-				case 1: //inch
-					k.top 				= nc.doRound(nc.inch2mm(k.top),3);
-					k.outside_right		= nc.doRound(nc.inch2mm(k.outside_right),3);
-					k.inside_left 		= nc.doRound(nc.inch2mm(k.inside_left),3);
-					k.bottom 			= nc.doRound(nc.inch2mm(k.bottom),3);
-					k.units 			= 0;
+				case 0: //from mm
+					switch (to_unit) {
+						case 0: //to mm
+							break; // No need for conversion
+						case 1: //to inch
+							k.top 				= nc.doRound(nc.mm2inch(k.top),3);
+							k.outside_right		= nc.doRound(nc.mm2inch(k.outside_right),3);
+							k.inside_left 		= nc.doRound(nc.mm2inch(k.inside_left),3);
+							k.bottom 			= nc.doRound(nc.mm2inch(k.bottom),3);
+							k.units 			= 1;
+							break;
+						case 2: //to pt
+							k.top 				= nc.doRound(nc.mm2pt(k.top),3);
+							k.outside_right		= nc.doRound(nc.mm2pt(k.outside_right),3);
+							k.inside_left 		= nc.doRound(nc.mm2pt(k.inside_left),3);
+							k.bottom 			= nc.doRound(nc.mm2pt(k.bottom),3);
+							k.units 			= 2;
+							break;
+						default:
+							err = "Could not convert margin units from millimeters.";
+							break;
+					}
 					break;
-				case 2: //pt
-					k.top 				= nc.doRound(nc.pt2mm(k.top),3);
-					k.outside_right 	= nc.doRound(nc.pt2mm(k.outside_right),3);
-					k.inside_left 		= nc.doRound(nc.pt2mm(k.inside_left),3);
-					k.bottom 			= nc.doRound(nc.pt2mm(k.bottom),3);
-					k.units 			= 0;
+				case 1: //from inch
+					switch (to_unit) {
+						case 0: //to mm
+							k.top 				= nc.doRound(nc.inch2mm(k.top),3);
+							k.outside_right		= nc.doRound(nc.inch2mm(k.outside_right),3);
+							k.inside_left 		= nc.doRound(nc.inch2mm(k.inside_left),3);
+							k.bottom 			= nc.doRound(nc.inch2mm(k.bottom),3);
+							k.units 			= 0;
+							break;
+						case 1: //to inch
+							break; // No need for conversion
+						case 2: //to pt
+							k.top 				= nc.doRound(nc.inch2pt(k.top),3);
+							k.outside_right		= nc.doRound(nc.inch2pt(k.outside_right),3);
+							k.inside_left 		= nc.doRound(nc.inch2pt(k.inside_left),3);
+							k.bottom 			= nc.doRound(nc.inch2pt(k.bottom),3);
+							k.units 			= 2;
+							break;
+						default:
+							err = "Could not convert margin units from millimeters.";
+							break;
+					}
 					break;
-				default: //mm
-					// do nothing
+				case 2: //from pt
+					switch (to_unit) {
+						case 0: //to mm
+							k.top 				= nc.doRound(nc.pt2mm(k.top),3);
+							k.outside_right		= nc.doRound(nc.pt2mm(k.outside_right),3);
+							k.inside_left 		= nc.doRound(nc.pt2mm(k.inside_left),3);
+							k.bottom 			= nc.doRound(nc.pt2mm(k.bottom),3);
+							k.units 			= 0;
+							break;
+						case 1: //to inch
+							k.top 				= nc.doRound(nc.pt2inch(k.top),3);
+							k.outside_right		= nc.doRound(nc.pt2inch(k.outside_right),3);
+							k.inside_left 		= nc.doRound(nc.pt2inch(k.inside_left),3);
+							k.bottom 			= nc.doRound(nc.pt2inch(k.bottom),3);
+							k.units 			= 2;
+							break;
+						case 2: //to pt
+							break; // No need for conversion
+						default:
+							err = "Could not convert margin units from millimeters.";
+							break;
+					}
+					break;
+				default: //something went wrong
+					err = "Could not convert margin units.";
 					break;
 			}
 		}
+		if(err != null){
+			alert(err);
+		}
 		return thisM;
 	}
-	function cover(myApp, C){
-		if(C.measureUnit == 1){ //convert inches to mm as coverbuilder can’t handle inches yet
-			C.width   *= 25.4;
-			C.height  *= 25.4;
-			C.spine   *= 25.4;
-			C.bleed   *= 25.4;
-			C.hinge   *= 25.4;
-			C.binding *= 25.4;
-			C.flap    *= 25.4;
-			C.fold    *= 25.4;
-			C.wrap    *= 25.4;
-			C.measureUnit = 0;
+
+	function convertUnits(myApp, C, to_unit){
+		// This function converts all measurement units in the C object
+
+		// Create reference to number conversion tool
+		var nc = myApp.NumCon;
+
+		// Check if we can convert the cover object
+		if(!C.hasOwnProperty("measureUnit")){
+			alert("Not a valid C object.");
+			return C;
 		}
 
-		//always convert margins
-		C.margin = convertMargins(myApp, C.margin);
+		switch (C.measureUnit) {
+			case 0: //from mm
+				switch (to_unit) {
+					case 0: //to mm
+						C.margin  = convertMargins(myApp, C.margin, 0);
+						break; // No need for conversion
+					case 1: //to inch
+						C.width   = nc.mm2inch(C.width);
+						C.height  = nc.mm2inch(C.height);
+						C.spine   = nc.mm2inch(C.spine);
+						C.bleed   = nc.mm2inch(C.bleed);
+						C.hinge   = nc.mm2inch(C.hinge);
+						C.binding = nc.mm2inch(C.binding);
+						C.flap    = nc.mm2inch(C.flap);
+						C.fold    = nc.mm2inch(C.fold);
+						C.wrap    = nc.mm2inch(C.wrap);
+						C.margin  = convertMargins(myApp, C.margin, 1);
+						C.measureUnit = 1; // Set units to inches
+						break;
+					case 2: //to pt
+						C.width   = nc.mm2pt(C.width);
+						C.height  = nc.mm2pt(C.height);
+						C.spine   = nc.mm2pt(C.spine);
+						C.bleed   = nc.mm2pt(C.bleed);
+						C.hinge   = nc.mm2pt(C.hinge);
+						C.binding = nc.mm2pt(C.binding);
+						C.flap    = nc.mm2pt(C.flap);
+						C.fold    = nc.mm2pt(C.fold);
+						C.wrap    = nc.mm2pt(C.wrap);
+						C.margin  = convertMargins(myApp, C.margin, 2);
+						C.measureUnit = 2; // Set units to inches
+						break;
+					default:
+						alert("Could not convert units from millimeters.");
+						break;
+				}
+				break;
+			case 1: //from inch
+				switch (to_unit) {
+					case 0: //to mm
+						C.width   = nc.inch2mm(C.width);
+						C.height  = nc.inch2mm(C.height);
+						C.spine   = nc.inch2mm(C.spine);
+						C.bleed   = nc.inch2mm(C.bleed);
+						C.hinge   = nc.inch2mm(C.hinge);
+						C.binding = nc.inch2mm(C.binding);
+						C.flap    = nc.inch2mm(C.flap);
+						C.fold    = nc.inch2mm(C.fold);
+						C.wrap    = nc.inch2mm(C.wrap);
+						C.margin  = convertMargins(myApp, C.margin, 0);
+						C.measureUnit = 0; // Set units to inches
+						break;
+					case 1: //to inch
+						C.margin  = convertMargins(myApp, C.margin, 1);
+						break; // No need for conversion
+					case 2: //to pt
+						C.width   = nc.inch2pt(C.width);
+						C.height  = nc.inch2pt(C.height);
+						C.spine   = nc.inch2pt(C.spine);
+						C.bleed   = nc.inch2pt(C.bleed);
+						C.hinge   = nc.inch2pt(C.hinge);
+						C.binding = nc.inch2pt(C.binding);
+						C.flap    = nc.inch2pt(C.flap);
+						C.fold    = nc.inch2pt(C.fold);
+						C.wrap    = nc.inch2pt(C.wrap);
+						C.margin  = convertMargins(myApp, C.margin, 2);
+						C.measureUnit = 2; // Set units to inches
+						break;
+					default:
+						alert("Could not convert units from millimeters.");
+				}
+				break;
+			case 2: //from pt
+				switch (to_unit) {
+					case 0: //to mm
+						C.width   = nc.pt2mm(C.width);
+						C.height  = nc.pt2mm(C.height);
+						C.spine   = nc.pt2mm(C.spine);
+						C.bleed   = nc.pt2mm(C.bleed);
+						C.hinge   = nc.pt2mm(C.hinge);
+						C.binding = nc.pt2mm(C.binding);
+						C.flap    = nc.pt2mm(C.flap);
+						C.fold    = nc.pt2mm(C.fold);
+						C.wrap    = nc.pt2mm(C.wrap);
+						C.margin  = convertMargins(myApp, C.margin, 0);
+						C.measureUnit = 0; // Set units to inches
+						break;
+					case 1: //to inch
+						C.width   = nc.pt2inch(C.width);
+						C.height  = nc.pt2inch(C.height);
+						C.spine   = nc.pt2inch(C.spine);
+						C.bleed   = nc.pt2inch(C.bleed);
+						C.hinge   = nc.pt2inch(C.hinge);
+						C.binding = nc.pt2inch(C.binding);
+						C.flap    = nc.pt2inch(C.flap);
+						C.fold    = nc.pt2inch(C.fold);
+						C.wrap    = nc.pt2inch(C.wrap);
+						C.margin  = convertMargins(myApp, C.margin, 1);
+						C.measureUnit = 1; // Set units to inches
+						break;
+					case 2: //to pt
+						C.margin  = convertMargins(myApp, C.margin, 2);
+						break; // No need for conversion
+					default:
+						alert("Could not convert units from millimeters.");
+				}
+				break;
+			default:
+				alert("Could not convert units.");
+				break;
+		}
+		return C;
+	}
+
+	function cover(myApp, C){
+		// Make sure we safe the settings from UI into document?
+		var UI_Clone = myApp.JSON.parse( myApp.JSON.stringify( C ) );
+
+		convertUnits(myApp, C, 0); //convert inches to mm as coverbuilder can’t handle inches yet
 
 		//now let’s fixup the sizes
 		if(C.inExCludeWrap == 1){
@@ -346,7 +525,7 @@
 		}
 
 		//add XMP data
-		myApp.XMP.newXMP(myApp,myCover,C);
+		myApp.XMP.newXMP(myApp,myCover,UI_Clone);
 
 		//Set sizes in slug
 		myApp.Slugs.placeSizesInSlug(myApp,C,myCover);

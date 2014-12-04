@@ -9,7 +9,7 @@
         // The Cover Object this function will return
         var C = null;
 
-        var presetChange = false;
+        var presetChange = true;
         var savePS    = myApp.STools.ButtonTXT.savePS;
         var clearPS   = myApp.STools.ButtonTXT.clearPS;
         var MarginObj = myApp.STools.MarginObj;
@@ -182,7 +182,7 @@
                 var mh = parseFloat(myHeight.text);
                 var mm = "mm";
                 var noprobs = true;
-                
+
                 if(flapQBDropdown.selection != 0){
                     var thisQB = parseFloat(myFlapQB.text);
                     if(thisQB < parseFloat(myHinge.text) && thisQB != 0){
@@ -202,7 +202,7 @@
                     if(ms >= minSize && mw >= minSize && mh >= minSize){
                         // Let's safe these settings to Last Used preset
                         // Easiest to start from scratch and delete any "Last Used" objects in presets array
-                        
+
                         /* this seems to be the problem as -last used- is not the last in the array.
                         var plen = MyPresets.presets.length-1;
                         for (var i = 0; i <= plen; i++) {
@@ -211,7 +211,7 @@
                             }
                         }
                         */
-                        
+
                         if(add2Presets(myApp, "-Last Used-", true)){
                             myApp.JSON.saveFile(myApp, f, MyPresets);
                             C = MyPresets.presets[MyPresets.presets.length-1];
@@ -766,6 +766,7 @@
             presets.selection = MyPresets.presets.length;
         }
 
+		presetChange = false;
         myWindow.show();
 
         return C;
