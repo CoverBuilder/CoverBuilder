@@ -38,7 +38,7 @@
 
 		//let’s ask the user what the new spine should be
 		var newSpine = prompt("New spine-width in MM:");
-		//var newSpine = prompt("New spine-width in " + myApp.XMP.getMeasurementUnits(C) + ":");
+		//var newSpine = prompt("New spine-width in " + myApp.STools.getMeasurementUnits(myApp, C) + ":");
 
 		if(newSpine == null){
 			//user pressed cancel

@@ -75,28 +75,12 @@
 		myCover.metadataPreferences.createContainerItem(destNamespace, destContName, undefined, ContainerType.BAG);
 		safeCoverObject(myApp, myCover, C);
 	}
-	function getMeasurementUnits(C){
-		if(C.hasOwnProperty("measureUnit")){
-			switch(C.measureUnit) {
-				case 0:
-					return "mm";
-					break;
-				case 1:
-					return "inch";
-					break;
-				default:
-					return undefined;
-			}
-		}
-		return null;
-	}
 	////////////
 	// expose //
 	////////////
   	return {
   		newXMP              : newXMP,
 		safeCoverObject     : safeCoverObject,
-  		retrieveCoverObject : retrieveCoverObject,
-  		getMeasurementUnits : getMeasurementUnits
+  		retrieveCoverObject : retrieveCoverObject
 	};
 })();
