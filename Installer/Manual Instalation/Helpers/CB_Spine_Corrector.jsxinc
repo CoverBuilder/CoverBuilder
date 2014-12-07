@@ -27,7 +27,33 @@
 			alert("Can’t find a spine!");
 		}
 		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+        var minimumPageWidth = myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.minPageWidthINDD  ); // Minimum page width for indesign
+        
+        // safe original rulers
+        var myOldXUnits = myCover.viewPreferences.horizontalMeasurementUnits;
+        var myOldYUnits = myCover.viewPreferences.verticalMeasurementUnits;
 
+		with(myCover.viewPreferences){
+		    switch(C.measureUnit) {
+                case 0:
+                    horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+			        verticalMeasurementUnits   = MeasurementUnits.MILLIMETERS;
+                    break;
+                case 1:
+                    horizontalMeasurementUnits = MeasurementUnits.INCHES_DECIMAL;
+			        verticalMeasurementUnits   = MeasurementUnits.INCHES_DECIMAL;
+                    break;
+                case 2:
+                    horizontalMeasurementUnits = MeasurementUnits.POINTS;
+			        verticalMeasurementUnits   = MeasurementUnits.POINTS;
+                    break;
+                default:
+                    alert("indd_coverbuilder.Build.cover: Could not parse MeasurementUnits from C.measureUnit");
+                    break;
+            }
+			rulerOrigin = RulerOrigin.pageOrigin;
+		}
+        
 		// Tidy.
 		var docBleed = myCover.documentPreferences.documentBleedTopOffset;
 		// Update data if changed
@@ -37,20 +63,19 @@
 		var mSpine = myApp.Slugs.fetchPage(myApp, myCover, "CB-spine", 0);
 
 		//let’s ask the user what the new spine should be
-		var newSpine = prompt("New spine-width in MM:");
-		//var newSpine = prompt("New spine-width in " + myApp.STools.getMeasurementUnits(myApp, C) + ":");
-
+		var newSpine = prompt("New spine-width in " + myApp.STools.getMeasurementUnits(myApp, C) + ":");
+        
 		if(newSpine == null){
 			//user pressed cancel
 			exit();
 		} else {
 			newSpine = parseFloat(newSpine);
 		}
-
+        
 		if ( isNaN(newSpine) ){
 			alert("That was not a Number");
-		} else if (newSpine < 0.5){
-			alert("Spine-width should be at least 0.5mm.");
+		} else if (newSpine < minimumPageWidth){
+			alert("Spine-width should be at least " + minimumPageWidth + myApp.STools.getMeasurementUnits(myApp, C));
 			changeSpine(myApp);
 			exit();
 		} else {
@@ -63,7 +88,8 @@
 			}
 			mSpine.page.resize(CoordinateSpaces.INNER_COORDINATES,
 				AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
-				[myApp.NumCon.mm2pt(newSpine), myApp.NumCon.mm2pt(mSpine.h)]); //Width * Height in postscript points
+				//[myApp.NumCon.mm2pt(newSpine), myApp.NumCon.mm2pt(mSpine.h)]); //Width * Height in postscript points
+				[myApp.NumCon.convert(myApp, C.measureUnit, "pt", newSpine), myApp.NumCon.convert(myApp, C.measureUnit, "pt", mSpine.h)]);  //Width * Height in postscript points
 
 			myApp.Slugs.updateSpineSlug(myApp,myCover,C,newSpine);
 
@@ -75,6 +101,10 @@
 				myCover.documentPreferences.facingPages = false;
 			}
 		}
+		
+		// reset original rulers
+        myCover.viewPreferences.horizontalMeasurementUnits = myOldXUnits;
+		myCover.viewPreferences.verticalMeasurementUnits   = myOldYUnits;
 	}
 	////////////
 	// expose //

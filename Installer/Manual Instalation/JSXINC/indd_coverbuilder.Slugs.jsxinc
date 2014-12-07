@@ -132,7 +132,7 @@
 	}
 
 	function positionSlugWidth(C, myPage, myItem){
-		myItem.geometricBounds = [-C.bleed-5, 0, -C.bleed, myPage.w];
+		myItem.geometricBounds = [-C.bleed-myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.mmSlug), 0, -C.bleed, myPage.w];
 		myItem.contents = myPage.w.toString();
 	}
 
