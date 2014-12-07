@@ -7,6 +7,8 @@
     // privates //
     //////////////
     var ButtonTXT = {savePS : "Save Preset", clearPS : "Clear Preset"};
+    var validMeasurementUnits = ["mm", "inch", "pt"]; // In that order
+    
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS variables
     //-----------------------------------------------------------------------------------
@@ -29,91 +31,95 @@
 
     function getMeasurementUnits(myApp, C){
         switch(typeof C) {
-        	case "object":
-        	case "number":
-        		// We need to return a string
-        		if(C.hasOwnProperty("measureUnit")){
-					var munit = C.measureUnit;
-				} else if( !isNan(parseInt(C)) ){
-					var munit = parseInt(C); // We got a number, let give back the corresponding unit
-				}
-				switch(munit) {
-					case 0:
-						return "mm";
-						break;
-					case 1:
-						return "inch";
-						break;
-					case 2:
-						return "pt";
-						break;
-					default:
-						alert("getMeasurementUnits could not find unit from " + munit);
-						return undefined;
-				}
-        		break;
-        	case "string":
-        		// We need to return a number
-        		switch(C.toLowerCase()) {
-					case "mm":
-						return 0;
-						break;
-					case "inch":
-						return 1;
-						break;
-					case "pt":
-						return 2;
-						break;
-					default:
-						alert("getMeasurementUnits could not find unit from " + C);
-						return undefined;
-				}
-        		break;
-        	default:
-        		alert("Something went wrong! \n Could not find unit from " + C);
-        		return null;
+            case "object":
+            case "number":
+                // We need to return a string
+                if(C.hasOwnProperty("measureUnit")){
+                    var munit = C.measureUnit;
+                } else if( !isNan(parseInt(C)) ){
+                    var munit = parseInt(C); // We got a number, let give back the corresponding unit
+                }
+                switch(munit) {
+                    case 0:
+                        return "mm";
+                        break;
+                    case 1:
+                        return "inch";
+                        break;
+                    case 2:
+                        return "pt";
+                        break;
+                    default:
+                        alert("getMeasurementUnits could not find unit from " + munit);
+                        return undefined;
+                }
+                break;
+            case "string":
+                // We need to return a number
+                switch(C.toLowerCase()) {
+                    case "mm":
+                        return 0;
+                        break;
+                    case "inch":
+                        return 1;
+                        break;
+                    case "pt":
+                        return 2;
+                        break;
+                    default:
+                        alert("getMeasurementUnits could not find unit from " + C);
+                        return undefined;
+                }
+                break;
+            default:
+                alert("Something went wrong! \n Could not find unit from " + C);
+                return null;
         }
     }
 
-	function resolveSizes(myApp, C){
-		// This function takes the C object and resolves all the sizes
-		try {
-			// RESOLVE WRAP
-			if(C.inExCludeWrap == 1){
-				C.bleed += C.wrap;
-			} else {
-				C.bleed -= C.wrap;
-			}
-			C.wrap = 0;
+    function resolveSizes(myApp, C){
+        // This function takes the C object and resolves all the sizes
+        try {
+            // First make sure all measurements are in the same measure unit
+            C = convertUnits(myApp, C, C.measureUnit); //make sure all units are the same
+            
+            // RESOLVE WRAP
+            if(C.inExCludeWrap == 1){
+                C.bleed += C.wrap;
+            } else {
+                C.bleed -= C.wrap;
+            }
+            //C.wrap = 0;  // Do not reset the origin as we still need them.
 
-			// RESOLVE FOLD
-			if(C.inExCludeFold == 1){
-				C.flap += C.fold;
-			} else if(C.inExCludeFold == 2){
-				C.width -= C.fold;
-			}
-			C.fold = 0;
+            // RESOLVE FOLD
+            if(C.inExCludeFold == 1){
+                C.flap += C.fold;
+            } else if(C.inExCludeFold == 2){
+                C.width -= C.fold;
+            }
+            //C.fold = 0;
 
-			// RESOLVE HINGE
-			if(C.inExCludeHinge == 1){
-				C.width += C.hinge;
-				if(C.binding > 0){
-					C.binding += C.hinge;
-				}
-			}
-			C.hinge = 0;
+            // RESOLVE HINGE
+            if(C.inExCludeHinge == 1){
+                C.width += C.hinge;
+                if(C.binding > 0){
+                    C.binding += C.hinge;
+                }
+            }
+            //C.hinge = 0;
 
-			// RESOLVE BINDING
-			if(C.inExCludeQB == 0){
-				C.width += C.binding;
-			}
-			C.binding = 0;
-
-			return C;
-		} catch (e) {
-			alert("Could not resolve sizes \n" + e.description);
-		}
-	}
+            // RESOLVE BINDING
+            if(C.inExCludeQB == 0){
+                C.width -= C.binding;
+            }
+            //C.binding = 0;
+            C.resolved = true;
+		
+            return C;
+        } catch (e) {
+            alert("Could not resolve sizes \n" + e.description);
+        }
+    }
 
     function Cparser(myApp, C){
         if( C !== null && typeof C === 'object' ){
@@ -136,7 +142,8 @@
                 wrap:           (parseFloat( C.wrap)           || 0),
                 inExCludeWrap:  (parseInt(   C.inExCludeWrap)  || 0),
                 margin:         (C.margin                      || MarginObj),
-                measureUnit:    (parseInt(   C.measureUnit)    || 0)
+                measureUnit:    (parseInt(   C.measureUnit)    || 0),
+                resolved:       Boolean(    C.resolved == true)
             }
             //alert(myApp.JSON.stringify(C));
             //alert(myApp.JSON.stringify(Cool));
@@ -145,222 +152,38 @@
         return null
     }
 
-	function convertMargins(myApp, thisM, to_unit){
 
-	    // Create reference to number conversion tool
-		var nc = myApp.NumCon;
-		var err = null;
+    function convertMargins(myApp, coverMargins, to_unit){
+        var myMargins = ["top","outside_right","inside_left","bottom"];
+        for(var page in coverMargins){
+            var pagemargins = coverMargins[page];
+            for(var i in myMargins) {
+                pagemargins[myMargins[i]] = myApp.NumCon.convert(myApp, pagemargins.units, to_unit, pagemargins[myMargins[i]], 3); ;
+            }
+            pagemargins.units = checkMeasureUnit(myApp, to_unit);
+        }
+        return coverMargins;
+    }
 
-		for(var key in thisM){
-			var k = thisM[key];
-			switch (k.units) {
-				case 0: //from mm
-					switch (to_unit) {
-						case 0: //to mm
-							break; // No need for conversion
-						case 1: //to inch
-							k.top 				= nc.doRound(nc.mm2inch(k.top),3);
-							k.outside_right		= nc.doRound(nc.mm2inch(k.outside_right),3);
-							k.inside_left 		= nc.doRound(nc.mm2inch(k.inside_left),3);
-							k.bottom 			= nc.doRound(nc.mm2inch(k.bottom),3);
-							k.units 			= 1;
-							break;
-						case 2: //to pt
-							k.top 				= nc.doRound(nc.mm2pt(k.top),3);
-							k.outside_right		= nc.doRound(nc.mm2pt(k.outside_right),3);
-							k.inside_left 		= nc.doRound(nc.mm2pt(k.inside_left),3);
-							k.bottom 			= nc.doRound(nc.mm2pt(k.bottom),3);
-							k.units 			= 2;
-							break;
-						default:
-							err = "Could not convert margin units from millimeters.";
-							break;
-					}
-					break;
-				case 1: //from inch
-					switch (to_unit) {
-						case 0: //to mm
-							k.top 				= nc.doRound(nc.inch2mm(k.top),3);
-							k.outside_right		= nc.doRound(nc.inch2mm(k.outside_right),3);
-							k.inside_left 		= nc.doRound(nc.inch2mm(k.inside_left),3);
-							k.bottom 			= nc.doRound(nc.inch2mm(k.bottom),3);
-							k.units 			= 0;
-							break;
-						case 1: //to inch
-							break; // No need for conversion
-						case 2: //to pt
-							k.top 				= nc.doRound(nc.inch2pt(k.top),3);
-							k.outside_right		= nc.doRound(nc.inch2pt(k.outside_right),3);
-							k.inside_left 		= nc.doRound(nc.inch2pt(k.inside_left),3);
-							k.bottom 			= nc.doRound(nc.inch2pt(k.bottom),3);
-							k.units 			= 2;
-							break;
-						default:
-							err = "Could not convert margin units from millimeters.";
-							break;
-					}
-					break;
-				case 2: //from pt
-					switch (to_unit) {
-						case 0: //to mm
-							k.top 				= nc.doRound(nc.pt2mm(k.top),3);
-							k.outside_right		= nc.doRound(nc.pt2mm(k.outside_right),3);
-							k.inside_left 		= nc.doRound(nc.pt2mm(k.inside_left),3);
-							k.bottom 			= nc.doRound(nc.pt2mm(k.bottom),3);
-							k.units 			= 0;
-							break;
-						case 1: //to inch
-							k.top 				= nc.doRound(nc.pt2inch(k.top),3);
-							k.outside_right		= nc.doRound(nc.pt2inch(k.outside_right),3);
-							k.inside_left 		= nc.doRound(nc.pt2inch(k.inside_left),3);
-							k.bottom 			= nc.doRound(nc.pt2inch(k.bottom),3);
-							k.units 			= 2;
-							break;
-						case 2: //to pt
-							break; // No need for conversion
-						default:
-							err = "Could not convert margin units from millimeters.";
-							break;
-					}
-					break;
-				default: //something went wrong
-					err = "Could not convert margin units.";
-					break;
-			}
-		}
-		if(err != null){
-			alert(err);
-		}
-		return thisM;
-	}
-
-	function convertUnits(myApp, C, to_unit){
-		// This function converts all measurement units in the C object
-		// We need to write this more elegantly
-
-		// Create reference to number conversion tool
-		var nc = myApp.NumCon;
-
-		// Check if we can convert the cover object
-		if(!C.hasOwnProperty("measureUnit")){
-			alert("Not a valid C object.");
-			return C;
-		}
-
-		switch (C.measureUnit) {
-			case 0: //from mm
-				switch (to_unit) {
-					case 0: //to mm
-						C.margin  = convertMargins(myApp, C.margin, 0);
-						break; // No need for conversion
-					case 1: //to inch
-						C.width   = nc.mm2inch(C.width);
-						C.height  = nc.mm2inch(C.height);
-						C.spine   = nc.mm2inch(C.spine);
-						C.bleed   = nc.mm2inch(C.bleed);
-						C.hinge   = nc.mm2inch(C.hinge);
-						C.binding = nc.mm2inch(C.binding);
-						C.flap    = nc.mm2inch(C.flap);
-						C.fold    = nc.mm2inch(C.fold);
-						C.wrap    = nc.mm2inch(C.wrap);
-						C.margin  = convertMargins(myApp, C.margin, 1);
-						C.measureUnit = 1; // Set units to inches
-						break;
-					case 2: //to pt
-						C.width   = nc.mm2pt(C.width);
-						C.height  = nc.mm2pt(C.height);
-						C.spine   = nc.mm2pt(C.spine);
-						C.bleed   = nc.mm2pt(C.bleed);
-						C.hinge   = nc.mm2pt(C.hinge);
-						C.binding = nc.mm2pt(C.binding);
-						C.flap    = nc.mm2pt(C.flap);
-						C.fold    = nc.mm2pt(C.fold);
-						C.wrap    = nc.mm2pt(C.wrap);
-						C.margin  = convertMargins(myApp, C.margin, 2);
-						C.measureUnit = 2; // Set units to inches
-						break;
-					default:
-						alert("Could not convert units from millimeters.");
-						break;
-				}
-				break;
-			case 1: //from inch
-				switch (to_unit) {
-					case 0: //to mm
-						C.width   = nc.inch2mm(C.width);
-						C.height  = nc.inch2mm(C.height);
-						C.spine   = nc.inch2mm(C.spine);
-						C.bleed   = nc.inch2mm(C.bleed);
-						C.hinge   = nc.inch2mm(C.hinge);
-						C.binding = nc.inch2mm(C.binding);
-						C.flap    = nc.inch2mm(C.flap);
-						C.fold    = nc.inch2mm(C.fold);
-						C.wrap    = nc.inch2mm(C.wrap);
-						C.margin  = convertMargins(myApp, C.margin, 0);
-						C.measureUnit = 0; // Set units to inches
-						break;
-					case 1: //to inch
-						C.margin  = convertMargins(myApp, C.margin, 1);
-						break; // No need for conversion
-					case 2: //to pt
-						C.width   = nc.inch2pt(C.width);
-						C.height  = nc.inch2pt(C.height);
-						C.spine   = nc.inch2pt(C.spine);
-						C.bleed   = nc.inch2pt(C.bleed);
-						C.hinge   = nc.inch2pt(C.hinge);
-						C.binding = nc.inch2pt(C.binding);
-						C.flap    = nc.inch2pt(C.flap);
-						C.fold    = nc.inch2pt(C.fold);
-						C.wrap    = nc.inch2pt(C.wrap);
-						C.margin  = convertMargins(myApp, C.margin, 2);
-						C.measureUnit = 2; // Set units to inches
-						break;
-					default:
-						alert("Could not convert units from millimeters.");
-				}
-				break;
-			case 2: //from pt
-				switch (to_unit) {
-					case 0: //to mm
-						C.width   = nc.pt2mm(C.width);
-						C.height  = nc.pt2mm(C.height);
-						C.spine   = nc.pt2mm(C.spine);
-						C.bleed   = nc.pt2mm(C.bleed);
-						C.hinge   = nc.pt2mm(C.hinge);
-						C.binding = nc.pt2mm(C.binding);
-						C.flap    = nc.pt2mm(C.flap);
-						C.fold    = nc.pt2mm(C.fold);
-						C.wrap    = nc.pt2mm(C.wrap);
-						C.margin  = convertMargins(myApp, C.margin, 0);
-						C.measureUnit = 0; // Set units to inches
-						break;
-					case 1: //to inch
-						C.width   = nc.pt2inch(C.width);
-						C.height  = nc.pt2inch(C.height);
-						C.spine   = nc.pt2inch(C.spine);
-						C.bleed   = nc.pt2inch(C.bleed);
-						C.hinge   = nc.pt2inch(C.hinge);
-						C.binding = nc.pt2inch(C.binding);
-						C.flap    = nc.pt2inch(C.flap);
-						C.fold    = nc.pt2inch(C.fold);
-						C.wrap    = nc.pt2inch(C.wrap);
-						C.margin  = convertMargins(myApp, C.margin, 1);
-						C.measureUnit = 1; // Set units to inches
-						break;
-					case 2: //to pt
-						C.margin  = convertMargins(myApp, C.margin, 2);
-						break; // No need for conversion
-					default:
-						alert("Could not convert units from millimeters.");
-				}
-				break;
-			default:
-				alert("Could not convert units.");
-				break;
-		}
-		return C;
-	}
-
+    function convertUnits(myApp, C, to_unit){
+       // Check if we can convert the cover object
+        if(!C.hasOwnProperty("measureUnit")){
+            alert("Not a valid C object.");
+            return C;
+        }
+        
+        var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
+        
+        for(var size in dimensions) {
+            C[dimensions[size]] = myApp.NumCon.convert(myApp, C.measureUnit, to_unit, C[dimensions[size]]);
+        }
+        // Do margin
+        C.margin      = convertMargins(myApp, C.margin, to_unit);
+        C.measureUnit = checkMeasureUnit(myApp, to_unit);
+        
+        return C;
+    }
+    
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS validator
     //-----------------------------------------------------------------------------------
@@ -440,6 +263,34 @@
         return true;
     }
 
+    function checkMeasureUnit(myApp, mu){
+        // Returns the measurement unit as Number
+        // Return error string if there are problems
+        var err     = "number.conversion.convert: \n";
+        var validmu = null;
+        
+        // Start with checking measure unit
+        switch(typeof mu) {
+            case "number":
+                validmu = Math.abs(parseInt(mu)); // Make sure it is a integer
+                if(!(validmu < myApp.STools.validMeasurementUnits.length)){
+                    err += "Unit not supported.\n";
+                    return err;
+                }
+                break;
+            case "string":
+                var validmu = getMeasurementUnits(myApp, mu);
+                if(typeof validmu != "number"){
+                    err += "Unit not supported.\n";
+                    return err;
+                }
+                break;
+            default:
+                return err;
+                break;
+        }
+        return validmu
+    }
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS get
     //-----------------------------------------------------------------------------------
@@ -574,25 +425,27 @@
     // Return an object exposed to the public
     return {
         // Preset Tools
-        getFile             : getFile,
-        MarginObj           : MarginObj,
-        PresetObj           : PresetObj,
-        ButtonTXT           : ButtonTXT,
-        getPresets          : getPresets,
+        getFile              : getFile,
+        MarginObj            : MarginObj,
+        PresetObj            : PresetObj,
+        ButtonTXT            : ButtonTXT,
+        getPresets           : getPresets,
+        validMeasurementUnits: validMeasurementUnits,
         // Validator
-        sameProps           : sameProps,
+        sameProps            : sameProps,
+        checkMeasureUnit     : checkMeasureUnit,
         // C Tools
-        getMeasurementUnits : getMeasurementUnits,
-        resolveSizes        : resolveSizes,
-        Cparser             : Cparser,
-        convertUnits        : convertUnits,
+        getMeasurementUnits  : getMeasurementUnits,
+        resolveSizes         : resolveSizes,
+        Cparser              : Cparser,
+        convertUnits         : convertUnits,
         // Array Tools
-        getIndex            : getIndex,
-        sameKeys            : sameKeys,
+        getIndex             : getIndex,
+        sameKeys             : sameKeys,
         // Link Jumpers
-        reportBug           : reportBug,
-        createBarcode       : createBarcode,
-        emailTo             : emailTo,
-        visitURL            : visitURL
+        reportBug            : reportBug,
+        createBarcode        : createBarcode,
+        emailTo              : emailTo,
+        visitURL             : visitURL
     };
 })();

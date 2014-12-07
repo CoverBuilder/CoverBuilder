@@ -1,24 +1,26 @@
 // CoverBuilder Module: Build
+// Version: 2.0
 
 (function () {
 	//////////////
 	// privates //
 	//////////////
 
-	var minimumPageWidth = {"mm":0.4,"inch":0.016};
-
 	function cover(myApp, C){
 		// Safe original settings from UI
 		// We will save this in the document so we can always refer back to source settings
 		var UI_Clone = myApp.JSON.parse( myApp.JSON.stringify( C ) );
+        
+        ///////////////////
+        // Convert Units //
+        ///////////////////
+        C = myApp.STools.resolveSizes(myApp, C); //resolve the sizes for build
 
-		C = myApp.STools.convertUnits(myApp, C, 0); //convert inches to mm as coverbuilder can’t handle inches yet
-		C = myApp.STools.resolveSizes(myApp, C);    //now resolve the sizes for build
-
-		var mpw = minimumPageWidth[myApp.STools.getMeasurementUnits(myApp, C)];
-
-		if(C.height < mpw || C.width < mpw || C.spine < mpw){
-			alert("A pagesize can’t be smaller than 0.5");
+        var mySlug           = myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.mmSlug            ); // For crop-marks and slug info
+        var minimumPageWidth = myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.minPageWidthINDD  ); // Minimum page width for indesign
+		
+		if(C.height < minimumPageWidth || C.width < minimumPageWidth || C.spine < minimumPageWidth){
+			alert("A pagesize can’t be smaller than " + minimumPageWidth + myApp.STools.getMeasurementUnits(myApp, C.measureUnit) );
 			return;
 		}
 		if(C.binding < C.hinge && C.binding != 0){
@@ -40,10 +42,26 @@
 
 		//Set up the new cover.
 		with(myCover.viewPreferences){
-			horizontalMeasurementUnits = MeasurementUnits.millimeters;
-			verticalMeasurementUnits = MeasurementUnits.millimeters;
+		    switch(C.measureUnit) {
+                case 0:
+                    horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+			        verticalMeasurementUnits   = MeasurementUnits.MILLIMETERS;
+                    break;
+                case 1:
+                    horizontalMeasurementUnits = MeasurementUnits.INCHES_DECIMAL;
+			        verticalMeasurementUnits   = MeasurementUnits.INCHES_DECIMAL;
+                    break;
+                case 2:
+                    horizontalMeasurementUnits = MeasurementUnits.POINTS;
+			        verticalMeasurementUnits   = MeasurementUnits.POINTS;
+                    break;
+                default:
+                    alert("indd_coverbuilder.Build.cover: Could not parse MeasurementUnits from C.measureUnit");
+                    break;
+            }
 			rulerOrigin = RulerOrigin.pageOrigin;
 		}
+		
 		with(myCover.documentPreferences){
 			facingPages = true; //so we can stuff the pages together
 			horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
@@ -55,7 +73,7 @@
 			documentBleedUniformSize = true;
 			documentBleedTopOffset = C.bleed;
 			documentSlugUniformSize = true;
-			slugTopOffset = C.bleed+5;
+			slugTopOffset = C.bleed+mySlug;
 			pagesPerDocument = 1;
 		}
 
@@ -102,12 +120,13 @@
 				resize(CoordinateSpaces.INNER_COORDINATES,
 					AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
 					//1 millimetre = 2.83464567 PostScript points
-					[C.spine*2.83464567, C.height*2.83464567]);
+					//[C.spine*2.83464567, C.height*2.83464567]);
+					[myApp.NumCon.convert(myApp, C.measureUnit, "pt", C.spine), myApp.NumCon.convert(myApp, C.measureUnit, "pt", C.height)]);
 			}
 		}
 
 		//Create a new masterspread for flap
-		if(C.flap > 0.5){ //0.5 is minimum pagewidth for indesign
+		if(C.flap > minimumPageWidth){
 			myCover.masterSpreads.add(1,{namePrefix:"CB", baseName:"flap"});
 			with(myCover.masterSpreads.item("CB-flap")){
 				with(pages.item(0)){
@@ -127,11 +146,12 @@
 					resize(CoordinateSpaces.INNER_COORDINATES,
 						AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
 						//1 millimetre = 2.83464567 PostScript points
-						[C.flap*2.83464567, C.height*2.83464567]);
+						//[C.flap*2.83464567, C.height*2.83464567]);
+						[myApp.NumCon.convert(myApp, C.measureUnit, "pt", C.flap), myApp.NumCon.convert(myApp, C.measureUnit, "pt", C.height)]);
 				}
 			}
 		//Create a new masterspread for binding
-		} else if(C.binding > 0.5){ //0.5 is minimum pagewidth for indesign
+		} else if(C.binding > minimumPageWidth){
 			myCover.masterSpreads.add(1,{namePrefix:"CB", baseName:"binding"});
 			with(myCover.masterSpreads.item("CB-binding")){
 				with(pages.item(0)){
@@ -151,7 +171,8 @@
 					resize(CoordinateSpaces.INNER_COORDINATES,
 						AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
 						//1 millimetre = 2.83464567 PostScript points
-						[C.binding*2.83464567, C.height*2.83464567]);
+						//[C.binding*2.83464567, C.height*2.83464567]);
+						[myApp.NumCon.convert(myApp, C.measureUnit, "pt", C.binding), myApp.NumCon.convert(myApp, C.measureUnit, "pt", C.height)]);
 				}
 			}
 		}
@@ -164,13 +185,13 @@
 					R_flapbind : { pp: 4, label: "FlapR", master: "CB-flap"  },
 					pageCount  : 3 };
 
-		if(C.flap  > 0.5 || C.binding  > 0.5){
+		if(C.flap  > minimumPageWidth || C.binding  > minimumPageWidth){
 			pt.pageCount  += 2;
 			pt.L_cover.pp  = 1;
 			pt.R_cover.pp  = 3;
 			pt.spine.pp    = 2;
 
-			if(C.binding  > 0.5){
+			if(C.binding  > minimumPageWidth){
 				pt.L_cover.pp = 0;
 				pt.R_cover.pp = 4;
 
@@ -222,7 +243,7 @@
 		myPages.item(pt.L_cover.pp).marginPreferences.left  = mr;
 
 		//apply binding or flaps to masterspread
-		if(C.flap  > 0.5 || C.binding  > 0.5){
+		if(C.flap  > minimumPageWidth || C.binding  > minimumPageWidth){
 			myPages.item(pt.L_flapbind.pp).appliedMaster = myCover.masterSpreads.item(pt.L_flapbind.master);
 			myPages.item(pt.L_flapbind.pp).label         = pt.L_flapbind.label;
 			myPages.item(pt.R_flapbind.pp).appliedMaster = myCover.masterSpreads.item(pt.R_flapbind.master);
