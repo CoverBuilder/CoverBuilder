@@ -40,19 +40,19 @@
         }
         
         if( (typeof validInput == "number") && (typeof validOutput == "number") && (typeof measure == "number") ){
-            var convertedUnit = undefined;
+            var convertedMeasure = undefined;
             // Lets convert the items
             switch (validInput) {
                 case 0: //from mm
                     switch (validOutput) {
                         case 0: //to mm
-                            convertedUnit = measure;// No need for conversion
+                            convertedMeasure = measure;// No need for conversion
                             break;
                         case 1: //to inch
-                            convertedUnit = mm2inch(measure);
+                            convertedMeasure = mm2inch(measure);
                             break;
                         case 2: //to pt
-                            convertedUnit = mm2pt(measure);
+                            convertedMeasure = mm2pt(measure);
                             break;
                         default:
                             alert("number.conversion.convert: Could not convert units from millimeters.");
@@ -62,13 +62,13 @@
                 case 1: //from inch
                     switch (validOutput) {
                         case 0: //to mm
-                            convertedUnit = inch2mm(measure);
+                            convertedMeasure = inch2mm(measure);
                             break;
                         case 1: //to inch
-                            convertedUnit = measure; // No need for conversion
+                            convertedMeasure = measure; // No need for conversion
                             break;
                         case 2: //to pt
-                            convertedUnit = inch2pt(measure);
+                            convertedMeasure = inch2pt(measure);
                             break;
                         default:
                             alert("number.conversion.convert: Could not convert units from millimeters.");
@@ -78,13 +78,13 @@
                 case 2: //from pt
                     switch (validOutput) {
                         case 0: //to mm
-                            convertedUnit = pt2mm(measure);
+                            convertedMeasure = pt2mm(measure);
                             break;
                         case 1: //to inch
-                            convertedUnit = pt2inch(measure);
+                            convertedMeasure = pt2inch(measure);
                             break;
                         case 2: //to pt
-                            convertedUnit = measure;// No need for conversion
+                            convertedMeasure = measure;// No need for conversion
                             break;
                         default:
                             alert("number.conversion.convert: Could not convert units from millimeters.");
@@ -99,9 +99,9 @@
             // Round Units
             if(typeof roundDec == "number"){
                 roundDec = parseInt(roundDec);
-                convertedUnit = doRound(convertedUnit, roundDec);
+                convertedMeasure = doRound(convertedMeasure, roundDec);
             }
-            return convertedUnit;
+            return convertedMeasure;
         } else {
             // We have not returned elsewhere
            alert("Could not convert " + measure + " from " + unitInput + " to " + unitOutput);
