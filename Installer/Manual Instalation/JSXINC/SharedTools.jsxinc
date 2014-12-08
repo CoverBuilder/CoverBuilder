@@ -8,7 +8,7 @@
     //////////////
     var ButtonTXT = {savePS : "Save Preset", clearPS : "Clear Preset"};
     var validMeasurementUnits = ["mm", "inch", "pt"]; // In that order
-    
+
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS variables
     //-----------------------------------------------------------------------------------
@@ -82,7 +82,7 @@
         try {
             // First make sure all measurements are in the same measure unit
             C = convertUnits(myApp, C, C.measureUnit); //make sure all units are the same
-            
+
             // RESOLVE WRAP
             if(C.inExCludeWrap == 1){
                 C.bleed += C.wrap;
@@ -114,7 +114,7 @@
             }
             //C.binding = 0;
             C.resolved = true;
-		
+
             return C;
         } catch (e) {
             alert("Could not resolve sizes \n" + e.description);
@@ -171,19 +171,19 @@
             alert("Not a valid C object.");
             return C;
         }
-        
+
         var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
-        
+
         for(var size in dimensions) {
             C[dimensions[size]] = myApp.NumCon.convert(myApp, C.measureUnit, to_unit, C[dimensions[size]]);
         }
         // Do margin
         C.margin      = convertMargins(myApp, C.margin, to_unit);
         C.measureUnit = checkMeasureUnit(myApp, to_unit);
-        
+
         return C;
     }
-    
+
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS validator
     //-----------------------------------------------------------------------------------
@@ -268,7 +268,7 @@
         // Return error string if there are problems
         var err     = "number.conversion.convert: \n";
         var validmu = null;
-        
+
         // Start with checking measure unit
         switch(typeof mu) {
             case "number":
@@ -413,7 +413,7 @@
     }
 
     function reportBug(){
-        visitURL("https://github.com/GitBruno/CoverBuilder/issues");
+        visitURL("http://coverbuilder.brunoherfst.com/faq/");
     }
     function createBarcode(){
         visitURL("http://barcode.brunoherfst.com/");
