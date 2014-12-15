@@ -412,7 +412,7 @@
         linkJumper.execute();
     }
 
-    function reportBug(){
+    function getHelp(){
         visitURL("http://coverbuilder.brunoherfst.com/faq/");
     }
     function createBarcode(){
@@ -443,7 +443,7 @@
         getIndex             : getIndex,
         sameKeys             : sameKeys,
         // Link Jumpers
-        reportBug            : reportBug,
+        getHelp              : getHelp,
         createBarcode        : createBarcode,
         emailTo              : emailTo,
         visitURL             : visitURL

@@ -84,7 +84,7 @@
                 var optional2Group = optionalInputpanel.add ("group");
                     optional2Group.orientation =  "row";
                     optional2Group.margins = [0,0,0,5];
-                    var hingeDropdown = optional2Group.add ("dropdownlist", undefined, ["- Hinge:","+ Hinge:"]);
+                    var hingeDropdown = optional2Group.add ("dropdownlist", undefined, ["- Hinge/Score:","+ Hinge/Score:"]);
                     hingeDropdown.selection = 0;
                     hingeDropdown.preferredSize.width = 170; //design
                     var myHinge = optional2Group.add ("edittext", undefined, "0");
@@ -161,9 +161,9 @@
             myButtonGroup.alignment = "right";
 
             //register button
-            var registerBut = myButtonGroup.add ("button", undefined, "Help");
-                registerBut.onClick = function () {
-                    myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
+            var helpBut = myButtonGroup.add ("button", undefined, "Help");
+                helpBut.onClick = function () {
+                    myApp.STools.getHelp();
                 }
 
             //save load preset button
