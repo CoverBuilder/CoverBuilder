@@ -5,7 +5,20 @@
 	//////////////
 	// privates //
 	//////////////
-
+	function checkOverset(myApp, thisTextFrame, offset){
+		//this function checks if text-frame has overset text and tries to fix it.
+		//this function is made for smaller page sizes and we should be OK by jut adding the bleed.
+		if(thisTextFrame.overflows){
+			try{
+				//getBleed
+				oldGeoBounds = thisTextFrame.geometricBounds; //[y1, x1, y2, x2]
+				newGeoBounds = [oldGeoBounds[0],oldGeoBounds[1]-offset,oldGeoBounds[2],oldGeoBounds[3]+offset];
+				thisTextFrame.geometricBounds = newGeoBounds;
+			}catch(err){
+				alert(err);
+			}
+		}
+	}
 	function doHeight(myApp, myCover, myParagraphStyle){
 		var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
 		//CVR1
@@ -33,6 +46,7 @@
 			myGroup = myPage.groups.add(myGroup);
 			myGroup.label = "forcePageHeightGroup";
 	}
+
 	function placeSizesInSlug(myApp, C, myCover){
 		var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements");
 
@@ -43,11 +57,12 @@
 		//top
 		for (i=0;myCover.masterSpreads.length-1>i;i++){
 			for (j=0;myCover.masterSpreads[i].pages.length>j;j++){
-				var myPage = myCover.masterSpreads[i].pages.item(j);
-				var pageBounds = myPage.bounds;
-				var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
+				var myPage        = myCover.masterSpreads[i].pages.item(j);
+				var pageBounds    = myPage.bounds;
+				var myPageWidth   = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
 				var myFrameBounds = new Array (-myCover.documentPreferences.slugTopOffset,0,-myCover.documentPreferences.documentBleedTopOffset,myPageWidth);
-				addTextFrame(myPage, myFrameBounds, myPageWidth.toString(), myParagraphStyle, 0,"pageWidth");
+				var myTextFrame   = addTextFrame(myPage, myFrameBounds, myPageWidth.toString(), myParagraphStyle, 0,"pageWidth");
+				checkOverset(myApp, myTextFrame, myCover.documentPreferences.documentBleedTopOffset);
 			}
 		}
 
@@ -193,6 +208,7 @@
 		    }
 		}
 	}
+
 	function removeOldMeasurements(myApp, myCover, masters){
 	    for (var m=0; masters.length > m; m++){
             // get ref to first page
