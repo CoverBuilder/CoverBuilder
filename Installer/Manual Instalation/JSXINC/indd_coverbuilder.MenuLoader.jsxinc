@@ -17,11 +17,11 @@
 		try{
             var cbHandlers = {
                 'onInvoke' : function(){
-                    //prevent undo
-                    if( 6 > parseFloat(app.version) ) {
-                        APP.GO();
-                    } else {
-                        app.doScript(APP.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
+                    // prevent undo // Our script assumes CS5+
+                    try{
+                    	app.doScript(APP.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
+                    } catch(error){
+                    	alert(error); // Let us know what is going on.
                     }
                 }};
 
