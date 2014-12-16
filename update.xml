@@ -1,12 +1,15 @@
 <ExtensionUpdateInformation>
 	<version>2.9.3</version>
-	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_293.zxp</download>
+	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_294.zxp</download>
 	<description url="http://coverbuilder.brunoherfst.com">
 	<![CDATA[
-	        Build button the default active one.
-	        Introduce Save As menu item.
-	        Introduce Barcode Creator as menu item.
-	        Added plugin sample.
+	        Updated install location.
+	        Spine-width in slug overset.
+	        Updated help location.
+	        CoverBuilderPS hide preview layers after build.
+	        Native support for inches and points.
+	        Added load doc presets.
+	        Add note to slug info.
 			Minor bug-fixes.
 		]]>
 	</description>
