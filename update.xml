@@ -3,14 +3,13 @@
 	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_295.zxp</download>
 	<description url="http://coverbuilder.brunoherfst.com">
 	<![CDATA[
-	        Updated install location.
 	        Spine-width in slug overset.
 	        Updated help location.
 	        CoverBuilderPS hide preview layers after build.
 	        Native support for inches and points.
 	        Added load doc presets.
 	        Add note to slug info.
-			Minor bug-fixes.
-		]]>
+		Minor bug-fixes.
+	]]>
 	</description>
 </ExtensionUpdateInformation>
