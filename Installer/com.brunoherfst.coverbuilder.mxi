@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<macromedia-extension name = "CoverBuilder" id = "com.brunoherfst.coverbuilder" requires-restart = "true" version = "2.9.5" icon = "CoverBuilder_icon_25x25.png">
+
+	<author name = "Bruno Herfst" />
+	<update url = "https://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
+
+	<products>
+		<product name="InDesign" primary="true" version="8" />
+	</products>
+
+	<files>
+		<file source="Icon/CoverBuilder_icon_25x25.png" destination="$ExtensionSpecificEMStore" />
+		<file source="CoverBuilder" platform="mac" destination="$indesign/Scripts/startup scripts" products="InDesign"/>
+		<file source="CoverBuilder" platform="win" destination="$indesign\Scripts\startup scripts" products="InDesign"/>
+	</files>
+
+	<description>
+		<![CDATA[A sensible way to build book covers.]]>
+	</description>
+
+</macromedia-extension>

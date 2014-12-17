@@ -5,8 +5,8 @@ Setting up a cover was always a tedious job. As you needed to calculate with the
 
 I found a bug/missing feature!
 ------------------------------
-     
-CoverBuilder bugs and feature requests are tracked with [the github issue tracker](https://github.com/GitBruno/CoverBuilder/issues). 
+
+CoverBuilder bugs and feature requests are tracked with [the github issue tracker](https://github.com/GitBruno/CoverBuilder/issues).
 When filing a new bug, please remember to include:
 
 * CoverBuilder version
@@ -17,4 +17,4 @@ When filing a new bug, please remember to include:
 More info?
 ---------
 
-Please review [CoverBuilder wiki](https://github.com/GitBruno/CoverBuilder/wiki)
+Please review [CoverBuilder FAQ](http://coverbuilder.brunoherfst.com/faq/)
