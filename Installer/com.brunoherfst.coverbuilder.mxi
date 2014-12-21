@@ -6,7 +6,7 @@
 	<update url = "https://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
 
 	<products>
-		<product name="InDesign" primary="true" version="8" />
+		<product name="InDesign" primary="true" version="7" />
 	</products>
 
 	<files>
