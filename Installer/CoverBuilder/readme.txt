@@ -1,4 +1,4 @@
-This folder should live in your InDesign "Start-Up Scripts" folder:
+This folder should live in your InDesign "startup scripts" folder:
 
 Mac
 Hard Drive > Applications > Adobe InDesign [Version]> Scripts > startup scripts or
