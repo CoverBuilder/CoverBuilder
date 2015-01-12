@@ -1,0 +1,33 @@
+
+/*
+
+--------------------------------------------
+
+	CB_OpenLibUI.jsxinc             (A CoverBuilder Helper Script)
+	An InDesign CS5 Javascript      (Tested in CS6)
+	Version 0.1 Alpha
+
+	Bruno Herfst 2015
+
+--------------------------------------------
+
+*/
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+
+	function loadUI(myApp) {
+		// Code to open UI here
+		alert("Coming soon!")
+	}
+
+	////////////
+	// expose //
+	////////////
+	return {
+		loadUI : loadUI
+	};
+
+})();
