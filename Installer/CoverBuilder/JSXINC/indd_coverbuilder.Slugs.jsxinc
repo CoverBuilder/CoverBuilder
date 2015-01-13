@@ -98,10 +98,12 @@
 		var myTextFrame = myPage.textFrames.add();
 		app.activeWindow.transformReferencePoint = AnchorPoint.CENTER_ANCHOR;
 		myTextFrame.rotationAngle = myRotationAngle;
-		// force indesign to stay on the right page before setting bounds //
-		// This is not the most elegant solution but at least it will always work even when InDesign changes it’s rules in the future
+
+		// Force indesign to stay on the right page before setting bounds
+		// This is not the most elegant solution but at least it works consistentw
 		app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
-		myTextFrame.move(myPage, [0.4, 0.4]); //Page can’t be smaller than 0.5 :)
+		myTextFrame.move(myPage, [0.05, 0.05]); //Page can’t be smaller than 0.5mm this number works in any measurement unit :)
+
 		myTextFrame.geometricBounds = [myBounds[0], myBounds[1], myBounds[2], myBounds[3]];
 
 		myTextFrame.contents = myString;
@@ -222,7 +224,7 @@
             }
 	    }
 	}
-	
+
 	////////////
 	// expose //
 	////////////

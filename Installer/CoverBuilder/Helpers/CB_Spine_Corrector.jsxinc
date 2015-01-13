@@ -16,6 +16,11 @@
 	//////////////
 	// privates //
 	//////////////
+	function getNewSpineUI(myApp, C){
+		// return the new spine in correct units
+		return prompt("New spine-width in " + myApp.STools.getMeasurementUnits(myApp, C) + ":");
+	}
+
 	function changeSpine(myApp) {
 		var myCover = myApp.Core.getActiveCover(myApp);
 		if(!myCover){
@@ -28,7 +33,7 @@
 		}
 		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
         var minimumPageWidth = myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.minPageWidthINDD  ); // Minimum page width for indesign
-        
+
         // safe original rulers
         var myOldXUnits = myCover.viewPreferences.horizontalMeasurementUnits;
         var myOldYUnits = myCover.viewPreferences.verticalMeasurementUnits;
@@ -53,7 +58,7 @@
             }
 			rulerOrigin = RulerOrigin.pageOrigin;
 		}
-        
+
 		// Tidy.
 		var docBleed = myCover.documentPreferences.documentBleedTopOffset;
 		// Update data if changed
@@ -63,15 +68,15 @@
 		var mSpine = myApp.Slugs.fetchPage(myApp, myCover, "CB-spine", 0);
 
 		//let’s ask the user what the new spine should be
-		var newSpine = prompt("New spine-width in " + myApp.STools.getMeasurementUnits(myApp, C) + ":");
-        
+		var newSpine = getNewSpineUI(myApp, C);
+
 		if(newSpine == null){
 			//user pressed cancel
 			exit();
 		} else {
 			newSpine = parseFloat(newSpine);
 		}
-        
+
 		if ( isNaN(newSpine) ){
 			alert("That was not a Number");
 		} else if (newSpine < minimumPageWidth){
@@ -101,7 +106,7 @@
 				myCover.documentPreferences.facingPages = false;
 			}
 		}
-		
+
 		// reset original rulers
         myCover.viewPreferences.horizontalMeasurementUnits = myOldXUnits;
 		myCover.viewPreferences.verticalMeasurementUnits   = myOldYUnits;
