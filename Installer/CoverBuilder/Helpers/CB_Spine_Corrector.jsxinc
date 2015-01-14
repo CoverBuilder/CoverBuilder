@@ -96,7 +96,11 @@
 				//[myApp.NumCon.mm2pt(newSpine), myApp.NumCon.mm2pt(mSpine.h)]); //Width * Height in postscript points
 				[myApp.NumCon.convert(myApp, C.measureUnit, "pt", newSpine), myApp.NumCon.convert(myApp, C.measureUnit, "pt", mSpine.h)]);  //Width * Height in postscript points
 
-			myApp.Slugs.updateSpineSlug(myApp,myCover,C,newSpine);
+			try{
+				myApp.Slugs.updateSpineSlug(myApp,myCover,C,newSpine);
+			} catch (err){
+				alert(err);
+			}
 
 			// Update XMP
 			myApp.XMP.safeCoverObject(myApp, myCover, C );

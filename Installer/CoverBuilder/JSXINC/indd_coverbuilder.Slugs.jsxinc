@@ -2,239 +2,255 @@
 // Bruno Herfst 2014
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
-	function checkOverset(myApp, thisTextFrame, offset){
-		//this function checks if text-frame has overset text and tries to fix it.
-		//this function is made for smaller page sizes and we should be OK by jut adding the bleed.
-		if(thisTextFrame.overflows){
-			try{
-				//getBleed
-				oldGeoBounds = thisTextFrame.geometricBounds; //[y1, x1, y2, x2]
-				newGeoBounds = [oldGeoBounds[0],oldGeoBounds[1]-offset,oldGeoBounds[2],oldGeoBounds[3]+offset];
-				thisTextFrame.geometricBounds = newGeoBounds;
-			}catch(err){
-				alert(err);
-			}
-		}
-	}
-	function doHeight(myApp, myCover, myParagraphStyle){
-		var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
-		//CVR1
-		var mySpinePage = myCover.pages.middleItem();
-		var myPage = myCover.pages.item(mySpinePage.index+1);
-		var pageBounds = myPage.bounds;
-		var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
-		var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
+    //////////////
+    // privates //
+    //////////////
+    function getRegistrationLayer(myApp,myCover){
+        var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
+        if(!regLayer.isValid){
+            alert("Could not find layer 'Registration'\n Please check and update your slugs manually");
+            // We find out if there are slug items in the document and get parent layer if there are any
+        }
+        return regLayer;
+    }
+    function checkOverset(myApp, thisTextFrame, offset){
+        //this function checks if text-frame has overset text and tries to fix it.
+        //this function is made for smaller page sizes and we should be OK by jut adding the bleed.
+        if(thisTextFrame.overflows){
+            try{
+                //getBleed
+                oldGeoBounds = thisTextFrame.geometricBounds; //[y1, x1, y2, x2]
+                newGeoBounds = [oldGeoBounds[0],oldGeoBounds[1]-offset,oldGeoBounds[2],oldGeoBounds[3]+offset];
+                thisTextFrame.geometricBounds = newGeoBounds;
+            }catch(err){
+                alert(err);
+            }
+        }
+    }
+    function doHeight(myApp, myCover, myParagraphStyle){
+        var regLayer = getRegistrationLayer(myApp,myCover);
 
-		//right (Only do cover spread)
-		var myPage  = myCover.masterSpreads[myCover.masterSpreads.length-1].pages.lastItem();
-		var pageBounds = myPage.bounds;
-		var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
-		var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
-		var myFrameBounds  = new Array (0,myPageWidth+myCover.documentPreferences.documentBleedOutsideOrRightOffset,myPageHeight,myPageWidth+myCover.documentPreferences.slugRightOrOutsideOffset);
-		var tf1 = addTextFrame(myPage, myFrameBounds, myPageHeight.toString(), myParagraphStyle, 270, "pageHeight");
+        var myLock = layerUnLockToggle(regLayer, true);
 
-		//force a new frame to group, this makes sure items in slug of master spread will show up in doc
-		var myPage = myCover.masterSpreads[myCover.masterSpreads.length-1].pages.firstItem();
-		var myFrameBounds = new Array (0,-myCover.documentPreferences.slugRightOrOutsideOffset,myPageHeight,-myCover.documentPreferences.documentBleedOutsideOrRightOffset);
-		var tf2 = addTextFrame(myPage, myFrameBounds, " ", myParagraphStyle, 270, "forcePageHeight");
+        //CVR1
+        var mySpinePage   = myCover.pages.middleItem();
+        var myPage        = myCover.pages.item(mySpinePage.index+1);
+        var pageBounds    = myPage.bounds;
+        var myPageWidth   = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
+        var myPageHeight  = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
 
-		//group text frames
-		var myGroup = [tf1,tf2];
-			myGroup = myPage.groups.add(myGroup);
-			myGroup.label = "forcePageHeightGroup";
-	}
+        //right (Only do cover spread)
+        var myPage        = myCover.masterSpreads[myCover.masterSpreads.length-1].pages.lastItem();
+        var pageBounds    = myPage.bounds;
+        var myPageWidth   = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
+        var myPageHeight  = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
+        var myFrameBounds = new Array (0,myPageWidth+myCover.documentPreferences.documentBleedOutsideOrRightOffset,myPageHeight,myPageWidth+myCover.documentPreferences.slugRightOrOutsideOffset);
+        var tf1 = addTextFrame(myPage, myFrameBounds, myPageHeight.toString(), myParagraphStyle, 270, "pageHeight");
 
-	function placeSizesInSlug(myApp, C, myCover){
-		var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements");
+        //force a new frame to group, this makes sure items in slug of master spread will show up in doc
+        var myPage = myCover.masterSpreads[myCover.masterSpreads.length-1].pages.firstItem();
+        var myFrameBounds = new Array (0,-myCover.documentPreferences.slugRightOrOutsideOffset,myPageHeight,-myCover.documentPreferences.documentBleedOutsideOrRightOffset);
+        var tf2 = addTextFrame(myPage, myFrameBounds, " ", myParagraphStyle, 270, "forcePageHeight");
 
-		var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
+        //group text frames
+        var myGroup = [tf1,tf2];
+            myGroup = myPage.groups.add(myGroup);
+            myGroup.label = "forcePageHeightGroup";
 
-		myCover.guides.everyItem().itemLayer = regLayer;
+        layerUnLockToggle(regLayer, myLock);
+    }
 
-		//top
-		for (i=0;myCover.masterSpreads.length-1>i;i++){
-			for (j=0;myCover.masterSpreads[i].pages.length>j;j++){
-				var myPage        = myCover.masterSpreads[i].pages.item(j);
-				var pageBounds    = myPage.bounds;
-				var myPageWidth   = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
-				var myFrameBounds = new Array (-myCover.documentPreferences.slugTopOffset,0,-myCover.documentPreferences.documentBleedTopOffset,myPageWidth);
-				var myTextFrame   = addTextFrame(myPage, myFrameBounds, myPageWidth.toString(), myParagraphStyle, 0,"pageWidth");
-				checkOverset(myApp, myTextFrame, myCover.documentPreferences.documentBleedTopOffset);
-			}
-		}
+    function placeSizesInSlug(myApp, C, myCover){
+        var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements");
+        var regLayer = getRegistrationLayer(myApp,myCover);
 
-		doHeight(myApp, myCover, myParagraphStyle);
+        myCover.guides.everyItem().itemLayer = regLayer;
 
-		myCover.layers[0].locked = true;
-	}
+        //top
+        for (i=0;myCover.masterSpreads.length-1>i;i++){
+            for (j=0;myCover.masterSpreads[i].pages.length>j;j++){
+                var myPage        = myCover.masterSpreads[i].pages.item(j);
+                var pageBounds    = myPage.bounds;
+                var myPageWidth   = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
+                var myFrameBounds = new Array (-myCover.documentPreferences.slugTopOffset,0,-myCover.documentPreferences.documentBleedTopOffset,myPageWidth);
+                var myTextFrame   = addTextFrame(myPage, myFrameBounds, myPageWidth.toString(), myParagraphStyle, 0,"pageWidth");
+                checkOverset(myApp, myTextFrame, myCover.documentPreferences.documentBleedTopOffset);
+            }
+        }
 
-	function getMeasureParagraphStyle(myApp, myCover, psName){
-		var measureParagraphStyle = myCover.paragraphStyles.item(psName);
-		if(!measureParagraphStyle.isValid) {
-			// Create the measure style
-			var measureParagraphStyle = myCover.paragraphStyles.add({name:psName});
-			try{
-				measureParagraphStyle.appliedFont = String(myApp.Settings.registration_font);
-			} catch (e) {
-				alert("Registration Font \n"+e.description);
-				try{
-					measureParagraphStyle.appliedFont = "Helvetica"; // try a standard one
-				} catch (e) {
-					//User already notified
-				}
-			}
-			measureParagraphStyle.pointSize = "8pt";
-			measureParagraphStyle.fillColor = "Registration";
-			measureParagraphStyle.fillTint = 100;
-			measureParagraphStyle.justification = 1667591796;
-		}
-		return measureParagraphStyle;
-	}
+        doHeight(myApp, myCover, myParagraphStyle);
+        regLayer.locked = true;
+    }
 
-	function addTextFrame(myPage, myBounds, myString, myParagraphStyle, myRotationAngle, myLabel){
-		var myTextFrame = myPage.textFrames.add();
-		app.activeWindow.transformReferencePoint = AnchorPoint.CENTER_ANCHOR;
-		myTextFrame.rotationAngle = myRotationAngle;
+    function getMeasureParagraphStyle(myApp, myCover, psName){
+        var measureParagraphStyle = myCover.paragraphStyles.item(psName);
+        if(!measureParagraphStyle.isValid) {
+            // Create the measure style
+            var measureParagraphStyle = myCover.paragraphStyles.add({name:psName});
+            try{
+                measureParagraphStyle.appliedFont = String(myApp.Settings.registration_font);
+            } catch (e) {
+                alert("Registration Font \n"+e.description);
+                try{
+                    measureParagraphStyle.appliedFont = "Helvetica"; // try a standard one
+                } catch (e) {
+                    //User already notified
+                }
+            }
+            measureParagraphStyle.pointSize = "8pt";
+            measureParagraphStyle.fillColor = "Registration";
+            measureParagraphStyle.fillTint = 100;
+            measureParagraphStyle.justification = 1667591796;
+        }
+        return measureParagraphStyle;
+    }
 
-		// Force indesign to stay on the right page before setting bounds
-		// This is not the most elegant solution but at least it works consistentw
-		app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
-		myTextFrame.move(myPage, [0.05, 0.05]); //Page can’t be smaller than 0.5mm this number works in any measurement unit :)
+    function addTextFrame(myPage, myBounds, myString, myParagraphStyle, myRotationAngle, myLabel){
+        var myTextFrame = myPage.textFrames.add();
+        app.activeWindow.transformReferencePoint = AnchorPoint.CENTER_ANCHOR;
+        myTextFrame.rotationAngle = myRotationAngle;
 
-		myTextFrame.geometricBounds = [myBounds[0], myBounds[1], myBounds[2], myBounds[3]];
+        // Force indesign to stay on the right page before setting bounds
+        // This is not the most elegant solution but at least it works consistentw
+        app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
+        myTextFrame.move(myPage, [0.05, 0.05]); //Page can’t be smaller than 0.5mm this number works in any measurement unit :)
 
-		myTextFrame.contents = myString;
-		myTextFrame.textFramePreferences.verticalJustification = VerticalJustification.CENTER_ALIGN;
+        myTextFrame.geometricBounds = [myBounds[0], myBounds[1], myBounds[2], myBounds[3]];
 
-		myTextFrame.label = myLabel;
-		myTextFrame.paragraphs[0].appliedParagraphStyle = myParagraphStyle;
-		return myTextFrame;
-	}
+        myTextFrame.contents = myString;
+        myTextFrame.textFramePreferences.verticalJustification = VerticalJustification.CENTER_ALIGN;
 
-	function addPageInfo(myApp, myPage){
-		myPage.bounds = myPage.page.bounds;
-		myPage.w = myApp.NumCon.doRound(myPage.bounds[3]-myPage.bounds[1], 2);
-		myPage.h = myApp.NumCon.doRound(myPage.bounds[2]-myPage.bounds[0], 2);
-		return myPage;
-	}
+        myTextFrame.label = myLabel;
+        myTextFrame.paragraphs[0].appliedParagraphStyle = myParagraphStyle;
+        return myTextFrame;
+    }
 
-	function fetchPage(myApp, myCover, myName, myPage){
-		var mPage    = new Object(); //master spine
-		mPage.name   = myName;
-		mPage.spread = myCover.masterSpreads.item(mPage.name);
-		mPage.page   = mPage.spread.pages[myPage];
+    function addPageInfo(myApp, myPage){
+        myPage.bounds = myPage.page.bounds;
+        myPage.w = myApp.NumCon.doRound(myPage.bounds[3]-myPage.bounds[1], 2);
+        myPage.h = myApp.NumCon.doRound(myPage.bounds[2]-myPage.bounds[0], 2);
+        return myPage;
+    }
 
-		if(!mPage.page.isValid){
-			alert("Can’t find the requested page!\nWhat happend to master spread "+mPage.name+"?");
-			exit(); // I’m done here
-		}
+    function fetchPage(myApp, myCover, myName, myPage){
+        var mPage    = new Object(); //master spine
+        mPage.name   = myName;
+        mPage.spread = myCover.masterSpreads.item(mPage.name);
+        mPage.page   = mPage.spread.pages[myPage];
 
-		mPage = addPageInfo(myApp, mPage);
-		return mPage;
-	}
+        if(!mPage.page.isValid){
+            alert("Can’t find the requested page!\nWhat happend to master spread "+mPage.name+"?");
+            exit(); // I’m done here
+        }
 
-	function fetchItem(myPage, myLabel){
-		//returns first object that has itemlabel
-		var myElements = myPage.parent.allPageItems;
-		var len = myElements.length;
-		for (var i = len-1; i >= 0; i--){
-			if(myElements[i].label == myLabel){
-				return myElements[i];
-			}
-		}
-		return null;
-	}
+        mPage = addPageInfo(myApp, mPage);
+        return mPage;
+    }
 
-	function positionSlugWidth(C, myPage, myItem){
-		myItem.geometricBounds = [-C.bleed-myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.mmSlug), 0, -C.bleed, myPage.w];
-		myItem.contents = myPage.w.toString();
-	}
+    function fetchItem(myPage, myLabel){
+        //returns first object that has itemlabel
+        var myElements = myPage.parent.allPageItems;
+        var len = myElements.length;
+        for (var i = len-1; i >= 0; i--){
+            if(myElements[i].label == myLabel){
+                return myElements[i];
+            }
+        }
+        return null;
+    }
 
-	function updateSpineSlug(myApp, myCover, C, newSpine){
-		//ref to spinepage
-		var mSpine = fetchPage(myApp, myCover, "CB-spine", 0);
-		var myLayer = myCover.layers.itemByName("Registration");
-		if(myLayer.isValid){
-			//check if it is locked
-			var myLock = myLayer.locked;
-			if(myLock){
-				//unlock
-				myLayer.locked = false;
-			}
-			//update width
-			var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
-			if(slugWidthFrame != null){
-				positionSlugWidth(C, mSpine, slugWidthFrame);
-			}
-			if(myLock){
-				//lock
-				myLayer.locked = true;
-			}
-			resetHeight(myApp,myCover);
-		} else {
-			alert("Could not find layer "+myLayerName);
-			return false;
-		}
-	}
+    function positionSlugWidth(C, myPage, myItem){
+        myItem.geometricBounds = [-C.bleed-myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.mmSlug), 0, -C.bleed, myPage.w];
+        myItem.contents = myPage.w.toString();
+    }
 
-	function resetHeight(myApp,myCover){
+    function updateSpineSlug(myApp, myCover, C, newSpine){
+        //ref to spinepage
+        var mSpine = fetchPage(myApp, myCover, "CB-spine", 0);
+        var myLayer = getRegistrationLayer(myApp,myCover);
+        if(myLayer.isValid){
+            //check if it is locked
+            var myLock = layerUnLockToggle(myLayer, true);
+            //update width
+            var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
+            if(slugWidthFrame != null){
+                positionSlugWidth(C, mSpine, slugWidthFrame);
+            }
+            resetHeight(myApp,myCover);
+            layerUnLockToggle(myLayer, myLock);
+        }
+    }
+
+    function resetHeight(myApp,myCover){
         try {
             var CVR4 = fetchPage(myApp, myCover, "CB-cover", 0);
             var groupFix = fetchItem(CVR4.page, "forcePageHeightGroup");
             var myLayer = groupFix.itemLayer;
+
             if(myLayer.isValid){
-                //check if it is locked
-                var myLock = myLayer.locked;
-                if(myLock){
-                    //unlock
-                    myLayer.locked = false;
-                }
                 var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
+                //check if it is locked
+                var myLock = layerUnLockToggle(myLayer, true);
                 groupFix.remove();
                 doHeight(myApp, myCover, myParaS);
-                if(myLock){
-                    //lock
-                    myLayer.locked = true;
-                }
+                layerUnLockToggle(myLayer, myLock);
             }
-		} catch(e) {
-		    removeOldMeasurements(myApp, myCover,["CB-WxH","CB-spine","CB-cover"]);
-		    try{
-		        var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
-		        doHeight(myApp, myCover, myParaS);
-		    } catch(e) {
-		        alert(e.description);
-		    }
-		}
-	}
+        } catch(e) {
+            removeOldMeasurements(myApp, myCover,["CB-WxH","CB-spine","CB-cover"]);
+            try{
+                var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
+                doHeight(myApp, myCover, myParaS);
+            } catch(e) {
+                alert(e.description);
+            }
+        }
+    }
 
-	function removeOldMeasurements(myApp, myCover, masters){
-	    for (var m=0; masters.length > m; m++){
+    function removeOldMeasurements(myApp, myCover, masters){
+        for (var m=0; masters.length > m; m++){
             // get ref to first page
             var mys    = fetchPage(myApp, myCover, masters[m], 0); // my spread
             var allpg  = mys.spread.allPageItems; // all pages
             for (var pp=0; allpg.length > pp; pp++){
                 try{
                     var myi = fetchItem(allpg[pp], "pageHeight");
-                        myi.remove();
+                    if(myi != null){
+                        var myLayer = myi.itemLayer;
+                        if(myLayer.isValid){
+                            var myLock = layerUnLockToggle(myLayer, true);
+                            myi.remove();
+                            layerUnLockToggle(myLayer, myLock);
+                        }
+                    }
                 }catch(nothing){};
             }
-	    }
-	}
+        }
+    }
 
-	////////////
-	// expose //
-	////////////
-	return {
-		fetchItem                : fetchItem,
-		fetchPage                : fetchPage,
-		updateSpineSlug          : updateSpineSlug,
-		resetHeight              : resetHeight,
-		placeSizesInSlug         : placeSizesInSlug,
-		getMeasureParagraphStyle : getMeasureParagraphStyle,
-		addTextFrame             : addTextFrame
-	};
+    function layerUnLockToggle(myLayer, myLock){
+        if(myLock == undefined){
+            myLock = myLayer.locked;
+        }
+        if(myLock){
+            //unlock
+            myLayer.locked = false;
+            return myLock;
+        } else {
+            myLayer.locked = true;
+            return myLock;
+        }
+    }
+
+    ////////////
+    // expose //
+    ////////////
+    return {
+        fetchItem                : fetchItem,
+        fetchPage                : fetchPage,
+        updateSpineSlug          : updateSpineSlug,
+        resetHeight              : resetHeight,
+        placeSizesInSlug         : placeSizesInSlug,
+        getMeasureParagraphStyle : getMeasureParagraphStyle,
+        addTextFrame             : addTextFrame
+    };
 })();
