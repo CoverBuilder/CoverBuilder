@@ -1,18 +1,10 @@
-// CoverBuilder Slugs
-// Bruno Herfst 2014
+// CoverBuilder Slugs V2.0
+// Bruno Herfst 2014 - 2015
 
 (function() {
     //////////////
     // privates //
     //////////////
-    function getRegistrationLayer(myApp,myCover){
-        var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
-        if(!regLayer.isValid){
-            alert("Could not find layer 'Registration'\n Please check and update your slugs manually");
-            // We find out if there are slug items in the document and get parent layer if there are any
-        }
-        return regLayer;
-    }
     function checkOverset(myApp, thisTextFrame, offset){
         //this function checks if text-frame has overset text and tries to fix it.
         //this function is made for smaller page sizes and we should be OK by jut adding the bleed.
@@ -28,7 +20,7 @@
         }
     }
     function doHeight(myApp, myCover, myParagraphStyle){
-        var regLayer = getRegistrationLayer(myApp,myCover);
+        var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
 
         var myLock = layerUnLockToggle(regLayer, true);
 
@@ -62,7 +54,7 @@
 
     function placeSizesInSlug(myApp, C, myCover){
         var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements");
-        var regLayer = getRegistrationLayer(myApp,myCover);
+        var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
 
         myCover.guides.everyItem().itemLayer = regLayer;
 
@@ -160,53 +152,56 @@
     }
 
     function positionSlugWidth(C, myPage, myItem){
+        var myLock = layerUnLockToggle(myItem.itemLayer, true);
         myItem.geometricBounds = [-C.bleed-myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.mmSlug), 0, -C.bleed, myPage.w];
         myItem.contents = myPage.w.toString();
+        layerUnLockToggle(myItem.itemLayer, myLock);
     }
 
     function updateSpineSlug(myApp, myCover, C, newSpine){
         //ref to spinepage
         var mSpine = fetchPage(myApp, myCover, "CB-spine", 0);
-        var myLayer = getRegistrationLayer(myApp,myCover);
-        if(myLayer.isValid){
-            //check if it is locked
-            var myLock = layerUnLockToggle(myLayer, true);
-            //update width
-            var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
-            if(slugWidthFrame != null){
-                positionSlugWidth(C, mSpine, slugWidthFrame);
-            }
-            resetHeight(myApp,myCover);
-            layerUnLockToggle(myLayer, myLock);
+        var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
+        if(slugWidthFrame != null){
+            positionSlugWidth(C, mSpine, slugWidthFrame);
         }
+        resetHeight(myApp,myCover);
     }
 
     function resetHeight(myApp,myCover){
         try {
             var CVR4 = fetchPage(myApp, myCover, "CB-cover", 0);
             var groupFix = fetchItem(CVR4.page, "forcePageHeightGroup");
-            var myLayer = groupFix.itemLayer;
-
-            if(myLayer.isValid){
-                var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
-                //check if it is locked
-                var myLock = layerUnLockToggle(myLayer, true);
-                groupFix.remove();
-                doHeight(myApp, myCover, myParaS);
-                layerUnLockToggle(myLayer, myLock);
+            if(groupFix != null){
+                var myLayer = groupFix.itemLayer;
+                if(myLayer.isValid){
+                    var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
+                    //check if it is locked
+                    var myLock = layerUnLockToggle(myLayer, true);
+                    groupFix.remove();
+                    doHeight(myApp, myCover, myParaS);
+                    layerUnLockToggle(myLayer, myLock);
+                } else {
+                    throw "Slugs.resetHeight(): Layer invalid.";
+                }
+            } else {
+                throw "Slugs.resetHeight(): No forcePageHeightGroup";
             }
         } catch(e) {
-            removeOldMeasurements(myApp, myCover,["CB-WxH","CB-spine","CB-cover"]);
-            try{
-                var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
-                doHeight(myApp, myCover, myParaS);
-            } catch(e) {
-                alert(e.description);
+            // Let's see if there are any old measurements, we don't want to add them if they where purposely removed.
+            if(removeOldMeasurements(myApp, myCover,["CB-WxH","CB-spine","CB-cover"])){
+                try{
+                    var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
+                    doHeight(myApp, myCover, myParaS);
+                } catch(e) {
+                    alert(e.description);
+                }
             }
         }
     }
 
     function removeOldMeasurements(myApp, myCover, masters){
+        var removedItems = false;
         for (var m=0; masters.length > m; m++){
             // get ref to first page
             var mys    = fetchPage(myApp, myCover, masters[m], 0); // my spread
@@ -219,12 +214,14 @@
                         if(myLayer.isValid){
                             var myLock = layerUnLockToggle(myLayer, true);
                             myi.remove();
+                            removedItems = true;
                             layerUnLockToggle(myLayer, myLock);
                         }
                     }
                 }catch(nothing){};
             }
         }
+        return removedItems;
     }
 
     function layerUnLockToggle(myLayer, myLock){
