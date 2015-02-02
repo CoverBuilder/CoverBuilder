@@ -4,7 +4,7 @@
 
 	CB_SlugFinisher.jsx    			(A CoverBuilder Helper Script)
 	An InDesign CS5 Javascript      (Tested in CS6)
-	Version 1.1
+	Version 1.2
 
 	Bruno Herfst 2013-2014
 
@@ -40,17 +40,25 @@
 	}];
 
 	function go(myApp) {
-		var myDoc  = myApp.Core.getActiveCover(myApp);
-		var CVR1PN = myApp.Core.getCVR1pageNo(myApp);
-		var myPage = app.activeWindow.activeSpread.pages[CVR1PN-1];
+		var myCover  = myApp.Core.getActiveCover(myApp);
+		var CVR1PN   = myApp.Core.getCVR1pageNo(myApp);
+		var myPage   = app.activeWindow.activeSpread.pages[CVR1PN-1];
 		if(myPage.isValid){
-			var swatchOBJ = finischUI(getSpotSwatches(myDoc));
+			var swatchOBJ = finischUI(getSpotSwatches(myCover));
 			if(swatchOBJ != undefined){
 				var myTextFrame = myApp.Slugs.fetchItem(myPage,"finish");
 				if(myTextFrame == null){
 					myTextFrame = createFrame(app.activeWindow.activeSpread);
 				}
-				setText(myApp,myDoc,myTextFrame, swatchOBJ);
+				setText(myApp,myCover,myTextFrame, swatchOBJ);
+				if(swatchOBJ.pageSizes){
+				    var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+				    if(C != null){
+				        myApp.Slugs.placeSizesInSlug(myApp, C, myCover);
+				    }
+				} else {
+				    myApp.Slugs.removeSlugMeasurements(myApp,myCover);
+				}
 			} // else user canceled
 		} else {
 			alert("Could not find front cover.");
@@ -85,8 +93,8 @@
 		return myApp.Slugs.addTextFrame(myPage, myFrameBounds, " ", myParagraphStyle, 0,"finish");
 	}
 
-	function getSpotSwatches(myDoc) {
-		mySwatches = myDoc.swatches;
+	function getSpotSwatches(myCover) {
+		mySwatches = myCover.swatches;
 		var i = mySwatches.length - 1;
 		var spotSwatches = [];
 		while (i--) {
@@ -106,11 +114,11 @@
 		var myNoteTextField = null;
 
 		var myDialog = app.dialogs.add({
-			name: "Insert Colours and Finish",
+			name: "Slug Tool",
 			canCancel: true
 		});
 		with(myDialog) {
-			with(dialogColumns.add()) {
+			with(dialogColumns.add()) {		   
 				with(dialogRows.add()) {
 					// P R O C E S S
 					with(borderPanels.add()) {
@@ -118,7 +126,6 @@
 							staticLabel: "PROCESS:"
 						});
 						with(dialogColumns.add()) {
-
 							for (myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
 								var myCheckbox;
 								myCMYKCheckboxes.push(myCheckbox);
@@ -172,11 +179,18 @@
 						}
 					}
 				}
+				// P A G E S I Z E S
+                with(borderPanels.add()) {
+                    myPageSizeSlugCheckbox = checkboxControls.add({
+                                staticLabel: "Page measurements in slug.",
+                                checkedState: true
+                            });
+                }
 			}
 		}
 		//Display the dialog box.
 		if (myDialog.show() == true) {
-			//Get process
+		    //Get process
 			var i = myCMYKCheckboxes.length;
 			var processSwatches = [];
 			while (i--) {
@@ -203,24 +217,25 @@
 				myNoteText.push(myNoteTextField.editContents);
 			}
 			return {
-				process: processSwatches,
-				spot:    spotSwatches,
-				finish:  myFinishSelect,
-				note:    myNoteText
+				process:   processSwatches,
+				spot:      spotSwatches,
+				finish:    myFinishSelect,
+				note:      myNoteText,
+				pageSizes: myPageSizeSlugCheckbox.checkedState
 			}
 		}
 	}
 
-	function setText(myApp,myDoc,tf, swatchOBJ) {
+	function setText(myApp,myCover,tf, swatchOBJ) {
 		var tempString = "";
 		var first = true;
 		tf.contents = "";
 
 		if (swatchOBJ.process.length > 0) {
-			myApp.Core.addColor(myDoc, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
-			myApp.Core.addColor(myDoc, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
-			myApp.Core.addColor(myDoc, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
-			myApp.Core.addColor(myDoc, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
+			myApp.Core.addColor(myCover, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
+			myApp.Core.addColor(myCover, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
+			myApp.Core.addColor(myCover, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
+			myApp.Core.addColor(myCover, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
 
 			var i = swatchOBJ.process.length;
 			while (i--) {

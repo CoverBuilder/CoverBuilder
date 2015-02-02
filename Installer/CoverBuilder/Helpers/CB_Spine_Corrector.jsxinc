@@ -65,7 +65,7 @@
 		C.bleed = docBleed;
 
 		//ref to spinepage
-		var mSpine = myApp.Slugs.fetchPage(myApp, myCover, "CB-spine", 0);
+		var mSpine = myApp.Slugs.fetchMasterPage(myApp, myCover, "CB-spine", 0);
 
 		//let’s ask the user what the new spine should be
 		var newSpine = getNewSpineUI(myApp, C);

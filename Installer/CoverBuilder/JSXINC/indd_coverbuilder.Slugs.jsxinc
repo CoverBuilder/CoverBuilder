@@ -53,10 +53,11 @@
     }
 
     function placeSizesInSlug(myApp, C, myCover){
+        removeSlugMeasurements(myApp, myCover); // Make sure there are no old items
+        
         var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements");
         var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
-
-        myCover.guides.everyItem().itemLayer = regLayer;
+        var myLock = layerUnLockToggle(regLayer, true);
 
         //top
         for (i=0;myCover.masterSpreads.length-1>i;i++){
@@ -71,7 +72,7 @@
         }
 
         doHeight(myApp, myCover, myParagraphStyle);
-        regLayer.locked = true;
+        layerUnLockToggle(regLayer, myLock);
     }
 
     function getMeasureParagraphStyle(myApp, myCover, psName){
@@ -124,8 +125,8 @@
         return myPage;
     }
 
-    function fetchPage(myApp, myCover, myName, myPage){
-        var mPage    = new Object(); //master spine
+    function fetchMasterPage(myApp, myCover, myName, myPage){
+        var mPage    = new Object();
         mPage.name   = myName;
         mPage.spread = myCover.masterSpreads.item(mPage.name);
         mPage.page   = mPage.spread.pages[myPage];
@@ -139,16 +140,29 @@
         return mPage;
     }
 
-    function fetchItem(myPage, myLabel){
-        //returns first object that has itemlabel
-        var myElements = myPage.parent.allPageItems;
-        var len = myElements.length;
-        for (var i = len-1; i >= 0; i--){
-            if(myElements[i].label == myLabel){
-                return myElements[i];
+    function fetchItem(mySpread, myLabel, returnAll){
+        //returns array of all items that have label unless returnAll is set to true, then it return just the item;
+        //if nothing is found this function returns null
+        returnAll = returnAll || false;
+        var allItems = new Array();
+        if(mySpread.isValid){        
+            var myElements = mySpread.allPageItems;
+            var len = myElements.length;
+            for (var i = len-1; i >= 0; i--){
+                if(myElements[i].label == myLabel){
+                    if(returnAll){
+                        allItems.push(myElements[i]); 
+                    } else {
+                        return myElements[i];
+                    }
+                }
             }
+        } else {
+            alert("CoverBuilder.Slugs: Expected a valid spread.");
         }
-        return null;
+        if(allItems.length > 0){
+            return allItems;
+        } else { return null; }
     }
 
     function positionSlugWidth(C, myPage, myItem){
@@ -160,7 +174,7 @@
 
     function updateSpineSlug(myApp, myCover, C, newSpine){
         //ref to spinepage
-        var mSpine = fetchPage(myApp, myCover, "CB-spine", 0);
+        var mSpine = fetchMasterPage(myApp, myCover, "CB-spine", 0);
         var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
         if(slugWidthFrame != null){
             positionSlugWidth(C, mSpine, slugWidthFrame);
@@ -170,7 +184,7 @@
 
     function resetHeight(myApp,myCover){
         try {
-            var CVR4 = fetchPage(myApp, myCover, "CB-cover", 0);
+            var CVR4 = fetchMasterPage(myApp, myCover, "CB-cover", 0);
             var groupFix = fetchItem(CVR4.page, "forcePageHeightGroup");
             if(groupFix != null){
                 var myLayer = groupFix.itemLayer;
@@ -189,7 +203,7 @@
             }
         } catch(e) {
             // Let's see if there are any old measurements, we don't want to add them if they where purposely removed.
-            if(removeOldMeasurements(myApp, myCover,["CB-WxH","CB-spine","CB-cover"])){
+            if(removeFromMasterSpreads(myApp, myCover,["CB-WxH","CB-spine","CB-cover"],["pageHeight"])){
                 try{
                     var myParaS = getMeasureParagraphStyle(myApp, myCover, "measurements");
                     doHeight(myApp, myCover, myParaS);
@@ -200,28 +214,38 @@
         }
     }
 
-    function removeOldMeasurements(myApp, myCover, masters){
+    function removeFromMasterSpreads(myApp, myCover, masters, scriptLabels){
         var removedItems = false;
         for (var m=0; masters.length > m; m++){
-            // get ref to first page
-            var mys    = fetchPage(myApp, myCover, masters[m], 0); // my spread
-            var allpg  = mys.spread.allPageItems; // all pages
-            for (var pp=0; allpg.length > pp; pp++){
+            for (var ii=0; scriptLabels.length > ii; ii++){
                 try{
-                    var myi = fetchItem(allpg[pp], "pageHeight");
-                    if(myi != null){
-                        var myLayer = myi.itemLayer;
-                        if(myLayer.isValid){
-                            var myLock = layerUnLockToggle(myLayer, true);
-                            myi.remove();
-                            removedItems = true;
-                            layerUnLockToggle(myLayer, myLock);
+                    var myItems = fetchItem(myCover.masterSpreads.item(masters[m]), scriptLabels[ii], true);
+                    if(myItems != null){
+                        for(var i = 0; myItems.length > i; i++){
+                            var myItem = myItems[i];
+                            var myLayer = myItem.itemLayer;
+                            if(myLayer.isValid){
+                                var myLock = layerUnLockToggle(myLayer, true);
+                                myItem.remove();
+                                removedItems = true;
+                                layerUnLockToggle(myLayer, myLock);
+                            }
                         }
                     }
-                }catch(nothing){};
+                }catch(nothing){
+                    //alert(nothing);
+                };
             }
         }
         return removedItems;
+    }
+    
+    function removeSlugMeasurements(myApp, myCover){
+        try{
+            removeFromMasterSpreads(myApp, myCover,["CB-WxH","CB-spine","CB-cover"],["forcePageHeightGroup","pageHeight","pageWidth"]);
+        } catch(err) {
+            alert(err);
+        }
     }
 
     function layerUnLockToggle(myLayer, myLock){
@@ -243,11 +267,12 @@
     ////////////
     return {
         fetchItem                : fetchItem,
-        fetchPage                : fetchPage,
+        fetchMasterPage          : fetchMasterPage,
         updateSpineSlug          : updateSpineSlug,
         resetHeight              : resetHeight,
         placeSizesInSlug         : placeSizesInSlug,
         getMeasureParagraphStyle : getMeasureParagraphStyle,
-        addTextFrame             : addTextFrame
+        addTextFrame             : addTextFrame,
+        removeSlugMeasurements   : removeSlugMeasurements
     };
 })();

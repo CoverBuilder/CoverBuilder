@@ -322,12 +322,13 @@
 
 		//Set sizes in slug
 		myApp.Slugs.placeSizesInSlug(myApp,C,myCover);
+        
+        myCover.documentPreferences.facingPages = false;
 
 		// Move registration layer to top of doc
+		myCover.guides.everyItem().itemLayer = myCover.layers.item("Registration");
 		myCover.layers.item("Registration").move(LocationOptions.AT_BEGINNING);
-
-		myCover.documentPreferences.facingPages = false;
-
+        myCover.layers.item("Registration").locked = true;
 		//select most bottom layer (Art)
 		myCover.activeLayer = myCover.layers[myCover.layers.length-1];
 		return myCover;
