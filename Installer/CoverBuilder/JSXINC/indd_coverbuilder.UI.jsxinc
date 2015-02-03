@@ -1,5 +1,6 @@
 // CoverBuilder UI
-// Bruno Herfst 2014
+// Bruno Herfst 2014-2015
+// Version 2.0.0
 
 (function() {
     //////////////
@@ -56,13 +57,14 @@
         /////////////////////////////////////////////////////////////////////////////
         var minimalGroup = myWindow.add ("group");
             minimalGroup.margins = [20,0,20,0];
-            minimalGroup.add ("statictext", undefined, "Width:");
-                var myWidth = minimalGroup.add ("edittext", undefined, "0");
-                myWidth.characters = 6;
 
             minimalGroup.add ("statictext", undefined, "Height:");
                 var myHeight = minimalGroup.add ("edittext", undefined, "0");
                 myHeight.characters = 6;
+
+			minimalGroup.add ("statictext", undefined, "Width:");
+                var myWidth = minimalGroup.add ("edittext", undefined, "0");
+                myWidth.characters = 6;
 
             minimalGroup.add ("statictext", undefined, "Spine:");
                 var mySpine = minimalGroup.add ("edittext", undefined, "0");
@@ -84,6 +86,7 @@
                 var optional2Group = optionalInputpanel.add ("group");
                     optional2Group.orientation =  "row";
                     optional2Group.margins = [0,0,0,5];
+
                     var hingeDropdown = optional2Group.add ("dropdownlist", undefined, ["- Hinge/Score:","+ Hinge/Score:"]);
                     hingeDropdown.selection = 0;
                     hingeDropdown.preferredSize.width = 170; //design
@@ -93,13 +96,13 @@
                     var wrapDropdown = optional2Group.add ("dropdownlist", undefined, ["- Wrap:","+ Wrap:"]);
                     wrapDropdown.selection = 1;
                     wrapDropdown.preferredSize.width = 160; //design
-
                     var myWrap = optional2Group.add ("edittext", undefined, "0");
                     myWrap.characters = 6;
 
                 var optional1Group = optionalInputpanel.add ("group");
                     optional1Group.orientation =  "row";
                     optional1Group.margins = [0,0,0,5];
+
                     var flapQBDropdown = optional1Group.add ("dropdownlist", undefined, ["Flaps:","- Binding:","+ Binding:"]);
                     flapQBDropdown.selection = 0;
                     flapQBDropdown.preferredSize.width = 170; //design
