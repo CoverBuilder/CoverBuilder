@@ -7,6 +7,22 @@
     //////////////
     // privates //
     //////////////
+	//-----------------------------------------------------------------------------------
+    //  SELECTION TOOLS
+    //-----------------------------------------------------------------------------------
+	function itemsSelected(myApp, tellUser){
+		// This function needs more work which can be done when needed.
+		// Always return a Boolean
+		var tellUser = tellUser || false;
+		var selectionType = "something";
+		if(app.selection.length < 1){
+			if(tellUser){
+				alert("Please select " + selectionType + " before running this function.");
+			}
+			return false;
+		}
+		return true;
+	}
 
     //-----------------------------------------------------------------------------------
     //  LAYER TOOLS
@@ -146,17 +162,19 @@
     ////////////
     // Return an object exposed to the public
     return {
+    	// SelectionTools
+    	itemsSelected           : itemsSelected,
         // LayerTools
-        moveLayer             : moveLayer,
-        selectLayer           : selectLayer,
-        getLayer              : getLayer,
-        getAndSelectLayer     : getAndSelectLayer,
-        getSelectAndMoveLayer : getSelectAndMoveLayer,
+        moveLayer               : moveLayer,
+        selectLayer             : selectLayer,
+        getLayer                : getLayer,
+        getAndSelectLayer       : getAndSelectLayer,
+        getSelectAndMoveLayer   : getSelectAndMoveLayer,
         // PageTools
-        getActiveCover        : getActiveCover,
-        getCVR1pageNo         : getCVR1pageNo,
-        createPageObject      : createPageObject,
+        getActiveCover          : getActiveCover,
+        getCVR1pageNo           : getCVR1pageNo,
+        createPageObject        : createPageObject,
         // ColourTools
-        addColor              : addColor
+        addColor                : addColor
     };
 })();
