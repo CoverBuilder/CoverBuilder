@@ -1,0 +1,112 @@
+/*
+    CB_BreakFrames.jsx          (A CoverBuilder Helper Script)
+    An InDesign JavaScript      (Tested in CS6)
+
+    Version 1.0
+
+    This script breaks frames over a spread.
+    
+    Bruno Herfst 2012-2014
+    coverbuilder.brunoHerfst.com
+
+*/
+
+(function() {
+	//////////////
+	// privates //
+	//////////////
+	var doTextFrames = false;
+    
+    function onCover(myApp){
+        var myCover = myApp.Core.getActiveCover(myApp, true);
+        try{
+            if(breakCover(myApp, myCover)) {
+                alert("Done!");
+            }
+        } catch(err) {
+            alert(err);
+        }
+    }
+    
+    function breakCover(myApp, myCover){
+        //For all spreads
+        var spreadsLen = myCover.spreads.length;
+        for (var i=spreadsLen-1; i>=0; i--){
+              breakSpread(myApp, myCover, myCover.spreads[i]);
+        }
+        return true;
+    }
+    
+    function breakSpread(myApp, myCover, mySpread){
+        var ruleror = myCover.viewPreferences.rulerOrigin;
+        myCover.viewPreferences.rulerOrigin = RulerOrigin.SPREAD_ORIGIN;
+
+        var mySpreadRectangles  = mySpread.rectangles;
+        var mySpreadOvals       = mySpread.ovals;
+        var mySpreadPolygons    = mySpread.polygons;
+    
+        var mySpreadPages = mySpread.pages;
+        var pagesLen      = mySpreadPages.length;
+        var myPages       = new Array();
+
+        for (var page = pagesLen-1; page>=0; page--){
+            // Get page bounds including bleed
+            if(page == 0){ // first
+                var myFrameBounds	= myApp.Core.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 3);
+            } else if (page == pagesLen-1){
+                var myFrameBounds	= myApp.Core.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 1);
+            } else {
+                var myFrameBounds	= myApp.Core.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 2);
+            }
+            myPages.push({page: mySpreadPages[page], bounds:myFrameBounds});
+        }
+
+        if(myPages.length > 1) {
+            breakFramesTo(myApp, myPages, mySpreadRectangles);
+            breakFramesTo(myApp, myPages, mySpreadOvals);
+            breakFramesTo(myApp, myPages, mySpreadPolygons);
+        } 
+        myCover.viewPreferences.rulerOrigin = ruleror;
+        return true;
+    }
+
+    function breakFramesTo(myApp, myPages, mySpreadItems){
+        for ( i = mySpreadItems.length-1; i >= 0; i-- ) {
+            var spreadItem = mySpreadItems[i];
+            var myLayer = spreadItem.itemLayer;
+            //make sure layer is unlocked
+            var myLayerLock = myLayer.locked;
+            if(myLayerLock){
+                myLayer.locked = false;
+            }
+            // Check item agains every page
+            var pagesLen = myPages.length;
+            for (var j = pagesLen-1; j >= 0; j--){
+                var myDupItem = spreadItem.duplicate();
+                var rect = myPages[j].page.rectangles.add(myLayer,{geometricBounds:myPages[j].bounds, fillColor:"None", strokeColor:"None"});
+                    rect.sendToBack();
+                try {
+                    rect.intersectPath(myDupItem);
+                } catch(e) {
+                    // Don't break if it doesn't work out. It's OK.
+                    rect.remove();
+                    myDupItem.remove();
+                    // alert(e.description);
+                }
+            }
+            spreadItem.remove();
+            //set original lock
+            if(myLayerLock){
+                myLayer.locked = true;
+            }
+        }
+    }
+    
+	////////////
+	// expose //
+	////////////
+	return {
+		onCover  : onCover
+	};
+
+})();

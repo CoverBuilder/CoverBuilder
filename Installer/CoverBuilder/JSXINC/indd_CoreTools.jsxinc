@@ -107,6 +107,40 @@
 		}
         return P;
     }
+    
+    function getPageBleedBounds(myApp, myCover, myPage, selector){
+        
+        var myCoverBleed = {
+                Top    : myCover.documentPreferences.documentBleedTopOffset,
+                Bottom : myCover.documentPreferences.documentBleedBottomOffset,
+                Left   : myCover.documentPreferences.documentBleedInsideOrLeftOffset,
+                Right  : myCover.documentPreferences.documentBleedOutsideOrRightOffset
+            };
+
+        var myBleedBounds = myPage.bounds; //[y1, x1, y2, x2]
+
+        // Add top and bottom bleed
+        myBleedBounds[0] -= myCoverBleed.Top;
+        myBleedBounds[2] += myCoverBleed.Bottom;
+
+        // Left and right bleed
+        switch (selector){
+            case 2:
+                return myBleedBounds; // Return page-bounds with top+bottom bleed
+                break;
+            case 3:
+                myBleedBounds[1] -= myCoverBleed.Left;
+                return myBleedBounds;
+                break;
+            case 1:
+                myBleedBounds[3] += myCoverBleed.Right;
+                return myBleedBounds;
+                break;
+            default: // Return page-bounds without bleed
+                return myPage.bounds;
+                break;
+        }
+    }
 
     //-----------------------------------------------------------------------------------
     //  COLOUR TOOLS
@@ -156,6 +190,7 @@
         getActiveCover        : getActiveCover,
         getCVR1pageNo         : getCVR1pageNo,
         createPageObject      : createPageObject,
+        getPageBleedBounds    : getPageBleedBounds,
         // ColourTools
         addColor              : addColor
     };
