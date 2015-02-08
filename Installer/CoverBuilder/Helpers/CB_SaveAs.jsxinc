@@ -26,23 +26,29 @@
         if(C != null){
             var myType = "_CVR_";
             var myW    = C.width;
-            var myH    = C.height;
+            var myH    = "x" + C.height;
             var myS    = "x" + Math.floor(C.spine);
         } else { // Not a cover
             var myType = "_TXT_";
             var myW    = Math.floor(myCover.documentPreferences.pageWidth);
-            var myH    = Math.floor(myCover.documentPreferences.pageHeight);
+            var myH    = "x" + Math.floor(myCover.documentPreferences.pageHeight);
             var myS    = ""; // No spine
         }
-		
+
 		// Get or create doc name
 		if(myCover.metadataPreferences.documentTitle == ""){
-			myCover.metadataPreferences.documentTitle = prompt("What is the title of the book?");
-			var booktitle = myCover.metadataPreferences.documentTitle.replace(/[ ,]/g,'');
+			var booktitle = prompt("What is the title of the book?");
+			if(booktitle == null){
+				return null; //bail
+			}
+			// safe the title as meta data
+			myCover.metadataPreferences.documentTitle = booktitle;
+			// Update title to safe filename
+			booktitle = booktitle.replace(/[ ,\?\!]/g,'');
 		}
 
 		// Create temp-file with the right name
-		var fileName = booktitle + myType + myW + "x" + myH + myS + "_MU00.indd";
+		var fileName = booktitle + myType + myW + myH + myS + "_MU00.indd";
 		var tempfile = File(myApp.PathTo.settingsFolder + fileName);
 		myCover.save(tempfile);
 
