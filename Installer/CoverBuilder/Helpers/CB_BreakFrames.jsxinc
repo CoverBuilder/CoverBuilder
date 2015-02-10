@@ -17,10 +17,10 @@
 	//////////////
 	var doTextFrames = false;
     
-    function onCover(myApp){
+    function activeCover(myApp){
         var myCover = myApp.Core.getActiveCover(myApp, true);
         try{
-            if(breakCover(myApp, myCover)) {
+            if(thisCover(myApp, myCover)) {
                 alert("Done!");
             }
         } catch(err) {
@@ -28,7 +28,7 @@
         }
     }
     
-    function breakCover(myApp, myCover){
+    function thisCover(myApp, myCover){
         //For all spreads
         var spreadsLen = myCover.spreads.length;
         for (var i=spreadsLen-1; i>=0; i--){
@@ -106,7 +106,8 @@
 	// expose //
 	////////////
 	return {
-		onCover  : onCover
+		activeCover : activeCover,
+		thisCover     : thisCover
 	};
 
 })();

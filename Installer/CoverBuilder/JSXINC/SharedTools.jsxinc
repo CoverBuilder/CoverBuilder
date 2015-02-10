@@ -28,8 +28,10 @@
     //-----------------------------------------------------------------------------------
     //  C (COVER OBJECT) TOOLS
     //-----------------------------------------------------------------------------------
-
-    function getMeasurementUnits(myApp, C){
+    function getMeasurementUnits(myApp, C, returnInDesignMeasurementUnits){
+        // set to true to always return InDesign MeasurementUnits
+        // e.g. MeasurementUnits.MILLIMETERS -> 2053991795
+        var inddMU = returnInDesignMeasurementUnits || false;
         switch(typeof C) {
             case "object":
             case "number":
@@ -41,12 +43,21 @@
                 }
                 switch(munit) {
                     case 0:
+                        if(inddMU){
+                            return 2053991795;
+                        }
                         return "mm";
                         break;
                     case 1:
+                        if(inddMU){
+                            return 2053729891;
+                        }
                         return "inch";
                         break;
                     case 2:
+                        if(inddMU){
+                            return 2054188905;
+                        }
                         return "pt";
                         break;
                     default:
@@ -58,12 +69,21 @@
                 // We need to return a number
                 switch(C.toLowerCase()) {
                     case "mm":
+                        if(inddMU){
+                            return 2053991795;
+                        }
                         return 0;
                         break;
                     case "inch":
+                        if(inddMU){
+                            return 2053729891;
+                        }
                         return 1;
                         break;
                     case "pt":
+                        if(inddMU){
+                            return 2054188905;
+                        }
                         return 2;
                         break;
                     default:
