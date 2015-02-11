@@ -185,7 +185,7 @@
     function resetHeight(myApp,myCover){
         try {
             var CVR4 = fetchMasterPage(myApp, myCover, "CB-cover", 0);
-            var groupFix = fetchItem(CVR4.page, "forcePageHeightGroup");
+            var groupFix = fetchItem(CVR4.spread, "forcePageHeightGroup");
             if(groupFix != null){
                 var myLayer = groupFix.itemLayer;
                 if(myLayer.isValid){
