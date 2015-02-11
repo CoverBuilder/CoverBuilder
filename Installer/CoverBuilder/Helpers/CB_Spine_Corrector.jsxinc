@@ -42,7 +42,7 @@
     }
 
     function changeSpine(myApp) {
-        var myCover = myApp.Core.getActiveCover(myApp);
+        var myCover = myApp.Tools.getActiveCover(myApp);
         if(!myCover){
             exit();
         }

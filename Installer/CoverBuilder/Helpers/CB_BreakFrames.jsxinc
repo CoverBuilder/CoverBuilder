@@ -18,7 +18,7 @@
 	var doTextFrames = false;
     
     function activeCover(myApp){
-        var myCover = myApp.Core.getActiveCover(myApp, true);
+        var myCover = myApp.Tools.getActiveCover(myApp, true);
         try{
             if(thisCover(myApp, myCover)) {
                 alert("Done!");
@@ -52,11 +52,11 @@
         for (var page = pagesLen-1; page>=0; page--){
             // Get page bounds including bleed
             if(page == 0){ // first
-                var myFrameBounds	= myApp.Core.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 3);
+                var myFrameBounds	= myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 3);
             } else if (page == pagesLen-1){
-                var myFrameBounds	= myApp.Core.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 1);
+                var myFrameBounds	= myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 1);
             } else {
-                var myFrameBounds	= myApp.Core.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 2);
+                var myFrameBounds	= myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 2);
             }
             myPages.push({page: mySpreadPages[page], bounds:myFrameBounds});
         }

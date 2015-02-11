@@ -173,7 +173,7 @@
 			pos = addOffset(pos, [AssetObj.offsetX,AssetObj.offsetY]);
 
 			if(typeof C != "object"){
-				var myCover = myApp.Core.getActiveCover(myApp);
+				var myCover = myApp.Tools.getActiveCover(myApp);
 				C = myApp.XMP.retrieveCoverObject(myApp, myCover);
 			}
 			//if places on the back or front cover add hinge to offset

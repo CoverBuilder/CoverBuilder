@@ -481,8 +481,8 @@
 	function exportCover(myApp){
 		//Make certain that user interaction (display of dialogs, etc.) is turned on.
     	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
-    	myPresets.doc    = myApp.Core.getActiveCover(myApp);
-		myPresets.CVR1PN = myApp.Core.getCVR1pageNo(myApp);
+    	myPresets.doc    = myApp.Tools.getActiveCover(myApp);
+		myPresets.CVR1PN = myApp.Tools.getCVR1pageNo(myApp);
 
         if(myPresets.preflight) {
             try{

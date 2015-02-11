@@ -21,7 +21,7 @@
 	//////////////
 
 	function loadsettings(myApp) {
-		var myCover = myApp.Core.getActiveCover(myApp);
+		var myCover = myApp.Tools.getActiveCover(myApp);
 		var C       = myApp.XMP.retrieveCoverObject(myApp, myCover);
 
 		if( C != null ){

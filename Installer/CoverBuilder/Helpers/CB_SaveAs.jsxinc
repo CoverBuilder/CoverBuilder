@@ -21,7 +21,7 @@
 	//////////////
 
 	function saveas(myApp) {
-		var myCover = myApp.Core.getActiveCover(myApp, true);
+		var myCover = myApp.Tools.getActiveCover(myApp, true);
 		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
         if(C != null){
             var myType = "_CVR_";

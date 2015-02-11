@@ -40,8 +40,8 @@
 	}];
 
 	function go(myApp) {
-		var myCover  = myApp.Core.getActiveCover(myApp);
-		var CVR1PN   = myApp.Core.getCVR1pageNo(myApp);
+		var myCover  = myApp.Tools.getActiveCover(myApp);
+		var CVR1PN   = myApp.Tools.getCVR1pageNo(myApp);
 		var myPage   = app.activeWindow.activeSpread.pages[CVR1PN-1];
 		if(myPage.isValid){
 			var swatchOBJ = finischUI(getSpotSwatches(myCover));
@@ -66,7 +66,7 @@
 	}
 
 	function createFrame(thisSpread){
-		var myCover = myApp.Core.getActiveCover(myApp);
+		var myCover = myApp.Tools.getActiveCover(myApp);
 
 		if(!myCover){
 			exit();
@@ -232,10 +232,10 @@
 		tf.contents = "";
 
 		if (swatchOBJ.process.length > 0) {
-			myApp.Core.addColor(myCover, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
-			myApp.Core.addColor(myCover, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
-			myApp.Core.addColor(myCover, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
-			myApp.Core.addColor(myCover, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
+			myApp.Tools.addColor(myCover, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
+			myApp.Tools.addColor(myCover, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
+			myApp.Tools.addColor(myCover, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
+			myApp.Tools.addColor(myCover, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
 
 			var i = swatchOBJ.process.length;
 			while (i--) {

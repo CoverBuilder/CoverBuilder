@@ -38,7 +38,7 @@
     }
 
     function send2photoshop(myApp){
-        var myCover = myApp.Core.getActiveCover(myApp, true);
+        var myCover = myApp.Tools.getActiveCover(myApp, true);
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
 		var addSpine = true;
 
@@ -49,10 +49,10 @@
 
 			var myPages = new Array();
 			for (i = 0; i < currSpread.pages.length; i++) {
-				myPages.push(myApp.Core.createPageObject(myApp, myCover, currSpread.pages[i]));
+				myPages.push(myApp.Tools.createPageObject(myApp, myCover, currSpread.pages[i]));
 			}
 			if(myPages.length == 1){
-            	//var myPage = myApp.Core.createPageObject(myApp, myCover, currPages[0]);
+            	//var myPage = myApp.Tools.createPageObject(myApp, myCover, currPages[0]);
                 var newC = {name:"Send to Photoshop",width:myPages[0].width,height:myPages[0].height,spine:0,ppi:600,bleed:myBleed,measureUnit:0};
 				C = myApp.STools.Cparser(myApp, newC);
             } else if(myPages.length == 2){

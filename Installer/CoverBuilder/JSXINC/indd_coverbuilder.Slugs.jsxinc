@@ -20,7 +20,7 @@
         }
     }
     function doHeight(myApp, myCover, myParagraphStyle){
-        var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
+        var regLayer = myApp.Tools.getAndSelectLayer(myCover, "Registration");
 
         var myLock = layerUnLockToggle(regLayer, true);
 
@@ -56,7 +56,7 @@
         removeSlugMeasurements(myApp, myCover); // Make sure there are no old items
         
         var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements");
-        var regLayer = myApp.Core.getAndSelectLayer(myCover, "Registration");
+        var regLayer = myApp.Tools.getAndSelectLayer(myCover, "Registration");
         var myLock = layerUnLockToggle(regLayer, true);
 
         //top

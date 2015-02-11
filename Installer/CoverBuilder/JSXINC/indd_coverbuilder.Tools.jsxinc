@@ -1,4 +1,4 @@
-// CoreTools for InDesign
+// Tools for InDesign
 // Indesign helpers for CoverBuilder
 // Bruno Herfst 2014
 // Version 1.0.1
@@ -49,7 +49,7 @@
             layer.move(LocationOptions.AFTER,layer.parent.layers[afterlayerNo]);
             return layer
         } catch (e) {
-            alert("CoverBuilder.CoreTools MoveLayer\n" + e.description);
+            alert("CoverBuilder.Tools MoveLayer\n" + e.description);
         }
     }
 
@@ -61,8 +61,8 @@
         var returnDoc = myDoc || false;
         if(returnDoc.constructor != Boolean){
             returnDoc =  false;
-            //I want to know if we receive something unexpected
-            alert("Something went wrong! \nindd_CoreTools.jsxinc -> getActiveCover -> Expected Boolean" );
+            //This should never happen but I want to know if it is used wrong
+            alert("Dude!\ngetActiveCover -> Expected Boolean" );
         }
 
         //Make certain that user interaction (display of dialogs, etc.) is turned on.
@@ -89,7 +89,7 @@
     }
 
     function getCVR1pageNo(myApp){
-        var myCover = myApp.Core.getActiveCover(myApp);
+        var myCover = myApp.Tools.getActiveCover(myApp);
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
         if(C.flap > 0){
             return 4;
