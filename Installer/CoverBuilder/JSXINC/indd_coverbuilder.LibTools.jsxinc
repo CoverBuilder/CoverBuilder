@@ -81,7 +81,7 @@
 
         // Try and parse original size from description
         try{
-            eval("var sizeObj = " + String(this.asset.description) + ";");
+            eval("var sizeObj = " + String(this.asset.description) + ";"); // {unit:0,w:5,h:5} == 5mm x 5mm
             this.measureUnit = sizeObj.unit;
             this.width       = sizeObj.w;
             this.height      = sizeObj.h;
@@ -100,13 +100,15 @@
         }
         this.convertToUnits = function (myApp, myMeasureUnits){
             // validate input
-            try{
-                var myMeasureUnits = myApp.STools.checkMeasureUnit(myApp, myMeasureUnits);
-            } catch(err){
-                alert(err);
-            }
+            var myMeasureUnits   = myApp.STools.checkMeasureUnit(myApp, myMeasureUnits);
+            var thisMeasureUnits = myApp.STools.checkMeasureUnit(myApp, this.measureUnit);
+
             if(isNaN(myMeasureUnits)){
-                alert(myMeasureUnits);
+                alert("Could not convert libObject " + this.name +  "\nFrom measureUnit: " + this.measureUnit + " To: " + myMeasureUnits);
+                return;
+            }
+            if(isNaN(thisMeasureUnits)){ // Make sure that we are good to go.
+            	alert("Could not convert libObject " + this.name + "\nNo measure defined in description.");
                 return;
             }
             this.width       = myApp.NumCon.convert(myApp, this.width,   this.measureUnit, myMeasureUnits);
