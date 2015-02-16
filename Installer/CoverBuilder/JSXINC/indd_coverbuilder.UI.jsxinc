@@ -62,7 +62,7 @@
                 var myHeight = minimalGroup.add ("edittext", undefined, "0");
                 myHeight.characters = 6;
 
-			minimalGroup.add ("statictext", undefined, "Width:");
+            minimalGroup.add ("statictext", undefined, "Width:");
                 var myWidth = minimalGroup.add ("edittext", undefined, "0");
                 myWidth.characters = 6;
 
@@ -769,7 +769,7 @@
             presets.selection = MyPresets.presets.length;
         }
 
-		presetChange = false;
+        presetChange = false;
         myWindow.show();
 
         return C;

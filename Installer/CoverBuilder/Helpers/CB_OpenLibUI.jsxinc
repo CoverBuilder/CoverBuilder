@@ -3,71 +3,71 @@
 
 --------------------------------------------
 
-	CB_OpenLibUI.jsxinc
-	A CoverBuilder Helper Script for InDesign CS5+
-	Version 1.0
+    CB_OpenLibUI.jsxinc
+    A CoverBuilder Helper Script for InDesign CS5+
+    Version 1.0
 
-	Bruno Herfst 2015
+    Bruno Herfst 2015
 
-	Thanks to Marijan Tompa who wrote most of this code:
-	http://tomaxxi.com/2010/07/drop-down-library-opener/
+    Thanks to Marijan Tompa who wrote most of this code:
+    http://tomaxxi.com/2010/07/drop-down-library-opener/
 
 --------------------------------------------
 
 */
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
-	var strNoFiles   = String("-- No libraries found --"); // shows if no libraries found
-	var strWinTitle  = String("Library opener");
-	var strSelectLib = String("Select library:");
+    //////////////
+    // privates //
+    //////////////
+    var strNoFiles   = String("-- No libraries found --"); // shows if no libraries found
+    var strWinTitle  = String("Library opener");
+    var strSelectLib = String("Select library:");
 
-	function loadUI(myApp) {
-		// Code to open UI here
-		var myFiles    = Folder(myApp.PathTo.libraryFolder).getFiles("*.indl");
-		var myFilesNo  = myFiles.length;
-		var myLibFiles = new Array();
+    function loadUI(myApp) {
+        // Code to open UI here
+        var myFiles    = Folder(myApp.PathTo.libraryFolder).getFiles("*.indl");
+        var myFilesNo  = myFiles.length;
+        var myLibFiles = new Array();
 
-		if(!myFilesNo){
-			 myLibFiles[0] = strNoFiles;
-		}else{
-			 for(var i=0; i < myFilesNo; i++){
-				  myLibFiles.push(myFiles[i].displayName.substr(0,myFiles[i].displayName.lastIndexOf(".")));
-			 }
-		}
+        if(!myFilesNo){
+             myLibFiles[0] = strNoFiles;
+        }else{
+             for(var i=0; i < myFilesNo; i++){
+                  myLibFiles.push(myFiles[i].displayName.substr(0,myFiles[i].displayName.lastIndexOf(".")));
+             }
+        }
 
-		var myDialog = app.dialogs.add({name:strWinTitle, canCancel:true});
-		with(myDialog){
-		  with(dialogColumns.add()){
-			   with(dialogRows.add()){
-					with(borderPanels.add()){
-						 with(dialogColumns.add()){
-							  staticTexts.add({staticLabel:strSelectLib});
-						 }
-						 with(dialogColumns.add()){
-							  var myLib = dropdowns.add({stringList:myLibFiles, selectedIndex:0});
-						 }
-					}
-			   }
-		  }
-		}
+        var myDialog = app.dialogs.add({name:strWinTitle, canCancel:true});
+        with(myDialog){
+          with(dialogColumns.add()){
+               with(dialogRows.add()){
+                    with(borderPanels.add()){
+                         with(dialogColumns.add()){
+                              staticTexts.add({staticLabel:strSelectLib});
+                         }
+                         with(dialogColumns.add()){
+                              var myLib = dropdowns.add({stringList:myLibFiles, selectedIndex:0});
+                         }
+                    }
+               }
+          }
+        }
 
-		if(myDialog.show() == true){
-			 if(myFilesNo){
-				  app.open(File(myFiles[myLib.selectedIndex]),false);
-			 }
-		}
+        if(myDialog.show() == true){
+             if(myFilesNo){
+                  app.open(File(myFiles[myLib.selectedIndex]),false);
+             }
+        }
 
-		myDialog.destroy();
-	}
+        myDialog.destroy();
+    }
 
-	////////////
-	// expose //
-	////////////
-	return {
-		loadUI : loadUI
-	};
+    ////////////
+    // expose //
+    ////////////
+    return {
+        loadUI : loadUI
+    };
 
 })();

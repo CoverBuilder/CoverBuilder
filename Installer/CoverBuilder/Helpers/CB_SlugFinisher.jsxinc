@@ -2,324 +2,324 @@
 
 --------------------------------------------
 
-	CB_SlugFinisher.jsx    			(A CoverBuilder Helper Script)
-	An InDesign CS5 Javascript      (Tested in CS6)
-	Version 1.2
+    CB_SlugFinisher.jsx                (A CoverBuilder Helper Script)
+    An InDesign CS5 Javascript      (Tested in CS6)
+    Version 1.2
 
-	Bruno Herfst 2013-2014
+    Bruno Herfst 2013-2014
 
 --------------------------------------------
 
 */
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
-	var myCMYKSwatches = [{
-		name: "Cyan"
-	}, {
-		name: "Magenta"
-	}, {
-		name: "Yellow"
-	}, {
-		name: "Black"
-	}];
-	var myFinishes = [{
-		name: "Lamination (Gloss)"
-	}, {
-		name: "Lamination (Matte)"
-	}, {
-		name: "Lamination (Silk)"
-	}, {
-		name: "Lamination (Satin)"
-	}, {
-		name: "Varnish (Gloss)"
-	}, {
-		name: "Varnish (Matte)"
-	}];
+    //////////////
+    // privates //
+    //////////////
+    var myCMYKSwatches = [{
+        name: "Cyan"
+    }, {
+        name: "Magenta"
+    }, {
+        name: "Yellow"
+    }, {
+        name: "Black"
+    }];
+    var myFinishes = [{
+        name: "Lamination (Gloss)"
+    }, {
+        name: "Lamination (Matte)"
+    }, {
+        name: "Lamination (Silk)"
+    }, {
+        name: "Lamination (Satin)"
+    }, {
+        name: "Varnish (Gloss)"
+    }, {
+        name: "Varnish (Matte)"
+    }];
 
-	function go(myApp) {
-		var myCover  = myApp.Tools.getActiveCover(myApp);
-		var CVR1PN   = myApp.Tools.getCVR1pageNo(myApp);
-		var myPage   = app.activeWindow.activeSpread.pages[CVR1PN-1];
-		if(myPage.isValid){
-			var swatchOBJ = finischUI(getSpotSwatches(myCover));
-			if(swatchOBJ != undefined){
-				var myTextFrame = myApp.Slugs.fetchItem(myPage,"finish");
-				if(myTextFrame == null){
-					myTextFrame = createFrame(app.activeWindow.activeSpread);
-				}
-				setText(myApp,myCover,myTextFrame, swatchOBJ);
-				if(swatchOBJ.pageSizes){
-				    var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-				    if(C != null){
-				        myApp.Slugs.placeSizesInSlug(myApp, C, myCover);
-				    }
-				} else {
-				    myApp.Slugs.removeSlugMeasurements(myApp,myCover);
-				}
-			} // else user canceled
-		} else {
-			alert("Could not find front cover.");
-		}
-	}
+    function go(myApp) {
+        var myCover  = myApp.Tools.getActiveCover(myApp);
+        var CVR1PN   = myApp.Tools.getCVR1pageNo(myApp);
+        var myPage   = app.activeWindow.activeSpread.pages[CVR1PN-1];
+        if(myPage.isValid){
+            var swatchOBJ = finischUI(getSpotSwatches(myCover));
+            if(swatchOBJ != undefined){
+                var myTextFrame = myApp.Tools.getItemByLabel(myPage,"finish");
+                if(myTextFrame == null){
+                    myTextFrame = createFrame(app.activeWindow.activeSpread);
+                }
+                setText(myApp,myCover,myTextFrame, swatchOBJ);
+                if(swatchOBJ.pageSizes){
+                    var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+                    if(C != null){
+                        myApp.Slugs.placeSizesInSlug(myApp, C, myCover);
+                    }
+                } else {
+                    myApp.Slugs.removeSlugMeasurements(myApp,myCover);
+                }
+            } // else user canceled
+        } else {
+            alert("Could not find front cover.");
+        }
+    }
 
-	function createFrame(thisSpread){
-		var myCover = myApp.Tools.getActiveCover(myApp);
+    function createFrame(thisSpread){
+        var myCover = myApp.Tools.getActiveCover(myApp);
 
-		if(!myCover){
-			exit();
-		}
-		//check if cover is build with CoverBuilder
-		var myOldSpine = parseFloat(myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]"));
-		if(myOldSpine <= 0) {
-			alert("Can’t find a spine!");
-		}
-		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+        if(!myCover){
+            exit();
+        }
+        //check if cover is build with CoverBuilder
+        var myOldSpine = parseFloat(myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]"));
+        if(myOldSpine <= 0) {
+            alert("Can’t find a spine!");
+        }
+        var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
 
-		var len = thisSpread.pages.length-1;
+        var len = thisSpread.pages.length-1;
 
-		if(C.flap  > 0.5){
-			var myPage = thisSpread.pages[len-1];
-		} else {
-			var myPage = thisSpread.pages[len];
-		}
-		var pageBounds = myPage.bounds;
-		var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
-		var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
-		var myFrameBounds = new Array (myPageHeight+myCover.documentPreferences.documentBleedBottomOffset,0,myPageHeight+myCover.documentPreferences.slugBottomOffset,myPageWidth);
-		var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, myCover, "measurements");
-		return myApp.Slugs.addTextFrame(myPage, myFrameBounds, " ", myParagraphStyle, 0,"finish");
-	}
+        if(C.flap  > 0.5){
+            var myPage = thisSpread.pages[len-1];
+        } else {
+            var myPage = thisSpread.pages[len];
+        }
+        var pageBounds = myPage.bounds;
+        var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
+        var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
+        var myFrameBounds = new Array (myPageHeight+myCover.documentPreferences.documentBleedBottomOffset,0,myPageHeight+myCover.documentPreferences.slugBottomOffset,myPageWidth);
+        var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, myCover, "measurements");
+        return myApp.Slugs.addTextFrame(myPage, myFrameBounds, " ", myParagraphStyle, 0,"finish");
+    }
 
-	function getSpotSwatches(myCover) {
-		mySwatches = myCover.swatches;
-		var i = mySwatches.length - 1;
-		var spotSwatches = [];
-		while (i--) {
-			if (mySwatches[i + 1].model == ColorModel.SPOT) {
-				spotSwatches.push(mySwatches[i + 1]);
-			}
-		}
-		return spotSwatches;
-	}
+    function getSpotSwatches(myCover) {
+        mySwatches = myCover.swatches;
+        var i = mySwatches.length - 1;
+        var spotSwatches = [];
+        while (i--) {
+            if (mySwatches[i + 1].model == ColorModel.SPOT) {
+                spotSwatches.push(mySwatches[i + 1]);
+            }
+        }
+        return spotSwatches;
+    }
 
-	function finischUI(mySpotSwatches) {
-		var i = mySpotSwatches.length;
-		var mySpotCheckboxes = new Array();
-		var myCMYKCheckboxes = new Array();
-		var myFinishRadio = null;
-		var myNoteCheckbox = null;
-		var myNoteTextField = null;
+    function finischUI(mySpotSwatches) {
+        var i = mySpotSwatches.length;
+        var mySpotCheckboxes = new Array();
+        var myCMYKCheckboxes = new Array();
+        var myFinishRadio = null;
+        var myNoteCheckbox = null;
+        var myNoteTextField = null;
 
-		var myDialog = app.dialogs.add({
-			name: "Slug Tool",
-			canCancel: true
-		});
-		with(myDialog) {
-			with(dialogColumns.add()) {		   
-				with(dialogRows.add()) {
-					// P R O C E S S
-					with(borderPanels.add()) {
-						staticTexts.add({
-							staticLabel: "PROCESS:"
-						});
-						with(dialogColumns.add()) {
-							for (myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
-								var myCheckbox;
-								myCMYKCheckboxes.push(myCheckbox);
-								myCMYKCheckboxes[myCounter] = checkboxControls.add({
-									staticLabel: myCMYKSwatches[myCounter].name,
-									checkedState: true
-								});
-							}
-						}
-					}
-					// S P O T
-					with(borderPanels.add()) {
-						staticTexts.add({
-							staticLabel: "SPOT:"
-						});
-						with(dialogColumns.add()) {
-							for (myCounter = 0; myCounter < i; myCounter++) {
-								var myCheckbox;
-								mySpotCheckboxes.push(myCheckbox);
-								mySpotCheckboxes[myCounter] = checkboxControls.add({
-									staticLabel: mySpotSwatches[myCounter].name,
-									checkedState: true
-								});
-							}
-						}
-					}
-					// F I N I S H
-					with(borderPanels.add()) {
-						staticTexts.add({
-							staticLabel: "FINISH:"
-						});
-						with(dialogColumns.add()) {
-							with(myFinishRadio = radiobuttonGroups.add()) {
-								for (myCounter = 0; myCounter < myFinishes.length; myCounter++) {
-									radiobuttonControls.add({
-										staticLabel: myFinishes[myCounter].name,
-										checkedState: false
-									});
-								}
-							}
-						}
-					}
-					// C U S T O M
-					with(borderPanels.add()) {
-						myNoteCheckbox = checkboxControls.add({
-									staticLabel: "NOTE:",
-									checkedState: false
-								});
-						with(dialogColumns.add()) {
-							myNoteTextField = textEditboxes.add();
-						}
-					}
-				}
-				// P A G E S I Z E S
+        var myDialog = app.dialogs.add({
+            name: "Slug Tool",
+            canCancel: true
+        });
+        with(myDialog) {
+            with(dialogColumns.add()) {           
+                with(dialogRows.add()) {
+                    // P R O C E S S
+                    with(borderPanels.add()) {
+                        staticTexts.add({
+                            staticLabel: "PROCESS:"
+                        });
+                        with(dialogColumns.add()) {
+                            for (myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
+                                var myCheckbox;
+                                myCMYKCheckboxes.push(myCheckbox);
+                                myCMYKCheckboxes[myCounter] = checkboxControls.add({
+                                    staticLabel: myCMYKSwatches[myCounter].name,
+                                    checkedState: true
+                                });
+                            }
+                        }
+                    }
+                    // S P O T
+                    with(borderPanels.add()) {
+                        staticTexts.add({
+                            staticLabel: "SPOT:"
+                        });
+                        with(dialogColumns.add()) {
+                            for (myCounter = 0; myCounter < i; myCounter++) {
+                                var myCheckbox;
+                                mySpotCheckboxes.push(myCheckbox);
+                                mySpotCheckboxes[myCounter] = checkboxControls.add({
+                                    staticLabel: mySpotSwatches[myCounter].name,
+                                    checkedState: true
+                                });
+                            }
+                        }
+                    }
+                    // F I N I S H
+                    with(borderPanels.add()) {
+                        staticTexts.add({
+                            staticLabel: "FINISH:"
+                        });
+                        with(dialogColumns.add()) {
+                            with(myFinishRadio = radiobuttonGroups.add()) {
+                                for (myCounter = 0; myCounter < myFinishes.length; myCounter++) {
+                                    radiobuttonControls.add({
+                                        staticLabel: myFinishes[myCounter].name,
+                                        checkedState: false
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    // C U S T O M
+                    with(borderPanels.add()) {
+                        myNoteCheckbox = checkboxControls.add({
+                                    staticLabel: "NOTE:",
+                                    checkedState: false
+                                });
+                        with(dialogColumns.add()) {
+                            myNoteTextField = textEditboxes.add();
+                        }
+                    }
+                }
+                // P A G E S I Z E S
                 with(borderPanels.add()) {
                     myPageSizeSlugCheckbox = checkboxControls.add({
                                 staticLabel: "Page measurements in slug.",
                                 checkedState: true
                             });
                 }
-			}
-		}
-		//Display the dialog box.
-		if (myDialog.show() == true) {
-		    //Get process
-			var i = myCMYKCheckboxes.length;
-			var processSwatches = [];
-			while (i--) {
-				if (myCMYKCheckboxes[i].checkedState == true) {
-					processSwatches.push(myCMYKSwatches[i].name);
-				}
-			}
-			//Get Spot
-			var i = mySpotCheckboxes.length;
-			var spotSwatches = [];
-			while (i--) {
-				if (mySpotCheckboxes[i].checkedState == true) {
-					spotSwatches.push(mySpotSwatches[i].name);
-				}
-			}
-			//Get Finish
-			var myFinishSelect = new Array();
-			if (myFinishRadio.selectedButton >= 0) {
-				myFinishSelect.push(myFinishes[myFinishRadio.selectedButton].name);
-			}
-			//Get Finish
-			var myNoteText = new Array();
-			if (myNoteCheckbox.checkedState == true) {
-				myNoteText.push(myNoteTextField.editContents);
-			}
-			return {
-				process:   processSwatches,
-				spot:      spotSwatches,
-				finish:    myFinishSelect,
-				note:      myNoteText,
-				pageSizes: myPageSizeSlugCheckbox.checkedState
-			}
-		}
-	}
+            }
+        }
+        //Display the dialog box.
+        if (myDialog.show() == true) {
+            //Get process
+            var i = myCMYKCheckboxes.length;
+            var processSwatches = [];
+            while (i--) {
+                if (myCMYKCheckboxes[i].checkedState == true) {
+                    processSwatches.push(myCMYKSwatches[i].name);
+                }
+            }
+            //Get Spot
+            var i = mySpotCheckboxes.length;
+            var spotSwatches = [];
+            while (i--) {
+                if (mySpotCheckboxes[i].checkedState == true) {
+                    spotSwatches.push(mySpotSwatches[i].name);
+                }
+            }
+            //Get Finish
+            var myFinishSelect = new Array();
+            if (myFinishRadio.selectedButton >= 0) {
+                myFinishSelect.push(myFinishes[myFinishRadio.selectedButton].name);
+            }
+            //Get Finish
+            var myNoteText = new Array();
+            if (myNoteCheckbox.checkedState == true) {
+                myNoteText.push(myNoteTextField.editContents);
+            }
+            return {
+                process:   processSwatches,
+                spot:      spotSwatches,
+                finish:    myFinishSelect,
+                note:      myNoteText,
+                pageSizes: myPageSizeSlugCheckbox.checkedState
+            }
+        }
+    }
 
-	function setText(myApp,myCover,tf, swatchOBJ) {
-		var tempString = "";
-		var first = true;
-		tf.contents = "";
+    function setText(myApp,myCover,tf, swatchOBJ) {
+        var tempString = "";
+        var first = true;
+        tf.contents = "";
 
-		if (swatchOBJ.process.length > 0) {
-			myApp.Tools.addColor(myCover, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
-			myApp.Tools.addColor(myCover, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
-			myApp.Tools.addColor(myCover, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
-			myApp.Tools.addColor(myCover, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
+        if (swatchOBJ.process.length > 0) {
+            myApp.Tools.addColor(myCover, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
+            myApp.Tools.addColor(myCover, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
+            myApp.Tools.addColor(myCover, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
+            myApp.Tools.addColor(myCover, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
 
-			var i = swatchOBJ.process.length;
-			while (i--) {
-				if (!first) {
-					insertPoint = tf.insertionPoints[-1].index;
-					tf.contents += " + ";
-					addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-						tf.insertionPoints[-1]);
-					addonText.fillColor = "Registration";
-					addonText.fontStyle = "Regular";
-				}
-				insertPoint = tf.insertionPoints[-1].index;
-				tf.contents += swatchOBJ.process[i];
-				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-					tf.insertionPoints[-1]);
-				addonText.fillColor = "CB_" + swatchOBJ.process[i];
-				addonText.fontStyle = "Bold";
-				first = false;
-			}
-		}
+            var i = swatchOBJ.process.length;
+            while (i--) {
+                if (!first) {
+                    insertPoint = tf.insertionPoints[-1].index;
+                    tf.contents += " + ";
+                    addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                        tf.insertionPoints[-1]);
+                    addonText.fillColor = "Registration";
+                    addonText.fontStyle = "Regular";
+                }
+                insertPoint = tf.insertionPoints[-1].index;
+                tf.contents += swatchOBJ.process[i];
+                addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                    tf.insertionPoints[-1]);
+                addonText.fillColor = "CB_" + swatchOBJ.process[i];
+                addonText.fontStyle = "Bold";
+                first = false;
+            }
+        }
 
-		if (swatchOBJ.spot.length > 0) {
-			var i = swatchOBJ.spot.length;
-			while (i--) {
-				if (!first) {
-					insertPoint = tf.insertionPoints[-1].index;
-					tf.contents += " + ";
-					addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-						tf.insertionPoints[-1]);
-					addonText.fillColor = "Registration";
-					addonText.fontStyle = "Regular";
-				}
-				insertPoint = tf.insertionPoints[-1].index;
-				tf.contents += swatchOBJ.spot[i];
-				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-					tf.insertionPoints[-1]);
-				addonText.fillColor = swatchOBJ.spot[i];
-				addonText.fontStyle = "Bold";
-				first = false;
-			}
-		}
-		if (swatchOBJ.finish.length > 0) {
-			var i = swatchOBJ.finish.length;
-			while (i--) {
-				if (!first) {
-					insertPoint = tf.insertionPoints[-1].index;
-					tf.contents += " + ";
-					addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-						tf.insertionPoints[-1]);
-					addonText.fillColor = "Registration";
-					addonText.fontStyle = "Regular";
-				}
-				insertPoint = tf.insertionPoints[-1].index;
-				tf.contents += swatchOBJ.finish[i];
-				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-					tf.insertionPoints[-1]);
-				addonText.fillColor = "Registration";
-				addonText.fontStyle = "Regular";
-				first = false;
-			}
-		}
-		if (swatchOBJ.note.length > 0) {
-			if (!first) {
-				insertPoint = tf.insertionPoints[-1].index;
-				tf.contents += " + ";
-				addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-					tf.insertionPoints[-1]);
-				addonText.fillColor = "Registration";
-				addonText.fontStyle = "Regular";
-			}
-			insertPoint = tf.insertionPoints[-1].index;
-			tf.contents += swatchOBJ.note[0];
-			addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-				tf.insertionPoints[-1]);
-			addonText.fillColor = "Registration";
-			addonText.fontStyle = "Bold";
-			first = false;
-		}
-	}
-	////////////
-	// expose //
-	////////////
-	return {
-		go : go
-	};
+        if (swatchOBJ.spot.length > 0) {
+            var i = swatchOBJ.spot.length;
+            while (i--) {
+                if (!first) {
+                    insertPoint = tf.insertionPoints[-1].index;
+                    tf.contents += " + ";
+                    addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                        tf.insertionPoints[-1]);
+                    addonText.fillColor = "Registration";
+                    addonText.fontStyle = "Regular";
+                }
+                insertPoint = tf.insertionPoints[-1].index;
+                tf.contents += swatchOBJ.spot[i];
+                addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                    tf.insertionPoints[-1]);
+                addonText.fillColor = swatchOBJ.spot[i];
+                addonText.fontStyle = "Bold";
+                first = false;
+            }
+        }
+        if (swatchOBJ.finish.length > 0) {
+            var i = swatchOBJ.finish.length;
+            while (i--) {
+                if (!first) {
+                    insertPoint = tf.insertionPoints[-1].index;
+                    tf.contents += " + ";
+                    addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                        tf.insertionPoints[-1]);
+                    addonText.fillColor = "Registration";
+                    addonText.fontStyle = "Regular";
+                }
+                insertPoint = tf.insertionPoints[-1].index;
+                tf.contents += swatchOBJ.finish[i];
+                addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                    tf.insertionPoints[-1]);
+                addonText.fillColor = "Registration";
+                addonText.fontStyle = "Regular";
+                first = false;
+            }
+        }
+        if (swatchOBJ.note.length > 0) {
+            if (!first) {
+                insertPoint = tf.insertionPoints[-1].index;
+                tf.contents += " + ";
+                addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                    tf.insertionPoints[-1]);
+                addonText.fillColor = "Registration";
+                addonText.fontStyle = "Regular";
+            }
+            insertPoint = tf.insertionPoints[-1].index;
+            tf.contents += swatchOBJ.note[0];
+            addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                tf.insertionPoints[-1]);
+            addonText.fillColor = "Registration";
+            addonText.fontStyle = "Bold";
+            first = false;
+        }
+    }
+    ////////////
+    // expose //
+    ////////////
+    return {
+        go : go
+    };
 
 })();

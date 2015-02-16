@@ -12,10 +12,10 @@
 */
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
-	var doTextFrames = false;
+    //////////////
+    // privates //
+    //////////////
+    var doTextFrames = false;
     
     function activeCover(myApp){
         var myCover = myApp.Tools.getActiveCover(myApp, true);
@@ -52,11 +52,11 @@
         for (var page = pagesLen-1; page>=0; page--){
             // Get page bounds including bleed
             if(page == 0){ // first
-                var myFrameBounds	= myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 3);
+                var myFrameBounds    = myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 3);
             } else if (page == pagesLen-1){
-                var myFrameBounds	= myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 1);
+                var myFrameBounds    = myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 1);
             } else {
-                var myFrameBounds	= myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 2);
+                var myFrameBounds    = myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 2);
             }
             myPages.push({page: mySpreadPages[page], bounds:myFrameBounds});
         }
@@ -102,12 +102,12 @@
         }
     }
     
-	////////////
-	// expose //
-	////////////
-	return {
-		activeCover : activeCover,
-		thisCover     : thisCover
-	};
+    ////////////
+    // expose //
+    ////////////
+    return {
+        activeCover : activeCover,
+        thisCover   : thisCover
+    };
 
 })();

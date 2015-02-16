@@ -3,25 +3,25 @@
 // Version 2.0.2
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
-	// Install and/or update the menu/submenu and connect
-	// the corresponding menu actions if script files are available
-	// http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
-	function loadHelperMenu (myApp, Menu, MENU_NAME) {
+    //////////////
+    // privates //
+    //////////////
+    // Install and/or update the menu/submenu and connect
+    // the corresponding menu actions if script files are available
+    // http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
+    function loadHelperMenu (myApp, Menu, MENU_NAME) {
 
-		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-		// NEW COVER INSTALLER
-		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-		try{
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // NEW COVER INSTALLER
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        try{
             var cbHandlers = {
                 'onInvoke' : function(){
                     // prevent undo // Our script assumes CS5+
                     try{
-                    	app.doScript(myApp.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
+                        app.doScript(myApp.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
                     } catch(error){
-                    	alert(error); // Let us know what is going on.
+                        alert(error); // Let us know what is going on.
                     }
                 }};
 
@@ -45,111 +45,111 @@
         } catch (e) {
             // Don't tell the germans
         }
-		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-		// END NEW COVER INSTALLER
-		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // END NEW COVER INSTALLER
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-		// Settings and constants
-		// ---
-		var LO_END = LocationOptions.atEnd,
-			INDESIGN_ROOT_MENU = app.menus.item( '$ID/Main' ),
-			FEATURE_LOCATION_PATH = (function() {
-				var f;
-				try{ f=app.activeScript; }
-				catch(_){ f=File(_.fileName); }
-				return f.parent.parent + '/';
-			})();
+        // Settings and constants
+        // ---
+        var LO_END = LocationOptions.atEnd,
+            INDESIGN_ROOT_MENU = app.menus.item( '$ID/Main' ),
+            FEATURE_LOCATION_PATH = (function() {
+                var f;
+                try{ f=app.activeScript; }
+                catch(_){ f=File(_.fileName); }
+                return f.parent.parent + '/';
+            })();
 
-		// (Re)set the actions
-		// Note: checks also whether script files are available
-		// ---
-		var t, f, i = Menu.length;
-		while( i-- ) {
-			t = Menu[i];
-			if( t.separator ) continue;
-			if(t.fileName.constructor == Function) {
-				// The script file is a function => create the corresponding action
-				// ---
-				function makeFun(fn, myApp) {
-					return function () {
-						return fn(myApp);
-					}
-				}
+        // (Re)set the actions
+        // Note: checks also whether script files are available
+        // ---
+        var t, f, i = Menu.length;
+        while( i-- ) {
+            t = Menu[i];
+            if( t.separator ) continue;
+            if(t.fileName.constructor == Function) {
+                // The script file is a function => create the corresponding action
+                // ---
+                function makeFun(fn, myApp) {
+                    return function () {
+                        return fn(myApp);
+                    }
+                }
 
-				fun = makeFun(t.fileName, myApp);
+                fun = makeFun(t.fileName, myApp);
 
-				(t.action = app.scriptMenuActions.add( t.caption )).
-					addEventListener('onInvoke', fun);
-				}
-			else if( (f=File(FEATURE_LOCATION_PATH + t.fileName)).exists ) {
-				// The script file exists => create the corresponding action
-				// ---
-				(t.action = app.scriptMenuActions.add( t.caption )).addEventListener('onInvoke', f);
-			} else {
-				// The script file does not exist => remove that feature
-				// ---
-				Menu.splice(i,1);
-			}
-		}
+                (t.action = app.scriptMenuActions.add( t.caption )).
+                    addEventListener('onInvoke', fun);
+                }
+            else if( (f=File(FEATURE_LOCATION_PATH + t.fileName)).exists ) {
+                // The script file exists => create the corresponding action
+                // ---
+                (t.action = app.scriptMenuActions.add( t.caption )).addEventListener('onInvoke', f);
+            } else {
+                // The script file does not exist => remove that feature
+                // ---
+                Menu.splice(i,1);
+            }
+        }
 
-		// ---
-		// Create/reset the custom menu container *if necessary*
-		// Note:  menus/submenus are application-persistent
-		// ---
-		var mnu = INDESIGN_ROOT_MENU.submenus.itemByName( MENU_NAME );
-		if( !mnu.isValid )
-			{
-			// Our custom menu hasn't been created yet
-			// ---
-			if( !Menu.length ) return;
-			mnu = INDESIGN_ROOT_MENU.submenus.add(
-				MENU_NAME,
-				LocationOptions.after,
-				INDESIGN_ROOT_MENU.submenus.item( '$ID/&Window' )
-				);
-			}
-		else
-			{
-			// Our custom menu already exists, but we must clear
-			// any sub element in order to rebuild a fresh structure
-			// ---
-			mnu.menuElements.everyItem().remove();
+        // ---
+        // Create/reset the custom menu container *if necessary*
+        // Note:  menus/submenus are application-persistent
+        // ---
+        var mnu = INDESIGN_ROOT_MENU.submenus.itemByName( MENU_NAME );
+        if( !mnu.isValid )
+            {
+            // Our custom menu hasn't been created yet
+            // ---
+            if( !Menu.length ) return;
+            mnu = INDESIGN_ROOT_MENU.submenus.add(
+                MENU_NAME,
+                LocationOptions.after,
+                INDESIGN_ROOT_MENU.submenus.item( '$ID/&Window' )
+                );
+            }
+        else
+            {
+            // Our custom menu already exists, but we must clear
+            // any sub element in order to rebuild a fresh structure
+            // ---
+            mnu.menuElements.everyItem().remove();
 
-			// If Menu is empty, remove the menu itself
-			// ---
-			if( !Menu.length ){ mnu.remove(); return; }
-			}
+            // If Menu is empty, remove the menu itself
+            // ---
+            if( !Menu.length ){ mnu.remove(); return; }
+            }
 
-		// ---
-		// Now, let's fill mnu with respect to Menu' order
-		// (Possible submenus are specified in .subName and created on the fly)
-		// ---
-		var s,
-			n = Menu.length,
-			subs = {},
-			sub = null;
-		for( i=0 ; i < n ; ++i )
-			{
-			t = Menu[i];
+        // ---
+        // Now, let's fill mnu with respect to Menu' order
+        // (Possible submenus are specified in .subName and created on the fly)
+        // ---
+        var s,
+            n = Menu.length,
+            subs = {},
+            sub = null;
+        for( i=0 ; i < n ; ++i )
+            {
+            t = Menu[i];
 
-			// Target the desired submenu
-			// ---
-			sub = (s=t.subName) ?
-				( subs[s] || (subs[s]=mnu.submenus.add( s, LO_END )) ) :
-				mnu;
+            // Target the desired submenu
+            // ---
+            sub = (s=t.subName) ?
+                ( subs[s] || (subs[s]=mnu.submenus.add( s, LO_END )) ) :
+                mnu;
 
-			// Connect the related action OR create a separator
-			// ---
-			if( t.separator )
-				sub.menuSeparators.add( LO_END);
-			else
-				sub.menuItems.add( t.action, LO_END );
-			}
-	}
-	////////////
-	// expose //
-	////////////
-  	return {
-  		loadHelperMenu : loadHelperMenu
-	};
+            // Connect the related action OR create a separator
+            // ---
+            if( t.separator )
+                sub.menuSeparators.add( LO_END);
+            else
+                sub.menuItems.add( t.action, LO_END );
+            }
+    }
+    ////////////
+    // expose //
+    ////////////
+      return {
+          loadHelperMenu : loadHelperMenu
+    };
 })();

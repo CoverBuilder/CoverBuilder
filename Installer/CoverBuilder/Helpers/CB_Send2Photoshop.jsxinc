@@ -40,35 +40,38 @@
     function send2photoshop(myApp){
         var myCover = myApp.Tools.getActiveCover(myApp, true);
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-		var addSpine = true;
+        var addSpine = true; // It is nice we can send a spread or page to photoshop
 
         if(C == null){ // Not a cover build with CoverBuilder
-			// get doc bleed settings //this can be improved
+            // Safe rulers add set to MM
+            // safe original rulers
+            var myOldRulers = myApp.Tools.setRuler(myCover,0);
+
+            // get doc bleed settings //this can be improved
             var currSpread = app.activeWindow.activeSpread;
             var myBleed    = myCover.documentPreferences.documentBleedTopOffset;
-
-			var myPages = new Array();
-			for (i = 0; i < currSpread.pages.length; i++) {
-				myPages.push(myApp.Tools.createPageObject(myApp, myCover, currSpread.pages[i]));
-			}
-			if(myPages.length == 1){
-            	//var myPage = myApp.Tools.createPageObject(myApp, myCover, currPages[0]);
-                var newC = {name:"Send to Photoshop",width:myPages[0].width,height:myPages[0].height,spine:0,ppi:600,bleed:myBleed,measureUnit:0};
-				C = myApp.STools.Cparser(myApp, newC);
-            } else if(myPages.length == 2){
-            	// Check if both pages are the same size
-            	if( (parseFloat(myPages[0].width) == parseFloat(myPages[1].width)) && (parseFloat(myPages[0].height) == parseFloat(myPages[1].height)) ){
-            		var newC = {name:"Send to Photoshop",width:myPages[0].width,height:myPages[0].height,spine:0,ppi:600,bleed:myBleed,measureUnit:0};
-					C = myApp.STools.Cparser(myApp, newC);
-					addSpine = false;
-            	} else {
-            		alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to hurry him along.");
-            		exit();
-            	}
-            } else {
-                alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to hurry him along.");
-                exit();
+            var myPages = new Array();
+            for (i = 0; i < currSpread.pages.length; i++) {
+                myPages.push(myApp.Tools.addPageInfo(myApp, {page: currSpread.pages[i]}));
             }
+            if(myPages.length == 1){
+                var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0,ppi:600,bleed:myBleed,measureUnit:0};
+                C = myApp.STools.Cparser(myApp, newC);
+                addSpine = false;
+            } else if(myPages.length == 2){
+                // Check if both pages are the same size
+                if( (parseFloat(myPages[0].w) == parseFloat(myPages[1].w)) && (parseFloat(myPages[0].h) == parseFloat(myPages[1].h)) ){
+                    var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0.005,ppi:600,bleed:myBleed,measureUnit:0};
+                    C = myApp.STools.Cparser(myApp, newC);
+                    addSpine = true;
+                } else {
+                    alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to ask for finalising.");
+                }
+            } else {
+                alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to ask for finalising.");
+            }
+            // Reset original rulers
+            myApp.Tools.setRuler(myCover,myOldRulers);
         }
         // We have a valid Cover object
         CreateBridgeTalkMessage(myApp,C,addSpine);

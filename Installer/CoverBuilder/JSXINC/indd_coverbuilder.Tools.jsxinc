@@ -11,20 +11,20 @@
     //-----------------------------------------------------------------------------------
     //  SELECTION TOOLS
     //-----------------------------------------------------------------------------------
-	function itemsSelected(myApp, tellUser){
-		// This function needs more work which can be done when needed.
-		// Always return a Boolean
-		var tellUser = tellUser || false;
-		var selectionType = "something";
-		if(app.selection.length < 1){
-			if(tellUser){
-				alert("Please select " + selectionType + " before running this function.");
-			}
-			return false;
-		}
-		return true;
-	}
-	
+    function itemsSelected(myApp, tellUser){
+        // This function needs more work which can be done when needed.
+        // Always return a Boolean
+        var tellUser = tellUser || false;
+        var selectionType = "something";
+        if(app.selection.length < 1){
+            if(tellUser){
+                alert("Please select " + selectionType + " before running this function.");
+            }
+            return false;
+        }
+        return true;
+    }
+    
     //-----------------------------------------------------------------------------------
     //  LAYER TOOLS
     //-----------------------------------------------------------------------------------
@@ -87,7 +87,29 @@
         }
         return myCover;
     }
+    
+    function addPageInfo(myApp, myPage){
+        myPage.bounds = myPage.page.bounds;
+        myPage.w = myPage.bounds[3]-myPage.bounds[1];
+        myPage.h = myPage.bounds[2]-myPage.bounds[0];
+        return myPage;
+    }
 
+    function getMasterPage(myApp, myCover, myName, myPage){
+        var mPage    = new Object();
+        mPage.name   = myName;
+        mPage.spread = myCover.masterSpreads.item(mPage.name);
+        mPage.page   = mPage.spread.pages[myPage];
+
+        if(!mPage.page.isValid){
+            alert("Can’t find the requested page!\nWhat happend to master spread "+mPage.name+"?");
+            exit(); // I’m done here
+        }
+
+        mPage = myApp.Tools.addPageInfo(myApp, mPage);
+        return mPage;
+    }
+    
     function getCVR1pageNo(myApp){
         var myCover = myApp.Tools.getActiveCover(myApp);
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
@@ -99,34 +121,8 @@
             return 3;
         }
     }
-
-    function createPageObject(myApp, myCover, myPage){
-    	//returns a page object
-    	with (myCover.viewPreferences){
-			var myOldXUnits = horizontalMeasurementUnits;
-			var myOldYUnits = verticalMeasurementUnits;
-			horizontalMeasurementUnits = MeasurementUnits.millimeters;
-			verticalMeasurementUnits = MeasurementUnits.millimeters;
-		}
-    	var P = new Object;
-    		P.page   = myPage;
-    		P.bounds = myPage.bounds;
-            P.width  = myPage.bounds[3] - myPage.bounds[1];
-            P.height = myPage.bounds[2] - myPage.bounds[0];
-
-        with (myCover.viewPreferences){
-			try {
-				horizontalMeasurementUnits = myOldXUnits;
-				verticalMeasurementUnits   = myOldYUnits;
-			} catch(myError) {
-				alert("Could not reset custom measurement units.");
-			}
-		}
-        return P;
-    }
     
-    function getPageBleedBounds(myApp, myCover, myPage, selector){
-        
+    function getPageBleedBounds(myApp, myCover, myPage, selector){   
         var myCoverBleed = {
                 Top    : myCover.documentPreferences.documentBleedTopOffset,
                 Bottom : myCover.documentPreferences.documentBleedBottomOffset,
@@ -157,6 +153,66 @@
                 return myPage.bounds;
                 break;
         }
+    }
+    
+    function getItemByLabel(myPageOrSpread, myLabel, returnAll){
+        //returns array of all items that have label unless returnAll is set to true, then it return the first item;
+        //if nothing is found this function returns null
+        returnAll = returnAll || false;
+        var allItems = new Array();
+        if(myPageOrSpread.isValid){        
+            var myElements = myPageOrSpread.allPageItems;
+            var len = myElements.length;
+            for (var i = len-1; i >= 0; i--){
+                if(myElements[i].label == myLabel){
+                    if(returnAll){
+                        allItems.push(myElements[i]); 
+                    } else {
+                        return myElements[i];
+                    }
+                }
+            }
+        } else {
+            alert("CoverBuilder.Tools: Expected a valid spread.");
+        }
+        if(allItems.length > 0){
+            return allItems;
+        } else { return null; }
+    }
+    //-----------------------------------------------------------------------------------
+    // APPLICATION SETTINGS TOOLS
+    //-----------------------------------------------------------------------------------
+    function setRuler(myCover, myNewUnits){
+        var myOldUnits = {xruler : myCover.viewPreferences.horizontalMeasurementUnits, yruler: myCover.viewPreferences.verticalMeasurementUnits}
+        
+        if(myNewUnits.hasOwnProperty('xruler') && myNewUnits.hasOwnProperty('yruler')){
+            // reset original rulers
+            myCover.viewPreferences.horizontalMeasurementUnits = myNewUnits.xruler;
+            myCover.viewPreferences.verticalMeasurementUnits   = myNewUnits.yruler;
+            return myOldUnits;
+        }
+        
+        with(myCover.viewPreferences){
+            switch(myNewUnits) {
+                case 0:
+                    horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+                    verticalMeasurementUnits   = MeasurementUnits.MILLIMETERS;
+                    break;
+                case 1:
+                    horizontalMeasurementUnits = MeasurementUnits.INCHES_DECIMAL;
+                    verticalMeasurementUnits   = MeasurementUnits.INCHES_DECIMAL;
+                    break;
+                case 2:
+                    horizontalMeasurementUnits = MeasurementUnits.POINTS;
+                    verticalMeasurementUnits   = MeasurementUnits.POINTS;
+                    break;
+                default:
+                    alert("indd_coverbuilder.Build.cover: Could not parse MeasurementUnits from C.measureUnit");
+                    break;
+            }
+            rulerOrigin = RulerOrigin.pageOrigin;
+        }
+        return myOldUnits;
     }
 
     //-----------------------------------------------------------------------------------
@@ -191,14 +247,15 @@
         }
         return myColor;
     }
-
     ////////////
     // expose //
     ////////////
     // Return an object exposed to the public
     return {
+        // application settings Tools
+        setRuler              : setRuler,
         // SelectionTools
-    	itemsSelected         : itemsSelected,
+        itemsSelected         : itemsSelected,
         // LayerTools
         moveLayer             : moveLayer,
         selectLayer           : selectLayer,
@@ -206,10 +263,12 @@
         getAndSelectLayer     : getAndSelectLayer,
         getSelectAndMoveLayer : getSelectAndMoveLayer,
         // PageTools
+        addPageInfo           : addPageInfo,
         getActiveCover        : getActiveCover,
+        getMasterPage         : getMasterPage,
         getCVR1pageNo         : getCVR1pageNo,
-        createPageObject      : createPageObject,
         getPageBleedBounds    : getPageBleedBounds,
+        getItemByLabel        : getItemByLabel,
         // ColourTools
         addColor              : addColor
     };

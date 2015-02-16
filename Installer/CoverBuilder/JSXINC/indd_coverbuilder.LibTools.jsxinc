@@ -2,254 +2,276 @@
 // Bruno Herfst 2014
 
 (function () {
-	//////////////
-	// privates //
-	//////////////
-	function libSelectorUI(filePath){
-		var strWinTitle = String("Library opener");
-		var strWorkFolder = String("Working folder:");
-		var strSelectLib = String("Select library:");
-		var strNoFiles = String("-- No libraries found --"); // shows if no libraries found
-		var myFiles = filePath.getFiles("*.indl");
-		var myFilesNo = myFiles.length;
-		var myLibFiles = Array();
+    //////////////
+    // privates //
+    //////////////
+    function libSelectorUI(filePath){
+        var strWinTitle = String("Library opener");
+        var strWorkFolder = String("Working folder:");
+        var strSelectLib = String("Select library:");
+        var strNoFiles = String("-- No libraries found --"); // shows if no libraries found
+        var myFiles = filePath.getFiles("*.indl");
+        var myFilesNo = myFiles.length;
+        var myLibFiles = Array();
 
-		if(!myFilesNo){
-		     myLibFiles[0] = strNoFiles;
-		}else{
-		     for(var i=0; i < myFilesNo; i++){
-		          myLibFiles.push(myFiles[i].displayName.substr(0,myFiles[i].displayName.lastIndexOf(".")));
-		     }
-		}
+        if(!myFilesNo){
+             myLibFiles[0] = strNoFiles;
+        }else{
+             for(var i=0; i < myFilesNo; i++){
+                  myLibFiles.push(myFiles[i].displayName.substr(0,myFiles[i].displayName.lastIndexOf(".")));
+             }
+        }
         ///////////////////////// UI /////////////////////////
-		var myDialog = app.dialogs.add({name:strWinTitle, canCancel:true});
-		     with(myDialog){
-		          with(dialogColumns.add()){
-		               with(dialogRows.add()){
-		                    with(borderPanels.add()){
-		                         with(dialogColumns.add()){
-		                              staticTexts.add({staticLabel:strSelectLib});
-		                         }
-		                         with(dialogColumns.add()){
-		                              var myLib = dropdowns.add({stringList:myLibFiles, selectedIndex:0});
-		                         }
-		                    }
-		               }
-		          }
-		     }
-		if(myDialog.show() == true){
-		     if(myFilesNo){
-		          app.open(File(myFiles[myLib.selectedIndex]),false);
-		     }
-		}
-		myDialog.destroy();
-	}
+        var myDialog = app.dialogs.add({name:strWinTitle, canCancel:true});
+             with(myDialog){
+                  with(dialogColumns.add()){
+                       with(dialogRows.add()){
+                            with(borderPanels.add()){
+                                 with(dialogColumns.add()){
+                                      staticTexts.add({staticLabel:strSelectLib});
+                                 }
+                                 with(dialogColumns.add()){
+                                      var myLib = dropdowns.add({stringList:myLibFiles, selectedIndex:0});
+                                 }
+                            }
+                       }
+                  }
+             }
+        if(myDialog.show() == true){
+             if(myFilesNo){
+                  app.open(File(myFiles[myLib.selectedIndex]),false);
+             }
+        }
+        myDialog.destroy();
+    }
 
-	function openLib(myLibPath){
-		if(File(myLibPath).exists == false){
-			//Display a dialog.
-			var thisLib = myLibPath.replace(/^.*(\\|\/|\:)/, '');
-			myLibPath = File.openDialog("Where is " + thisLib + "?");
-		}
-		if(myLibPath != null){
-				//open lib
-				myTarg = File(myLibPath);
-				myLib = app.open(myTarg,false);
-		} else {
-			myLib = null;
-		}
-		return myLib;
-	}
+    function openLib(myLibPath){
+        if(File(myLibPath).exists == false){
+            //Display a dialog.
+            var thisLib = myLibPath.replace(/^.*(\\|\/|\:)/, '');
+            myLibPath = File.openDialog("Where is " + thisLib + "?");
+        }
+        if(myLibPath != null){
+                //open lib
+                myTarg = File(myLibPath);
+                myLib = app.open(myTarg,false);
+        } else {
+            myLib = null;
+        }
+        return myLib;
+    }
 
-	function LibObjectWith(myLib,assetName) {
-		if(!myLib.isValid){
-			alert("CoverBuilder.LibTools LibObjectWith:/n That was not a valid library.");
-			exit();
-		}
-		this.asset = myLib.assets.item(assetName);
-		if(!this.asset.isValid){
-			alert("CoverBuilder.LibTools LibObjectWith:/nCan’t find " + assetName + " in library " + myLib.name);
-			exit();
-		}
-		this.name    = assetName;
-		this.offsetX = 0;
-		this.offsetY = 0;
-		this.anchor  = "TOP_LEFT";
-			// TOP_CENTER, TOP_LEFT, TOP_RIGHT,
-			// CENTER, LEFT_CENTER, RIGHT_CENTER,
-			// BOTTOM_CENTER, BOTTOM_LEFT, BOTTOM_RIGHT
+    function LibObjectWith(myLib,assetName) {
+        if(!myLib.isValid){
+            alert("CoverBuilder.LibTools LibObjectWith:/n That was not a valid library.");
+            exit();
+        }
+        this.asset = myLib.assets.item(assetName);
+        if(!this.asset.isValid){
+            alert("CoverBuilder.LibTools LibObjectWith:/nCan’t find " + assetName + " in library " + myLib.name);
+            exit();
+        }
+        this.name    = assetName;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.anchor  = "TOP_LEFT";
+            // TOP_CENTER, TOP_LEFT, TOP_RIGHT,
+            // CENTER, LEFT_CENTER, RIGHT_CENTER,
+            // BOTTOM_CENTER, BOTTOM_LEFT, BOTTOM_RIGHT
 
-		// Try and parse original size from description
-		try{
-			eval("var sizeObj = " + String(this.asset.description) + ";");
-			this.width  = sizeObj.w;
-			this.height = sizeObj.h;
-			this.ratio  = sizeObj.h / sizeObj.w;
-			this.height = this.width * this.ratio;
-		} catch(e) {
-			this.width  = undefined;
-			this.height = undefined;
-			this.ratio  = undefined;
-		}
-
-		this.toWidth = function(newWidth){
-			this.ratio  = this.height / this.width;
-			this.width  = newWidth;
-			this.height = newWidth * this.ratio;
-		}
+        // Try and parse original size from description
+        try{
+            eval("var sizeObj = " + String(this.asset.description) + ";");
+            this.measureUnit = sizeObj.unit;
+            this.width       = sizeObj.w;
+            this.height      = sizeObj.h;
+            this.ratio       = sizeObj.h / sizeObj.w;
+            this.height      = this.width * this.ratio;
+        } catch(e) {
+            this.measureUnit = undefined;
+            this.width       = undefined;
+            this.height      = undefined;
+            this.ratio       = undefined;
+        }
+        this.toWidth = function(newWidth){
+            this.ratio  = this.height / this.width;
+            this.width  = newWidth;
+            this.height = newWidth * this.ratio;
+        }
+        this.convertToUnits = function (myApp, myMeasureUnits){
+            // validate input
+            try{
+                var myMeasureUnits = myApp.STools.checkMeasureUnit(myApp, myMeasureUnits);
+            } catch(err){
+                alert(err);
+            }
+            if(isNaN(myMeasureUnits)){
+                alert(myMeasureUnits);
+                return;
+            }
+            this.width       = myApp.NumCon.convert(myApp, this.width,   this.measureUnit, myMeasureUnits);
+            this.height      = myApp.NumCon.convert(myApp, this.height,  this.measureUnit, myMeasureUnits);
+            this.offsetX     = myApp.NumCon.convert(myApp, this.offsetX, this.measureUnit, myMeasureUnits);
+            this.offsetY     = myApp.NumCon.convert(myApp, this.offsetY, this.measureUnit, myMeasureUnits);
+            this.measureUnit = myMeasureUnits;
+        }
         this.label = null;
-		return this;
-	}
+        return this;
+    }
 
-	function addOffset(xyPos, xyOffset){
-		xyPos[0] += xyOffset[0];
-		xyPos[1] += xyOffset[1];
-		return xyPos;
-	}
+    function addOffset(xyPos, xyOffset){
+        xyPos[0] += xyOffset[0];
+        xyPos[1] += xyOffset[1];
+        return xyPos;
+    }
 
-	function getPageByLabel(pages, label){
-		for (i=0;pages.length>i;i++){
-			var myPage = pages.item(i);
-			var myLabel = myPage.label;
-			if(label == myLabel){
-				return myPage;
-			}
-		}
-		return null;
-	}
+    function getPageByLabel(pages, label){
+        for (i=0;pages.length>i;i++){
+            var myPage = pages.item(i);
+            var myLabel = myPage.label;
+            if(label == myLabel){
+                return myPage;
+            }
+        }
+        return null;
+    }
 
-	function placeItem(myApp,myPage,AssetObj,C){
-			//Make sure facing pages is off
-			function getPageInfo(myPage){
-				this.l = myPage.label;
-				this.b = myPage.bounds; // [y1, x1, y2, x2]
-				this.w  = myPage.bounds[3]-myPage.bounds[1];
-				this.h = myPage.bounds[2]-myPage.bounds[0];
-				return this;
-			}
-			//get pageinfo
-			var myPageinfo = new getPageInfo(myPage);
-			//place asset in doc
-			var myDoc = myPage.parent.parent;
-			var thisAsset = AssetObj.asset.placeAsset(myDoc);
+    function placeItem(myApp,myPage,AssetObj,C){
+            //Make sure facing pages is off
+            function getPageInfo(myPage){
+                this.l = myPage.label;
+                this.b = myPage.bounds; // [y1, x1, y2, x2]
+                this.w  = myPage.bounds[3]-myPage.bounds[1];
+                this.h = myPage.bounds[2]-myPage.bounds[0];
+                return this;
+            }
+            //get pageinfo
+            var myPageinfo = new getPageInfo(myPage);
+            //place asset in doc
+            var myDoc = myPage.parent.parent;
+            var thisAsset = AssetObj.asset.placeAsset(myDoc);
 
-			//make sure it’s the right size (AssetObj can contain scaled measurements, if it does we want the object to be scaled as instructed)
-			var thisAssetBounds = thisAsset[0].geometricBounds; //[y1, x1, y2, x2]
-			var correctBounds = [thisAssetBounds[2] + AssetObj.height, thisAssetBounds[3] + AssetObj.width, thisAssetBounds[2], thisAssetBounds[3]];
-			thisAsset[0].geometricBounds = correctBounds;
+            //make sure it’s the right size (AssetObj can contain scaled measurements, if it does we want the object to be scaled as instructed)
+            var thisAssetBounds = thisAsset[0].geometricBounds; //[y1, x1, y2, x2]
+            var correctBounds = [thisAssetBounds[2] + AssetObj.height, thisAssetBounds[3] + AssetObj.width, thisAssetBounds[2], thisAssetBounds[3]];
+            thisAsset[0].geometricBounds = correctBounds;
 
-			var pos = [0,0]; //xy
-			switch (AssetObj.anchor){
-				case "BOTTOM_CENTER":
-					pos = [(myPageinfo.w/2)-(AssetObj.width/2) , myPageinfo.h-AssetObj.height];
-					break;
-				case "BOTTOM_LEFT":
-					pos = [0 , myPageinfo.h-AssetObj.height];
-					break;
-				case "BOTTOM_RIGHT":
-					pos = [myPageinfo.w-AssetObj.width , myPageinfo.h-AssetObj.height];
-					break;
-				case "CENTER":
-					pos = [(myPageinfo.w/2)-(AssetObj.width/2) , (myPageinfo.h/2)-(AssetObj.height/2)];
-					break;
-				case "LEFT_CENTER":
-					pos = [0 , (myPageinfo.h/2)-(AssetObj.height/2)];
-					break;
-				case "RIGHT_CENTER":
-					pos = [(myPageinfo.w/2)-(AssetObj.width/2) , 0];
-					break;
-				case "TOP_CENTER":
-					pos = [(myPageinfo.w/2)-(AssetObj.width/2) , 0];
-					break;
-				case "TOP_RIGHT":
-					pos = [myPageinfo.w-AssetObj.width , 0];
-					break;
-				default: //TOP_LEFT
-					pos = [0 , 0];
-					break;
-			}
+            var pos = [0,0]; //xy
+            switch (AssetObj.anchor){
+                case "BOTTOM_CENTER":
+                    pos = [(myPageinfo.w/2)-(AssetObj.width/2) , myPageinfo.h-AssetObj.height];
+                    break;
+                case "BOTTOM_LEFT":
+                    pos = [0 , myPageinfo.h-AssetObj.height];
+                    break;
+                case "BOTTOM_RIGHT":
+                    pos = [myPageinfo.w-AssetObj.width , myPageinfo.h-AssetObj.height];
+                    break;
+                case "CENTER":
+                    pos = [(myPageinfo.w/2)-(AssetObj.width/2) , (myPageinfo.h/2)-(AssetObj.height/2)];
+                    break;
+                case "LEFT_CENTER":
+                    pos = [0 , (myPageinfo.h/2)-(AssetObj.height/2)];
+                    break;
+                case "RIGHT_CENTER":
+                    pos = [(myPageinfo.w/2)-(AssetObj.width/2) , 0];
+                    break;
+                case "TOP_CENTER":
+                    pos = [(myPageinfo.w/2)-(AssetObj.width/2) , 0];
+                    break;
+                case "TOP_RIGHT":
+                    pos = [myPageinfo.w-AssetObj.width , 0];
+                    break;
+                default: //TOP_LEFT
+                    pos = [0 , 0];
+                    break;
+            }
 
-			//add offset
-			pos = addOffset(pos, [AssetObj.offsetX,AssetObj.offsetY]);
+            //add offset
+            pos = addOffset(pos, [AssetObj.offsetX,AssetObj.offsetY]);
 
-			if(typeof C != "object"){
-				var myCover = myApp.Tools.getActiveCover(myApp);
-				C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-			}
-			//if places on the back or front cover add hinge to offset
-			try{
-				if(myPageinfo.l == "CVRL"){
-					pos = addOffset(pos, [-C.hinge,0]);
-				}
-				else if(myPageinfo.l == "CVRR"){
-					pos = addOffset(pos, [C.hinge,0]);
-				}
-			} catch(e) {
-				// This should never happen but if it does let me know.
-				alert("Indd_LibTools:placeItem() was not given a valid CoverObject.");
-			}
+            if(typeof C != "object"){
+                var myCover = myApp.Tools.getActiveCover(myApp);
+                C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+            }
+            //if places on the back or front cover add hinge to offset
+            try{
+                if(myPageinfo.l == "CVRL"){
+                    pos = addOffset(pos, [-C.hinge,0]);
+                }
+                else if(myPageinfo.l == "CVRR"){
+                    pos = addOffset(pos, [C.hinge,0]);
+                }
+            } catch(e) {
+                // This should never happen but if it does let me know.
+                alert("Indd_LibTools:placeItem() was not given a valid CoverObject.");
+            }
 
-			thisAsset[0].move(myPage);
+            thisAsset[0].move(myPage);
 
-			// force indesign to stay on the right page before setting bounds //
-			// This is not the most elegant solution but at least it will always work even when InDesign changes it’s rules in the future
-			app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
+            // force indesign to stay on the right page before setting bounds //
+            // This is not the most elegant solution but at least it will always work even when InDesign changes it’s rules in the future
+            app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
 
-			thisAsset[0].move(myPage, [0.4, 0.4]); //Page can’t be smaller than 0.5 :)
+            thisAsset[0].move(myPage, [0.4, 0.4]); //Page can’t be smaller than 0.5 :)
 
-			thisAsset[0].move(pos); //x,y
+            thisAsset[0].move(pos); //x,y
 
-			if(typeof AssetObj.label == "string"){
-			    thisAsset[0].label = AssetObj.label;
-			}
-		}
+            if(typeof AssetObj.label == "string"){
+                thisAsset[0].label = AssetObj.label;
+            }
+        }
 
-		function placeSpineLogo(myApp, myCover, myLib, assetName, offsettings){
-	        //place spinelogo
-	        var mySpineLogo = new myApp.LibTool.LibObjectWith(myLib,assetName);
-	            mySpineLogo.anchor  = "BOTTOM_CENTER";
-	            mySpineLogo.label = "SpineLogo";
+        function placeSpineLogo(myApp, myCover, myLib, assetName, offsettings){
+            var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+            //place spinelogo
+            var mySpineLogo = new myApp.LibTool.LibObjectWith(myLib,assetName);
+                mySpineLogo.anchor  = "BOTTOM_CENTER";
+                mySpineLogo.label = "SpineLogo";
+                mySpineLogo.convertToUnits(myApp, C.measureUnit);
 
-	        var mw = 2, ws = 1;
+            // Set initial value
+            var initValue = myApp.NumCon.convert(myApp, 2, "mm", C.measureUnit);
+            var minimumLogoWidth = initValue, clearSpace = initValue;
 
-	        if(typeof offsettings === "object"){
-	            try{
-	                if ( offsettings.hasOwnProperty('y') ) {
-	                    mySpineLogo.offsetY += offsettings.y;
-	                }
-	                if ( offsettings.hasOwnProperty('minWidth') ) {
-	                    mw = offsettings.minWidth;
-	                }
-	                if ( offsettings.hasOwnProperty('whiteSpace') ) {
-	                    ws = offsettings.whiteSpace;
-	                }
-	            } catch(e){
-	                alert("CoverBuilder LibTools: PlaceSpineLogo\n" + e.description);
-	            }
-	        }
+            if(typeof offsettings === "object"){
+                try{
+                    if ( offsettings.hasOwnProperty('measureUnit') ) {
+                        if ( offsettings.hasOwnProperty('y') ) {
+                            mySpineLogo.offsetY += myApp.NumCon.convert(myApp, offsettings.y, offsettings.measureUnit, C.measureUnit);
+                        }
+                        if ( offsettings.hasOwnProperty('minWidth') ) {
+                            minimumLogoWidth = myApp.NumCon.convert(myApp, offsettings.minWidth, offsettings.measureUnit, C.measureUnit);
+                        }
+                        if ( offsettings.hasOwnProperty('whiteSpace') ) {
+                            clearSpace = myApp.NumCon.convert(myApp, offsettings.whiteSpace, offsettings.measureUnit, C.measureUnit);
+                        }
+                    }
+                } catch(e){
+                    alert("CoverBuilder LibTools: PlaceSpineLogo\n" + e.description);
+                }
+            }
 
-	        var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-
-	        if(C.spine > mw + ws * 2){
-				if(C.spine < mySpineLogo.width + ws * 2){
-					mySpineLogo.toWidth(C.spine - ws * 2 );
-				}
-				var pageRef = myApp.LibTool.getPageByLabel(myCover.spreads[0].pages, "Spine");
-				myApp.LibTool.placeItem(myApp, pageRef, mySpineLogo, C);
-			} else {
-				alert("Spine is too small for logo");
-			}
-	    }
-	////////////
-	// expose //
-	////////////
-  	return {
-  		openLib		    : openLib,
-  		LibObjectWith	: LibObjectWith,
-  		addOffset		: addOffset,
-  		placeItem		: placeItem,
-  		getPageByLabel  : getPageByLabel,
-		placeSpineLogo  : placeSpineLogo
-	};
+            if(C.spine > minimumLogoWidth + clearSpace * 2){
+                if(C.spine < mySpineLogo.width + clearSpace * 2){
+                    mySpineLogo.toWidth(C.spine - clearSpace * 2 );
+                }
+                var pageRef = myApp.LibTool.getPageByLabel(myCover.spreads[0].pages, "Spine");
+                myApp.LibTool.placeItem(myApp, pageRef, mySpineLogo, C);
+            } else {
+                alert("Spine is too small for logo");
+            }
+        }
+    ////////////
+    // expose //
+    ////////////
+      return {
+          openLib         : openLib,
+          LibObjectWith   : LibObjectWith,
+          addOffset       : addOffset,
+          placeItem       : placeItem,
+          getPageByLabel  : getPageByLabel,
+          placeSpineLogo  : placeSpineLogo
+    };
 
 })();

@@ -178,7 +178,7 @@
         for(var page in coverMargins){
             var pagemargins = coverMargins[page];
             for(var i in myMargins) {
-                pagemargins[myMargins[i]] = myApp.NumCon.convert(myApp, pagemargins.units, to_unit, pagemargins[myMargins[i]], 3); ;
+                pagemargins[myMargins[i]] = myApp.NumCon.convert(myApp, pagemargins[myMargins[i]], pagemargins.units, to_unit, 3); ;
             }
             pagemargins.units = checkMeasureUnit(myApp, to_unit);
         }
@@ -195,7 +195,7 @@
         var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
 
         for(var size in dimensions) {
-            C[dimensions[size]] = myApp.NumCon.convert(myApp, C.measureUnit, to_unit, C[dimensions[size]]);
+            C[dimensions[size]] = myApp.NumCon.convert(myApp, C[dimensions[size]], C.measureUnit, to_unit);
         }
         // Do margin
         C.margin      = convertMargins(myApp, C.margin, to_unit);

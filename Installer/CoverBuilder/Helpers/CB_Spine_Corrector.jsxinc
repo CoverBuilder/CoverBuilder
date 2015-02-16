@@ -34,7 +34,7 @@
         }
         if(myDialog.show() == true){
             // editValue returns postscript points. Which we will need to set the page height
-            return {breakFrames: breakFramesCheckbox.checkedState, newSpinePT : spineField.editValue};
+            return {breakFrames: breakFramesCheckbox.checkedState, newSpinePT : myApp.NumCon.doRound(parseFloat(spineField.editValue),6)}; // Round this to X decimals InDesign can crash otherwise on long floats
         } else {
             myDialog.destroy();
             exit();
@@ -52,32 +52,10 @@
             alert("Can’t find a spine!");
         }
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-        var minimumPageWidth = myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.minPageWidthINDD  );
+        var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", C.measureUnit);
 
         // safe original rulers
-        var myOldXUnits = myCover.viewPreferences.horizontalMeasurementUnits;
-        var myOldYUnits = myCover.viewPreferences.verticalMeasurementUnits;
-
-        with(myCover.viewPreferences){
-            switch(C.measureUnit) {
-                case 0:
-                    horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
-                    verticalMeasurementUnits   = MeasurementUnits.MILLIMETERS;
-                    break;
-                case 1:
-                    horizontalMeasurementUnits = MeasurementUnits.INCHES_DECIMAL;
-                    verticalMeasurementUnits   = MeasurementUnits.INCHES_DECIMAL;
-                    break;
-                case 2:
-                    horizontalMeasurementUnits = MeasurementUnits.POINTS;
-                    verticalMeasurementUnits   = MeasurementUnits.POINTS;
-                    break;
-                default:
-                    alert("indd_coverbuilder.Build.cover: Could not parse MeasurementUnits from C.measureUnit");
-                    break;
-            }
-            rulerOrigin = RulerOrigin.pageOrigin;
-        }
+        var myOldRulers = myApp.Tools.setRuler(myCover,C.measureUnit);
 
         // Tidy.
         var docBleed = myCover.documentPreferences.documentBleedTopOffset;
@@ -85,7 +63,7 @@
         C.bleed = docBleed;
 
         //ref to spinepage
-        var mSpine = myApp.Slugs.fetchMasterPage(myApp, myCover, "CB-spine", 0);
+        var mSpine = myApp.Tools.getMasterPage(myApp, myCover, "CB-spine", 0);
 
         //let’s ask the user what the new spine should be
         var userSettings = getnewSpineUI(myApp, C);
@@ -94,12 +72,12 @@
             //user pressed cancel
             exit();
         } else {
-            var newSpinePT = parseFloat(userSettings.newSpinePT);
+            var newSpinePT = userSettings.newSpinePT;
         }
 
         if ( isNaN(newSpinePT) ){
             alert("That was not a Number");
-        } else if (newSpinePT < myApp.NumCon.convert(myApp, "mm", "pt", myApp.Settings.minPageWidthINDD  )){
+        } else if (newSpinePT < myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", "pt")){
             alert("Spine-width should be at least " + myApp.NumCon.doRound(minimumPageWidth,3) + " " + myApp.STools.getMeasurementUnits(myApp, C));
             changeSpine(myApp); // Show UI to re enter new spinewidth
             exit();
@@ -113,22 +91,23 @@
             if(!userFacingPages) {
                 myCover.documentPreferences.facingPages = true;
             }
-            mSpine.page.resize(CoordinateSpaces.INNER_COORDINATES,
-                AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
-                //[myApp.NumCon.mm2pt(newSpinePT), myApp.NumCon.mm2pt(mSpine.h)]); //Width * Height in postscript points
-                [newSpinePT, myApp.NumCon.convert(myApp, C.measureUnit, "pt", mSpine.h)]);  //Width * Height in postscript points
-            
-            // Update cover object
-            C.spine = myApp.NumCon.convert(myApp, "pt", C.measureUnit, newSpinePT);
-            
             try{
+                mSpine.page.resize(CoordinateSpaces.INNER_COORDINATES,
+                    AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
+                    //[myApp.NumCon.mm2pt(newSpinePT), myApp.NumCon.mm2pt(mSpine.h)]);
+                    [newSpinePT, myApp.NumCon.convert(myApp, mSpine.h, C.measureUnit, "pt")]);  //Width * Height in postscript points
+            } catch (err){
+                alert(err);
+            }
+            try{
+                // Update cover object
+                C.spine = myApp.NumCon.convert(myApp, newSpinePT, "pt", C.measureUnit);
                 myApp.Slugs.updateSpineSlug(myApp,myCover,C);
             } catch (err){
                 alert(err);
             }
             // Update XMP
             myApp.XMP.safeCoverObject(myApp, myCover, C);
-
             //set userPref back
             if(!userFacingPages) {
                 myCover.documentPreferences.facingPages = false;
@@ -136,8 +115,7 @@
         }
 
         // reset original rulers
-        myCover.viewPreferences.horizontalMeasurementUnits = myOldXUnits;
-        myCover.viewPreferences.verticalMeasurementUnits   = myOldYUnits;
+        myApp.Tools.setRuler(myCover,myOldRulers);
     }
     ////////////
     // expose //

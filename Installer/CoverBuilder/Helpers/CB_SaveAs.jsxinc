@@ -3,26 +3,26 @@
 
 --------------------------------------------
 
-	CB_SaveAs.jsx    			    (A CoverBuilder Helper Script)
-	An InDesign CS5 Javascript      (Tested in CS6)
-	Version 1.0
+    CB_SaveAs.jsx                   (A CoverBuilder Helper Script)
+    An InDesign CS5 Javascript      (Tested in CS6)
+    Version 1.0
 
-	Bruno Herfst 2014
+    Bruno Herfst 2014
 
-	This script helps me with naming the file automatically to my file-naming conventions
+    This script helps me with naming the file automatically to my file-naming conventions
 
 --------------------------------------------
 
 */
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
+    //////////////
+    // privates //
+    //////////////
 
-	function saveas(myApp) {
-		var myCover = myApp.Tools.getActiveCover(myApp, true);
-		var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+    function saveas(myApp) {
+        var myCover = myApp.Tools.getActiveCover(myApp, true);
+        var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
         if(C != null){
             var myType = "_CVR_";
             var myW    = C.width;
@@ -35,34 +35,34 @@
             var myS    = ""; // No spine
         }
 
-		// Get or create doc name
-		if(myCover.metadataPreferences.documentTitle == ""){
-			var booktitle = prompt("What is the title of the book?");
-			if(booktitle == null){
-				return null; //bail
-			}
-			// safe the title as meta data
-			myCover.metadataPreferences.documentTitle = booktitle;
-			// Update title to safe filename
-			booktitle = booktitle.replace(/[ ,\?\!]/g,'');
-		}
+        // Get or create doc name
+        if(myCover.metadataPreferences.documentTitle == ""){
+            var booktitle = prompt("What is the title of the book?");
+            if(booktitle == null){
+                return null; //bail
+            }
+            // safe the title as meta data
+            myCover.metadataPreferences.documentTitle = booktitle;
+            // Update title to safe filename
+            booktitle = booktitle.replace(/[ ,\?\!]/g,'');
+        }
 
-		// Create temp-file with the right name
-		var fileName = booktitle + myType + myW + myH + myS + "_MU00.indd";
-		var tempfile = File(myApp.PathTo.settingsFolder + fileName);
-		myCover.save(tempfile);
+        // Create temp-file with the right name
+        var fileName = booktitle + myType + myW + myH + myS + "_MU00.indd";
+        var tempfile = File(myApp.PathTo.settingsFolder + fileName);
+        myCover.save(tempfile);
 
-		var myMenu = app.menus.item("Main");
-		var fileMenu = myMenu.menuElements.item("File");
-		var mySaveAsMenu = fileMenu.menuItems.item("Save As...");
-		mySaveAsMenu.associatedMenuAction.invoke(tempfile.remove());
-	}
+        var myMenu = app.menus.item("Main");
+        var fileMenu = myMenu.menuElements.item("File");
+        var mySaveAsMenu = fileMenu.menuItems.item("Save As...");
+        mySaveAsMenu.associatedMenuAction.invoke(tempfile.remove());
+    }
 
-	////////////
-	// expose //
-	////////////
-	return {
-		saveas : saveas
-	};
+    ////////////
+    // expose //
+    ////////////
+    return {
+        saveas : saveas
+    };
 
 })();

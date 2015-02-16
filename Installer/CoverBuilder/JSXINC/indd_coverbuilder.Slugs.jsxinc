@@ -118,74 +118,31 @@
         return myTextFrame;
     }
 
-    function addPageInfo(myApp, myPage){
-        myPage.bounds = myPage.page.bounds;
-        myPage.w = myPage.bounds[3]-myPage.bounds[1];
-        myPage.h = myPage.bounds[2]-myPage.bounds[0];
-        return myPage;
-    }
-
-    function fetchMasterPage(myApp, myCover, myName, myPage){
-        var mPage    = new Object();
-        mPage.name   = myName;
-        mPage.spread = myCover.masterSpreads.item(mPage.name);
-        mPage.page   = mPage.spread.pages[myPage];
-
-        if(!mPage.page.isValid){
-            alert("Can’t find the requested page!\nWhat happend to master spread "+mPage.name+"?");
-            exit(); // I’m done here
-        }
-
-        mPage = addPageInfo(myApp, mPage);
-        return mPage;
-    }
-
-    function fetchItem(mySpread, myLabel, returnAll){
-        //returns array of all items that have label unless returnAll is set to true, then it return just the item;
-        //if nothing is found this function returns null
-        returnAll = returnAll || false;
-        var allItems = new Array();
-        if(mySpread.isValid){        
-            var myElements = mySpread.allPageItems;
-            var len = myElements.length;
-            for (var i = len-1; i >= 0; i--){
-                if(myElements[i].label == myLabel){
-                    if(returnAll){
-                        allItems.push(myElements[i]); 
-                    } else {
-                        return myElements[i];
-                    }
-                }
-            }
-        } else {
-            alert("CoverBuilder.Slugs: Expected a valid spread.");
-        }
-        if(allItems.length > 0){
-            return allItems;
-        } else { return null; }
-    }
-
     function positionSlugWidth(C, myPage, myItem){
         var myLock = layerUnLockToggle(myItem.itemLayer, true);
-        myItem.geometricBounds = [-C.bleed-myApp.NumCon.convert(myApp, "mm", C.measureUnit, myApp.Settings.mmSlug), 0, -C.bleed, myPage.w];
+        myItem.geometricBounds = [-C.bleed-myApp.NumCon.convert(myApp, myApp.Settings.mmSlug, "mm", C.measureUnit), 0, -C.bleed, myPage.w];
         myItem.contents = myApp.NumCon.doRound(myPage.w,3).toString();
         layerUnLockToggle(myItem.itemLayer, myLock);
     }
 
     function updateSpineSlug(myApp, myCover, C){
         //ref to spinepage
-        var mSpine = fetchMasterPage(myApp, myCover, "CB-spine", 0);
-        var slugWidthFrame = fetchItem(mSpine.page, "pageWidth");
+        var mSpine         = myApp.Tools.getMasterPage(myApp, myCover, "CB-spine", 0);
+        var slugWidthFrame = myApp.Tools.getItemByLabel(mSpine.page, "pageWidth");
         if(slugWidthFrame != null){
             positionSlugWidth(C, mSpine, slugWidthFrame);
         }
-        resetHeight(myApp,myCover);
+        try{
+            resetHeight(myApp,myCover);
+        } catch(err){
+            alert(err.description);
+        }
     }
 
     function resetHeight(myApp,myCover){
         try {
-            var CVR4 = fetchMasterPage(myApp, myCover, "CB-cover", 0);
-            var groupFix = fetchItem(CVR4.spread, "forcePageHeightGroup");
+            var CVR4     = myApp.Tools.getMasterPage(myApp, myCover, "CB-cover", 0);
+            var groupFix = myApp.Tools.getItemByLabel(CVR4.spread, "forcePageHeightGroup");
             if(groupFix != null){
                 var myLayer = groupFix.itemLayer;
                 if(myLayer.isValid){
@@ -219,7 +176,7 @@
         for (var m=0; masters.length > m; m++){
             for (var ii=0; scriptLabels.length > ii; ii++){
                 try{
-                    var myItems = fetchItem(myCover.masterSpreads.item(masters[m]), scriptLabels[ii], true);
+                    var myItems = myApp.Tools.getItemByLabel(myCover.masterSpreads.item(masters[m]), scriptLabels[ii], true);
                     if(myItems != null){
                         for(var i = 0; myItems.length > i; i++){
                             var myItem = myItems[i];
@@ -266,8 +223,6 @@
     // expose //
     ////////////
     return {
-        fetchItem                : fetchItem,
-        fetchMasterPage          : fetchMasterPage,
         updateSpineSlug          : updateSpineSlug,
         resetHeight              : resetHeight,
         placeSizesInSlug         : placeSizesInSlug,

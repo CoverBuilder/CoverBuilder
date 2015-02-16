@@ -3,84 +3,84 @@
 // Bruno Herfst 2014
 
 (function() {
-	//////////////
-	// privates //
-	//////////////
-	var destNamespace = "http://brunoherfst.com/";
-	var destContName = "Settings";
+    //////////////
+    // privates //
+    //////////////
+    var destNamespace = "http://brunoherfst.com/";
+    var destContName = "Settings";
 
-	function setBags(myCover, C){
-		var myDocXMP = myCover.metadataPreferences;
-		try{
-			myDocXMP.setProperty(destNamespace, destContName + "[1]", String(C.width));
-			myDocXMP.setProperty(destNamespace, destContName + "[2]", String(C.height));
-			myDocXMP.setProperty(destNamespace, destContName + "[3]", String(C.spine));
-			myDocXMP.setProperty(destNamespace, destContName + "[4]", String(C.flap));
-			myDocXMP.setProperty(destNamespace, destContName + "[5]", String(C.JSONstring));
-			myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
+    function setBags(myCover, C){
+        var myDocXMP = myCover.metadataPreferences;
+        try{
+            myDocXMP.setProperty(destNamespace, destContName + "[1]", String(C.width));
+            myDocXMP.setProperty(destNamespace, destContName + "[2]", String(C.height));
+            myDocXMP.setProperty(destNamespace, destContName + "[3]", String(C.spine));
+            myDocXMP.setProperty(destNamespace, destContName + "[4]", String(C.flap));
+            myDocXMP.setProperty(destNamespace, destContName + "[5]", String(C.JSONstring));
+            myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
 
-		} catch(e){
-			alert("CoverBuilder:XMP:set:\n" + e);
-		}
-		return C;
-	}
-	function setHandBags(myCover, C){
-		var myDocXMP = myCover.metadataPreferences;
-		try{
-			myDocXMP.setProperty(destNamespace, destContName + "[1]", String(C.width));
-			myDocXMP.setProperty(destNamespace, destContName + "[2]", String(C.height));
-			myDocXMP.setProperty(destNamespace, destContName + "[3]", String(C.spine));
-			myDocXMP.setProperty(destNamespace, destContName + "[4]", String(C.flap));
-			myDocXMP.setProperty(destNamespace, destContName + "[5]", String(C.JSONstring));
-			myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
-		} catch(e){
-			alert("CoverBuilder:XMP:set:\n" + e);
-		}
-		return C;
-	}
-	function safeCoverObject(myApp, myCover, C){
-		var newC = myApp.STools.Cparser(myApp, C);
-		newC.JSONstring = myApp.JSON.stringify(newC);
-		return setBags(myCover, newC);
-	}
-	function retrieveCoverObject(myApp, myCover){
-		try{
-			var C = myApp.JSON.parse(myCover.metadataPreferences.getProperty(destNamespace,destContName + "[5]"));
-		} catch(e1){
-			// There is not such bag
-			var mySpine = myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]") || 0;
-			if(mySpine > 0){
-				try {
-					var C = { width:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[1]"),
-						      height:      myCover.metadataPreferences.getProperty(destNamespace,destContName + "[2]"),
-							  spine:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]")};
-					    C = safeCoverObject(myApp, myCover, C);
-				} catch(f){
-					var C = {name:"None"};
-					alert("Could not parse original settings from document.");
-				}
-			}
-		}
-		return myApp.STools.Cparser(myApp, C); // returns valid C object or null
-	}
-	function newXMP(myApp, myCover, C){
-		var myXML = new XML("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:CoverBuilder=\"http://brunoherfst.com/\"><CoverBuilder:contact>mail@brunoherfst.com</CoverBuilder:contact></rdf:Description></rdf:RDF></x:xmpmeta>");
-		var myXMLfile = File('TEMP_XMP.xml');
-		if( myXMLfile.open('e') ){
-			myXMLfile.write(myXML);
-			myXMLfile.close();
-			myCover.metadataPreferences.append(myXMLfile);
-			myXMLfile.remove();
-		}
-		myCover.metadataPreferences.createContainerItem(destNamespace, destContName, undefined, ContainerType.BAG);
-		safeCoverObject(myApp, myCover, C);
-	}
-	////////////
-	// expose //
-	////////////
-  	return {
-  		newXMP              : newXMP,
-		safeCoverObject     : safeCoverObject,
-  		retrieveCoverObject : retrieveCoverObject
-	};
+        } catch(e){
+            alert("CoverBuilder:XMP:set:\n" + e);
+        }
+        return C;
+    }
+    function setHandBags(myCover, C){
+        var myDocXMP = myCover.metadataPreferences;
+        try{
+            myDocXMP.setProperty(destNamespace, destContName + "[1]", String(C.width));
+            myDocXMP.setProperty(destNamespace, destContName + "[2]", String(C.height));
+            myDocXMP.setProperty(destNamespace, destContName + "[3]", String(C.spine));
+            myDocXMP.setProperty(destNamespace, destContName + "[4]", String(C.flap));
+            myDocXMP.setProperty(destNamespace, destContName + "[5]", String(C.JSONstring));
+            myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
+        } catch(e){
+            alert("CoverBuilder:XMP:set:\n" + e);
+        }
+        return C;
+    }
+    function safeCoverObject(myApp, myCover, C){
+        var newC = myApp.STools.Cparser(myApp, C);
+        newC.JSONstring = myApp.JSON.stringify(newC);
+        return setBags(myCover, newC);
+    }
+    function retrieveCoverObject(myApp, myCover){
+        try{
+            var C = myApp.JSON.parse(myCover.metadataPreferences.getProperty(destNamespace,destContName + "[5]"));
+        } catch(e1){
+            // There is not such bag
+            var mySpine = myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]") || 0;
+            if(mySpine > 0){
+                try {
+                    var C = { width:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[1]"),
+                              height:      myCover.metadataPreferences.getProperty(destNamespace,destContName + "[2]"),
+                              spine:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]")};
+                        C = safeCoverObject(myApp, myCover, C);
+                } catch(f){
+                    var C = {name:"None"};
+                    alert("Could not parse original settings from document.");
+                }
+            }
+        }
+        return myApp.STools.Cparser(myApp, C); // returns valid C object or null
+    }
+    function newXMP(myApp, myCover, C){
+        var myXML = new XML("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:CoverBuilder=\"http://brunoherfst.com/\"><CoverBuilder:contact>mail@brunoherfst.com</CoverBuilder:contact></rdf:Description></rdf:RDF></x:xmpmeta>");
+        var myXMLfile = File('TEMP_XMP.xml');
+        if( myXMLfile.open('e') ){
+            myXMLfile.write(myXML);
+            myXMLfile.close();
+            myCover.metadataPreferences.append(myXMLfile);
+            myXMLfile.remove();
+        }
+        myCover.metadataPreferences.createContainerItem(destNamespace, destContName, undefined, ContainerType.BAG);
+        safeCoverObject(myApp, myCover, C);
+    }
+    ////////////
+    // expose //
+    ////////////
+      return {
+          newXMP              : newXMP,
+        safeCoverObject     : safeCoverObject,
+          retrieveCoverObject : retrieveCoverObject
+    };
 })();
