@@ -214,8 +214,8 @@
             // force indesign to stay on the right page before setting bounds //
             // This is not the most elegant solution but at least it will always work even when InDesign changes it’s rules in the future
             app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
-
-            thisAsset[0].move(myPage, [0.4, 0.4]); //Page can’t be smaller than 0.5 :)
+            var minPageSize = myApp.NumCon.convert(myApp, 0.4, "mm", C.measureUnit);
+            thisAsset[0].move(myPage, [minPageSize, minPageSize]); //Page can’t be smaller than 0.5mm :)
 
             thisAsset[0].move(pos); //x,y
 
