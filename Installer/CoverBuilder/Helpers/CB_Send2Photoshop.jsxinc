@@ -18,6 +18,8 @@
     //////////////
     // privates //
     //////////////
+    var standardPPI = 300;
+
     function coverBuilderPS(myApp,C,addSpine){
         app.bringToFront();
         var builder = $.evalFile(new File(myApp.Module.PSbuild));
@@ -55,13 +57,13 @@
                 myPages.push(myApp.Tools.addPageInfo(myApp, {page: currSpread.pages[i]}));
             }
             if(myPages.length == 1){
-                var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0,ppi:600,bleed:myBleed,measureUnit:0};
+                var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0,ppi:standardPPI,bleed:myBleed,measureUnit:0};
                 C = myApp.STools.Cparser(myApp, newC);
                 addSpine = false;
             } else if(myPages.length == 2){
                 // Check if both pages are the same size
                 if( (parseFloat(myPages[0].w) == parseFloat(myPages[1].w)) && (parseFloat(myPages[0].h) == parseFloat(myPages[1].h)) ){
-                    var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0.005,ppi:600,bleed:myBleed,measureUnit:0};
+                    var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0.005,ppi:standardPPI,bleed:myBleed,measureUnit:0};
                     C = myApp.STools.Cparser(myApp, newC);
                     addSpine = true;
                 } else {
