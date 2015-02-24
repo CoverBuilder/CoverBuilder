@@ -36,16 +36,17 @@
         }
 
         // Get or create doc name
-        if(myCover.metadataPreferences.documentTitle == ""){
-            var booktitle = prompt("What is the title of the book?");
-            if(booktitle == null){
+        var booktitle = myCover.metadataPreferences.documentTitle;
+        if( booktitle == ""){
+            booktitle = prompt("What is the title of the book?");
+            if( booktitle == null){
                 return null; //bail
             }
             // safe the title as meta data
             myCover.metadataPreferences.documentTitle = booktitle;
-            // Update title to safe filename
-            booktitle = booktitle.replace(/[ ,\?\!]/g,'');
         }
+		// Update title to safe filename
+        booktitle = booktitle.replace(/[^a-zA-Z0-9]/g, "");
 
         // Create temp-file with the right name
         var fileName = booktitle + myType + myW + myH + myS + "_MU00.indd";
