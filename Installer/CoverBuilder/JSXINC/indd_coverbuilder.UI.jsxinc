@@ -179,6 +179,7 @@
 
         ////////////// dialog functionality
         buildBut.onClick = function () {
+        	// NEEDS WORK
             try{
                 var ms = parseFloat(mySpine.text);
                 var mw = parseFloat(myWidth.text);
@@ -214,8 +215,7 @@
                             }
                         }
                         */
-
-                        if(add2Presets(myApp, "-Last Used-", true)){
+						if(add2Presets(myApp, "-Last Used-", true)){
                             myApp.JSON.saveFile(myApp, f, MyPresets);
                             C = MyPresets.presets[MyPresets.presets.length-1];
                         } else {
@@ -514,7 +514,6 @@
                         }
                     }
                 }
-
                 var newFlap, newFold, newQB, newInExQB = 0;
                 if(flapQBDropdown.selection == 0){
                     newFlap = myApp.NumCon.NaN20(parseFloat(myFlapQB.text));
@@ -532,12 +531,17 @@
                         newInExQB++;
                     }
                 }
+                if(isNaN(myApp.Settings.standardPPI)){
+                	alert("CoverBuilder UI\nError reading settings");
+                	//continue
+                	myApp.Settings.standardPPI = 300;
+                }
                 MyPresets.presets.push({
                     name: newName,
                     width: myApp.NumCon.NaN20(parseFloat(myWidth.text)),
                     height: myApp.NumCon.NaN20(parseFloat(myHeight.text)),
                     spine: myApp.NumCon.NaN20(parseFloat(mySpine.text)),
-                    ppi: myApp.Settings.standardDPI,
+                    ppi: myApp.Settings.standardPPI,
                     bleed: myApp.NumCon.NaN20(parseFloat(myBleed.text)),
                     hinge: myApp.NumCon.NaN20(parseFloat(myHinge.text)),
                     inExCludeHinge: myApp.NumCon.NaN20(parseFloat(hingeDropdown.selection)),
@@ -551,7 +555,6 @@
                     margin: MarginObj,
                     measureUnit: myApp.NumCon.NaN20(parseFloat(mminch.selection))
                 });
-
                 return myApp.STools.sameProps(MyPresets, myApp.STools.PresetObj); //report back if it went well
             } //end check for string
             return "error";
