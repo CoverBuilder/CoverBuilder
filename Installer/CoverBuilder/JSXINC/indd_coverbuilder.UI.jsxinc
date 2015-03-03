@@ -179,59 +179,48 @@
 
         ////////////// dialog functionality
         buildBut.onClick = function () {
-        	// NEEDS WORK
+        	// Check input
             try{
-                var ms = parseFloat(mySpine.text);
-                var mw = parseFloat(myWidth.text);
-                var mh = parseFloat(myHeight.text);
-                var mm = "mm";
-                var noprobs = true;
-
+                // Check if quarter binding makes sense
+                //------
                 if(flapQBDropdown.selection != 0){
                     var thisQB = parseFloat(myFlapQB.text);
                     if(thisQB < parseFloat(myHinge.text) && thisQB != 0){
-                        noprobs = false;
+                        alert("Binding should cover the Hinge or Score.");
+                        return null;
                      }
                 }
-                switch(mminch.selection.text){
-                    case "mm":
-                        var minSize = 0.5;
-                        break;
-                    case "inch":
-                        var mm = "inch";
-                        var minSize = myApp.NumCon.doRound(myApp.NumCon.mm2inch(0.5), 3);
-                        break
+                
+                // Check for minimal page size: InDesign can't handle pages smaller then 0.5mm
+                //------
+                var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", mminch.selection.text, 4); // Minimum page width for indesign
+                var thisSpine   = parseFloat(mySpine.text);
+                var thisWidth   = parseFloat(myWidth.text);
+                var thisHeight  = parseFloat(myHeight.text);
+                
+                if(thisSpine <= minimumPageWidth || thisWidth <= minimumPageWidth || thisHeight <= minimumPageWidth){
+                    alert("SPINE, WIDTH and HEIGHT should be at least " + minimumPageWidth + " " + mminch.selection.text);
+                    return null;
                 }
-                if(noprobs){
-                    if(ms >= minSize && mw >= minSize && mh >= minSize){
-                        // Let's safe these settings to Last Used preset
-                        // Easiest to start from scratch and delete any "Last Used" objects in presets array
 
-                        /* this seems to be the problem as -last used- is not the last in the array.
-                        var plen = MyPresets.presets.length-1;
-                        for (var i = 0; i <= plen; i++) {
-                            if(MyPresets.presets[i].name == "-Last Used-"){
-                                MyPresets.presets.splice(i,1);
-                            }
-                        }
-                        */
-						if(add2Presets(myApp, "-Last Used-", true)){
-                            myApp.JSON.saveFile(myApp, f, MyPresets);
-                            C = MyPresets.presets[MyPresets.presets.length-1];
-                        } else {
-                            alert("Sorry!\nI'm having trouble saving last used settings");
-                        }
-                        myWindow.close();
-                    } else {
-                        alert("SPINE, WIDTH and HEIGHT should be at least "+minSize+" "+mm);
-                    }
+                // All good. But before we close the user interface
+                // let's safe settings to -last used- preset and set the Cover (C) object
+                // This is the object that this function will return at the end.
+                //------
+                if(add2Presets(myApp, "-Last Used-", true)){
+                    myApp.JSON.saveFile(myApp, f, MyPresets);
+                    C = MyPresets.presets[MyPresets.presets.length-1];
+                    myWindow.close();
                 } else {
-                    alert("Quarter Binding should cover the hinge.");
+                    alert("Sorry!\nI'm having trouble saving last used settings");
+                    return null;
                 }
             } catch(err){
-                alert("Build encountered an error: \n" + err);
+                alert("Build Button encountered an error: \n" + err);
+                return null;
             }
         }
+
         presetBut.onClick = function () {
             if(presetBut.text == 'Save Preset'){
                 //create preset

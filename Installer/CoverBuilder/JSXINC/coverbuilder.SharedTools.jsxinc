@@ -38,7 +38,7 @@
                 // We need to return a string
                 if(C.hasOwnProperty("measureUnit")){
                     var munit = C.measureUnit;
-                } else if( !isNan(parseInt(C)) ){
+                } else if( !isNaN(parseInt(C)) ){
                     var munit = parseInt(C); // We got a number, let give back the corresponding unit
                 }
                 switch(munit) {
