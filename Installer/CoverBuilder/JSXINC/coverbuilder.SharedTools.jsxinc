@@ -116,6 +116,7 @@
                 C.flap += C.fold;
             } else if(C.inExCludeFold == 2){
                 C.width -= C.fold;
+                C.flap  += C.fold
             }
             //C.fold = 0;
 
