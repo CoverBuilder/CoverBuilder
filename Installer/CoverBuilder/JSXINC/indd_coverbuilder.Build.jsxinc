@@ -10,7 +10,7 @@
         // Safe original settings from UI
         // We will save this in the document so we can always refer back to source settings
         var UI_Clone = myApp.JSON.parse( myApp.JSON.stringify( C ) );
-        
+
         ///////////////////
         // Convert Units //
         ///////////////////
@@ -18,7 +18,7 @@
 
         var mySlug           = myApp.NumCon.convert(myApp, myApp.Settings.mmSlug,           "mm", C.measureUnit ); // For crop-marks and slug info
         var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", C.measureUnit ); // Minimum page width for indesign
-        
+
         if(C.height < minimumPageWidth || C.width < minimumPageWidth || C.spine < minimumPageWidth){
             alert("A pagesize can’t be smaller than " + minimumPageWidth + myApp.STools.getMeasurementUnits(myApp, C.measureUnit) );
             return;
@@ -61,7 +61,7 @@
             }
             rulerOrigin = RulerOrigin.pageOrigin;
         }
-        
+
         with(myCover.documentPreferences){
             facingPages = true; //so we can stuff the pages together
             horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
@@ -322,7 +322,7 @@
 
         //Set sizes in slug
         myApp.Slugs.placeSizesInSlug(myApp,C,myCover);
-        
+
         myCover.documentPreferences.facingPages = false;
 
         // Move registration layer to top of doc

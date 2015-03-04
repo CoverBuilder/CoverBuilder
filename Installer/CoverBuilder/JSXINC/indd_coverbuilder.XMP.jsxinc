@@ -80,7 +80,7 @@
     ////////////
       return {
           newXMP              : newXMP,
-        safeCoverObject     : safeCoverObject,
+          safeCoverObject     : safeCoverObject,
           retrieveCoverObject : retrieveCoverObject
     };
 })();
