@@ -1,15 +1,9 @@
 <ExtensionUpdateInformation>
-	<version>2.9.5</version>
-	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_295.zxp</download>
+	<version>2.9.6</version>
+	<download>http://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_296.zxp</download>
 	<description url="http://coverbuilder.brunoherfst.com">
 	<![CDATA[
-	        Spine-width in slug overset.
-	        Updated help location.
-	        CoverBuilderPS hide preview layers after build.
-	        Native support for inches and points.
-	        Added load doc presets.
-	        Add note to slug info.
-		Minor bug-fixes.
+	        Bug-fixes.
 	]]>
 	</description>
 </ExtensionUpdateInformation>
