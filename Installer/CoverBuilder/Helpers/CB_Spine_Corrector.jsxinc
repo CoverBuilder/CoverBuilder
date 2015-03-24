@@ -101,7 +101,7 @@
             }
             try{
                 // Update cover object
-                C.spine = myApp.NumCon.convert(myApp, newSpinePT, "pt", C.measureUnit);
+                C.spine = myApp.NumCon.convert(myApp, newSpinePT, "pt", C.measureUnit, 6);
                 myApp.Slugs.updateSpineSlug(myApp,myCover,C);
             } catch (err){
                 alert(err);
