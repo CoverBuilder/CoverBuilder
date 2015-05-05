@@ -232,7 +232,7 @@
         pdfpref.monochromeBitmapSampling    = Sampling.NONE;
         pdfpref.optimizePDF                 = false;                                //Compresses text and line art (Ugly screen viewing)
         pdfpref.pageInformationMarks        = false;                                //ADD TO SETTINGS (can be handy)
-        pdfpref.pageMarksOffset             = myPresets.slug;                       //should be the same as document bleed
+        pdfpref.pageMarksOffset             = myPresets.bleed;                      //should be the same as document bleed
         if(colorProfiles){
             pdfpref.pdfColorSpace           = PDFColorSpace.REPURPOSE_CMYK;         //ADD TO SETTINGS (can be handy)
         } else {

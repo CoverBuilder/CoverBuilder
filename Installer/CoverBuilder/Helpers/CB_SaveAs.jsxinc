@@ -5,7 +5,7 @@
 
     CB_SaveAs.jsx                   (A CoverBuilder Helper Script)
     An InDesign CS5 Javascript      (Tested in CS6)
-    Version 1.0
+    Version 1.1
 
     Bruno Herfst 2014
 
@@ -19,6 +19,21 @@
     //////////////
     // privates //
     //////////////
+    function getBookTitleUI(){
+        var thisTitle = null;
+        var bookTitleUI = app.dialogs.add({name:"What is the title of this book?",canCancel:true});
+        with(bookTitleUI){
+            with(dialogColumns.add()){
+                var titleEditField = textEditboxes.add({editContents:"", minWidth:200});
+            }
+         }
+         var myResult = bookTitleUI.show();
+         if(myResult == true){
+             thisTitle = titleEditField.editContents;
+         }
+         bookTitleUI.destroy();
+         return thisTitle;
+    }
 
     function saveas(myApp) {
         var myCover = myApp.Tools.getActiveCover(myApp, true);
@@ -38,7 +53,7 @@
         // Get or create doc name
         var booktitle = myCover.metadataPreferences.documentTitle;
         if( booktitle == ""){
-            booktitle = prompt("What is the title of the book?");
+            booktitle = getBookTitleUI();
             if( booktitle == null){
                 return null; //bail
             }
