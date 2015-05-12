@@ -190,14 +190,14 @@
                         return null;
                      }
                 }
-                
+
                 // Check for minimal page size: InDesign can't handle pages smaller then 0.5mm
                 //------
                 var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", mminch.selection.text, 4); // Minimum page width for indesign
                 var thisSpine   = parseFloat(mySpine.text);
                 var thisWidth   = parseFloat(myWidth.text);
                 var thisHeight  = parseFloat(myHeight.text);
-                
+
                 if(thisSpine <= minimumPageWidth || thisWidth <= minimumPageWidth || thisHeight <= minimumPageWidth){
                     alert("SPINE, WIDTH and HEIGHT should be at least " + minimumPageWidth + " " + mminch.selection.text);
                     return null;
@@ -279,7 +279,7 @@
 
             // start creating the panels
             // there is not always a spine
-            if(parseFloat(mySpine.text) > 0){
+            if(parseFloat(mySpine.text) >= 0){ // We will show a spine just in case the user wants to setup the margins first.
                 //insert spine panel
                 var SpinePanel = new panel(CoverGroup, "Spine", MarginObj.Spine);
                 pagePanels.push(SpinePanel);
@@ -420,7 +420,7 @@
                     facing          : theseMargins.facing,
                     units           : parseInt(this.unit.selection),
                     linked          : this.link.value,
-                    ps_guides        : false
+                    ps_guides       : false
                 }
             }
 
