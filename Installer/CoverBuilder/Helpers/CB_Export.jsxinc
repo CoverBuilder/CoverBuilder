@@ -34,7 +34,7 @@
     //////////////
     // privates //
     //////////////
-    var myPresets = { thisVersion : "V1.4", preflight : true };
+    var myPresets = { thisVersion : "V1.5", preflight : true };
     var myErrr = false;
 
     // START DIALOG ------------------------------------------------------------
@@ -45,34 +45,68 @@
 
             var td10 = myWin.add ("group");
                 td10.orientation = "column";
-                td10.add ("statictext", [0,0,40,20], "CVR");
+                td10.add ("statictext", [0,0,80,20], "CVR [Spread]");
+                td10.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_PR = td10.add ("checkbox", [0,0,40,20], "");
+                td10.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_HR = td10.add ("checkbox", [0,0,40,20], "");
+                td10.add ("panel", [0,0,80,1]);
                 var check_CVR_JPG_HR = td10.add ("checkbox", [0,0,40,20], "");
+                td10.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_MR = td10.add ("checkbox", [0,0,40,20], "");
+                td10.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_LR = td10.add ("checkbox", [0,0,40,20], "");
+                td10.add ("panel", [0,0,80,1]);
                 var check_CVR_JPG_LR = td10.add ("checkbox", [0,0,40,20], "");
+
+            var td11 = myWin.add ("group");
+                td11.orientation = "column";
+                td11.add ("statictext", [0,0,80,20], "CVR [Pages]");
+                td11.add ("panel", [0,0,80,1]);
+                td11.add ("statictext", [0,0,80,20], "");
+                td11.add ("panel", [0,0,80,1]);
+                var check_CVR_PDF_single_HR = td11.add ("checkbox", [0,0,40,20], "");
+                td11.add ("panel", [0,0,80,1]);
+                var check_CVR_JPG_single_HR = td11.add ("checkbox", [0,0,40,20], "");
+                td11.add ("panel", [0,0,80,1]);
+                var check_CVR_PDF_single_MR = td11.add ("checkbox", [0,0,40,20], "");
+                td11.add ("panel", [0,0,80,1]);
+                var check_CVR_PDF_single_LR = td11.add ("checkbox", [0,0,40,20], "");
+                td11.add ("panel", [0,0,80,1]);
+                var check_CVR_JPG_single_LR = td11.add ("checkbox", [0,0,40,20], "");
 
             var td20 = myWin.add ("group");
                 td20.orientation = "column";
-                td20.add ("statictext", [0,0,40,20], "CVR1");
-                td20.add ("statictext", [0,0,40,20], "");
+                td20.add ("statictext", [0,0,80,20], "CVR1 [Front]");
+                td20.add ("panel", [0,0,80,1]);
+                td20.add ("statictext", [0,0,80,20], "");
+                td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_PDF_HR = td20.add ("checkbox", [0,0,40,20], "");
+                td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_JPG_HR = td20.add ("checkbox", [0,0,40,20], "");
+                td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_PDF_MR = td20.add ("checkbox", [0,0,40,20], "");
+                td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_PDF_LR = td20.add ("checkbox", [0,0,40,20], "");
+                td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_JPG_LR = td20.add ("checkbox", [0,0,40,20], "");
 
             var td00 = myWin.add ("group");
                 td00.orientation = "column";
                 td00.alignChildren = "right";
-                var whichSpread = td00.add ("dropdownlist",   [0,0,150,20], ["All Spreads","Current Spread"]);
-                    whichSpread.selection = 1;
+                var whichSpread = td00.add ("dropdownlist",   [0,0,150,20], ["All Spreads", "Current as Spread"]);
+                    whichSpread.selection = 0;
+                td00.add ("panel", [0,0,150,1]);
                 td00.add ("statictext", [0,0,150,20], "PDF Press-Ready");
+                td00.add ("panel", [0,0,150,1]);
                 td00.add ("statictext", [0,0,150,20], "PDF High-Res");
+                td00.add ("panel", [0,0,150,1]);
                 td00.add ("statictext", [0,0,150,20], "JPG High-Res");
+                td00.add ("panel", [0,0,150,1]);
                 td00.add ("statictext", [0,0,150,20], "PDF Mid-Res");
+                td00.add ("panel", [0,0,150,1]);
                 td00.add ("statictext", [0,0,150,20], "PDF Low-Res");
+                td00.add ("panel", [0,0,150,1]);
                 td00.add ("statictext", [0,0,150,20], "JPG Low-Res");
 
             var td30 = myWin.add ("group");
@@ -91,6 +125,14 @@
                 orders.push({name : "CVR_PDF_LR", state : check_CVR_PDF_LR.value});
                 orders.push({name : "CVR_JPG_HR", state : check_CVR_JPG_HR.value});
                 orders.push({name : "CVR_JPG_LR", state : check_CVR_JPG_LR.value});
+
+                //CVR single
+                orders.push({name : "CVR_PDF_single_HR", state : check_CVR_PDF_single_HR.value});
+                orders.push({name : "CVR_PDF_single_MR", state : check_CVR_PDF_single_MR.value});
+                orders.push({name : "CVR_PDF_single_LR", state : check_CVR_PDF_single_LR.value});
+                orders.push({name : "CVR_JPG_single_HR", state : check_CVR_JPG_single_HR.value});
+                orders.push({name : "CVR_JPG_single_LR", state : check_CVR_JPG_single_LR.value});
+
                 //CVR1
                 orders.push({name : "CVR1_PDF_HR", state : check_CVR1_PDF_HR.value});
                 orders.push({name : "CVR1_PDF_MR", state : check_CVR1_PDF_MR.value});
@@ -108,15 +150,22 @@
             myPresets.pageCount = myPresets.doc.pages.length;
             myPresets.spreadCount = myPresets.doc.spreads.length;
 
-            if(whichSpread.selection == 0){
-                myPresets.pageRange = "All";
-                myPresets.allSpreads = true;
-            } else {
-                myPresets.currSpread = app.activeWindow.activeSpread;
-                var myPages = myPresets.currSpread.pages;
-                myPresets.pageRange = myPages[0].name + "-" + myPages[-1].name;
-                myPresets.allSpreads = false;
-            }
+			switch(parseInt(whichSpread.selection)){
+				case 0: // All Spreads
+					myPresets.pageRange = "All";
+                	myPresets.allSpreads = true;
+					break;
+				case 2: // Current Spreads
+					myPresets.currSpread = app.activeWindow.activeSpread;
+                	var myPages = myPresets.currSpread.pages;
+                	myPresets.pageRange = myPages[0].name + "-" + myPages[-1].name;
+                	alert(myPresets.pageRange);
+                	myPresets.allSpreads = false;
+					break;
+				default:
+					alert("OOPS!");
+					break;
+			}
         }
         return orders;
     }
@@ -375,7 +424,7 @@
             }
         } else {
             pdfpref.pageRange = myPresets.pageRange;
-            pdfpref.exportReaderSpreads = true;
+            pdfpref.exportReaderSpreads = myPresets.exportSpreads;
             if(!myPresets.documentName.match(/CVR/)){
                 documentName += "_CVR_";
             }
@@ -456,7 +505,7 @@
         } else {
             jpgpref.jpegExportRange         = ExportRangeOrAllPages.EXPORT_ALL;
             jpgpref.pageString              = myPresets.pageRange;
-            jpgpref.exportingSpread         = true;
+            jpgpref.exportingSpread         = myPresets.exportSpreads;
             if(!myPresets.documentName.match(/CVR/)){
                 documentName += "_CVR_";
             }
@@ -502,7 +551,11 @@
         myPresets.bleed = myPresets.doc.documentPreferences.documentBleedTopOffset;
         myPresets.slug = myPresets.bleed+5; //I could use slug but this is better for files not build with CoverBuilder
 
-        var orders = getOrders();
+		try {
+        	var orders = getOrders();
+		} catch(err){
+			alert(err);
+		}
 
         if(orders.length > 0 ){
             //get the export location
@@ -514,6 +567,11 @@
             myPresets.folder = myFolder;
             var len = orders.length-1;
             for(var order = len; order >= 0; order--){
+            	if(orders[order].name.match(/single/)){
+            		myPresets.exportSpreads = false;
+            	} else {
+            		myPresets.exportSpreads = true;
+            	}
                 if(orders[order].name.match(/PDF/)){
                     var res = orders[order].name.substr(-2);
                     myPresets.order = orders[order];
