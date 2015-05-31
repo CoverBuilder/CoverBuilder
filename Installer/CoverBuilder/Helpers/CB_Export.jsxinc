@@ -45,7 +45,7 @@
 
             var td10 = myWin.add ("group");
                 td10.orientation = "column";
-                td10.add ("statictext", [0,0,80,20], "CVR [Spread]");
+                td10.add ("statictext", [0,0,80,20], "[Spreads]");
                 td10.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_PR = td10.add ("checkbox", [0,0,40,20], "");
                 td10.add ("panel", [0,0,80,1]);
@@ -61,40 +61,50 @@
 
             var td11 = myWin.add ("group");
                 td11.orientation = "column";
-                td11.add ("statictext", [0,0,80,20], "CVR [Pages]");
+                td11.add ("statictext", [0,0,80,20], "[Pages]");
                 td11.add ("panel", [0,0,80,1]);
                 td11.add ("statictext", [0,0,80,20], "");
                 td11.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_single_HR = td11.add ("checkbox", [0,0,40,20], "");
+                    check_CVR_PDF_single_HR.onClick = function(){check_CVR1_PDF_HR.value = false};
                 td11.add ("panel", [0,0,80,1]);
                 var check_CVR_JPG_single_HR = td11.add ("checkbox", [0,0,40,20], "");
+                    check_CVR_JPG_single_HR.onClick = function(){check_CVR1_JPG_HR.value = false};
                 td11.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_single_MR = td11.add ("checkbox", [0,0,40,20], "");
+                    check_CVR_PDF_single_MR.onClick = function(){check_CVR1_PDF_MR.value = false};
                 td11.add ("panel", [0,0,80,1]);
                 var check_CVR_PDF_single_LR = td11.add ("checkbox", [0,0,40,20], "");
+                    check_CVR_PDF_single_LR.onClick = function(){check_CVR1_PDF_LR.value = false};
                 td11.add ("panel", [0,0,80,1]);
                 var check_CVR_JPG_single_LR = td11.add ("checkbox", [0,0,40,20], "");
+                    check_CVR_JPG_single_LR.onClick = function(){check_CVR1_JPG_LR.value = false};
 
             var td20 = myWin.add ("group");
                 td20.orientation = "column";
-                td20.add ("statictext", [0,0,80,20], "CVR1 [Front]");
+                td20.add ("statictext", [0,0,80,20], "[Front Only]");
                 td20.add ("panel", [0,0,80,1]);
                 td20.add ("statictext", [0,0,80,20], "");
                 td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_PDF_HR = td20.add ("checkbox", [0,0,40,20], "");
+                    check_CVR1_PDF_HR.onClick = function(){check_CVR_PDF_single_HR.value = false};
                 td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_JPG_HR = td20.add ("checkbox", [0,0,40,20], "");
+                    check_CVR1_JPG_HR.onClick = function(){check_CVR_JPG_single_HR.value = false};
                 td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_PDF_MR = td20.add ("checkbox", [0,0,40,20], "");
+                    check_CVR1_PDF_MR.onClick = function(){check_CVR_PDF_single_MR.value = false};
                 td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_PDF_LR = td20.add ("checkbox", [0,0,40,20], "");
+                    check_CVR1_PDF_LR.onClick = function(){check_CVR_PDF_single_LR.value = false};
                 td20.add ("panel", [0,0,80,1]);
                 var check_CVR1_JPG_LR = td20.add ("checkbox", [0,0,40,20], "");
+                    check_CVR1_JPG_LR.onClick = function(){check_CVR_JPG_single_LR.value = false};
 
             var td00 = myWin.add ("group");
                 td00.orientation = "column";
                 td00.alignChildren = "right";
-                var whichSpread = td00.add ("dropdownlist",   [0,0,150,20], ["All Spreads", "Current as Spread"]);
+                var whichSpread = td00.add ("dropdownlist",   [0,0,150,20], ["All Spreads", "Current Spread Only"]);
                     whichSpread.selection = 0;
                 td00.add ("panel", [0,0,150,1]);
                 td00.add ("statictext", [0,0,150,20], "PDF Press-Ready");
@@ -281,7 +291,7 @@
         pdfpref.monochromeBitmapSampling    = Sampling.NONE;
         pdfpref.optimizePDF                 = false;                                //Compresses text and line art (Ugly screen viewing)
         pdfpref.pageInformationMarks        = false;                                //ADD TO SETTINGS (can be handy)
-        pdfpref.pageMarksOffset             = myPresets.bleed;                      //should be the same as document bleed
+        pdfpref.pageMarksOffset             = myPresets.marksOffset;                //should be not bigger then 72 PostScript points
         if(colorProfiles){
             pdfpref.pdfColorSpace           = PDFColorSpace.REPURPOSE_CMYK;         //ADD TO SETTINGS (can be handy)
         } else {
@@ -294,7 +304,9 @@
         pdfpref.subsetFontsBelow            = 0;                                    //include whole font (It’s worth the extra bagage)
         pdfpref.useDocumentBleedWithPDF     = true;
         pdfpref.useSecurity                 = false;
-        pdfpref.viewJDF                     = false;                                //ADD TO SETTINGS (can be handy)
+        try {
+            pdfpref.viewJDF                 = false;                                //ADD TO SETTINGS (can be handy)
+        } catch(notAvailable) {};
         pdfpref.viewPDF                     = true;                                 //ADD TO SETTINGS (can be handy)
         pdfpref.omitBitmaps                 = false;                                //please no!
         pdfpref.omitEPS                     = false;                                //please no!
@@ -354,6 +366,7 @@
                 thresholdToCompressColor            : HR_IMG;
                 thresholdToCompressGray             : HR_IMG;
                 thresholdToCompressMonochrome       : HR_BMP;
+                pdfpref.useDocumentBleedWithPDF     = false;
                 pdfpref.simulateOverprint           = true;
                 break;
             case "HR":
@@ -411,6 +424,10 @@
         // CVR/CVR1 //
         //////////////
         //-----------START PAGERANGE
+        var SP = "P_"; // Spread or Page
+        if(myPresets.exportSpreads){
+            SP = "S_";
+        }
         if(myPresets.order.name.match(/CVR1/)){
             myPresets = updatePageRange(myPresets);
             pdfpref.pageRange                 = myPresets.pageRange
@@ -418,15 +435,15 @@
             pdfpref.useDocumentBleedWithPDF   = false;
 
             if(documentName.match(/CVR/)){
-                documentName = documentName.replace(/CVR/g,"CVR1");
+                documentName = documentName.replace(/CVR/g,"CVR["+SP+myPresets.pageRange+"]");
             } else {
-                documentName += "_CVR1_";
+                documentName += "_CVR["+SP+myPresets.pageRange+"]";
             }
         } else {
             pdfpref.pageRange = myPresets.pageRange;
             pdfpref.exportReaderSpreads = myPresets.exportSpreads;
             if(!myPresets.documentName.match(/CVR/)){
-                documentName += "_CVR_";
+                documentName += "_CVR["+SP+myPresets.pageRange+"]";
             }
         }
         //-----------END PAGERANGE
@@ -492,22 +509,29 @@
         // CVR/CVR1 //
         //////////////
         //-----------START PAGERANGE
+        
+        var SP = "P_"; // Spread or Page
+        if(myPresets.exportSpreads){
+            SP = "S_";
+        }
+        
         if(myPresets.order.name.match(/CVR1/)){
             myPresets = updatePageRange(myPresets);
             jpgpref.jpegExportRange         = ExportRangeOrAllPages.EXPORT_RANGE;
             jpgpref.pageString              = myPresets.pageRange;
             jpgpref.exportingSpread         = false;
+            
             if(myPresets.documentName.match(/CVR/)){
-                documentName.replace(/CVR/,"CVR1");
+                documentName = documentName.replace(/CVR/g,"CVR["+SP+myPresets.pageRange+"]");
             } else {
-                documentName += "_CVR1_";
+                documentName += "_CVR["+SP+myPresets.pageRange+"]";
             }
         } else {
             jpgpref.jpegExportRange         = ExportRangeOrAllPages.EXPORT_ALL;
             jpgpref.pageString              = myPresets.pageRange;
             jpgpref.exportingSpread         = myPresets.exportSpreads;
             if(!myPresets.documentName.match(/CVR/)){
-                documentName += "_CVR_";
+                documentName += "_CVR["+SP+myPresets.pageRange+"]";
             }
         }
         //-----------END PAGERANGE
@@ -531,8 +555,12 @@
         //Make certain that user interaction (display of dialogs, etc.) is turned on.
         app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
         myPresets.doc    = myApp.Tools.getActiveCover(myApp);
+        myPresets.C      = myApp.XMP.retrieveCoverObject(myApp, myPresets.doc);
         myPresets.CVR1PN = myApp.Tools.getCVR1pageNo(myApp);
-
+        
+        // set + safe original rulers
+        var myOldRulers  = myApp.Tools.setRuler(myPresets.doc,myPresets.C.measureUnit);
+        
         if(myPresets.preflight) {
             try{
                 var result = myPresets.doc.activeProcess.aggregatedResults;
@@ -548,9 +576,14 @@
         }
 
         myPresets.documentName = seperate(myPresets.doc.name,!myPresets.doc.name.match(/\./)); //get rid of extension if there is one
+        
+        //I could use slug but this is better for files not build with CoverBuilder
         myPresets.bleed = myPresets.doc.documentPreferences.documentBleedTopOffset;
-        myPresets.slug = myPresets.bleed+5; //I could use slug but this is better for files not build with CoverBuilder
-
+        myPresets.slug = myPresets.doc.documentPreferences.slugTopOffset;
+        // Use slug and limit to 72 points wich is the maximum offset in InDesign
+        var clippingWarning = "Clipping might occur!\nMark offset needed: "+ myPresets.slug + ". Maximum mark offset is " + myApp.NumCon.convert(myApp, 72, "pt", myPresets.C.measureUnit);
+        myPresets.marksOffset = myApp.NumCon.constrain(myPresets.slug, 0, myApp.NumCon.convert(myApp, 72, "pt", myPresets.C.measureUnit),true,clippingWarning);
+        
 		try {
         	var orders = getOrders();
 		} catch(err){
@@ -618,6 +651,8 @@
                 alert("CoverBuilder Export\nYour files are ready!");
             }
         }
+        // reset original rulers
+        myApp.Tools.setRuler(myCover,myOldRulers);
     }
 
     ////////////

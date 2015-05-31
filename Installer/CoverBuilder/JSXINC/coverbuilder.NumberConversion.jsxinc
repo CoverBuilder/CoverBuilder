@@ -121,7 +121,16 @@
         var roundMulit = Math.pow(10,roundDec);
         return Math.round(num*roundMulit)/roundMulit;
     }
-
+    
+    function constrain(_number, _min, _max, _warn, _message){
+        var warn = _warn || false;
+        var clipped = Math.max(Math.min(_number, _max), _min);
+        if(warn && clipped != _number){
+            alert(_message);
+        }
+        return clipped;
+    }
+    
     ////////////
     // expose //
     ////////////
@@ -134,6 +143,7 @@
         pt2inch        : pt2inch,
         pt2mm          : pt2mm,
         NaN20          : NaN20,
+        constrain      : constrain,
         doRound        : doRound
     };
 })();
