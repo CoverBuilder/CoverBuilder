@@ -54,7 +54,7 @@
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
         var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", C.measureUnit);
 
-        // safe original rulers
+        // set + safe original rulers
         var myOldRulers = myApp.Tools.setRuler(myCover,C.measureUnit);
 
         // Tidy.

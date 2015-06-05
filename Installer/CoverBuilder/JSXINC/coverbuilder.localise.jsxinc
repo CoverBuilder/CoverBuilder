@@ -1,0 +1,108 @@
+// CoverBuilder Localisation objects
+// Bruno Herfst 2015
+// Version: 0.5
+// English, German, Dutch
+
+/*
+
+A locale name is an identifier string in that contains an ISO 639 language specifier, 
+and optionally an ISO 3166 region specifier, separated from the language specifier 
+by an underscore.
+
+The ISO 639 standard defines a set of two-letter language abbreviations, 
+such as 'en' for English and 'de' for German.
+
+The ISO 3166 standard defines a region code, another two-letter identifier, 
+which you can optionally append to the language identifier with an underscore. 
+For example, en_US identifies U.S. English, 
+while en_GB identifies British English.
+
+*/
+
+(function () {
+    //////////////
+    // privates //
+    //////////////
+    // localise
+    var UI = {
+        "Help" : { en: "Help",
+                   de: "Hilfe",
+                   nl: "Help" },
+                       
+        "LastUsed" : { en: "Last Used",
+                       de: "Zuletzt Verwendet",
+                       nl: "Laatst Gebruikte" },
+                       
+        "Presets" : { en: "Presets", 
+                      de: "Vorgaben",
+                      nl: "Voorinstellingen" },
+
+        "MM"   : { en:"mm", 
+                   de:"mm",
+                   nl:"mm" },
+
+        "INCH" : { en:"Inch", 
+                   de:"Inch",  // ursprünglich Zoll
+                   en:"Inch" } // Oorspronkelijk Duim
+    }
+    
+    var Parts = {
+        "Cover" : { en: "Cover",
+                    de: "Buchhülle",
+                    nl: "Omslag"},
+
+        "Width" : { en: "Width",
+                    de: "Breite",
+                    nl: "Breedte" },
+
+        "Height" : { en: "Height", 
+                     de: "Höhe",
+                     nl: "Hoogte" },
+
+        "Spine" : { en: "Spine", 
+                    de: "Rücken",
+                    nl: "Rug" },
+
+        "Flaps" : { en: "Flaps", 
+                    de: "Klappen",
+                    nl: "Flappen" },
+                    
+        "Binding" : { en: "Binding", 
+                      de: "Einband",
+                      nl: "Band" },
+
+        "Bleed" : { en: "Bleed", 
+                    de: "Anschnitt"
+                    nl: "Afloopgebied" },
+
+        "Slug" : { en: "Slug", 
+                   de: "Infobereich", 
+                   nl: "Witruimte" },
+
+        "Hinge" : { en: "Hinge",   // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
+                    de: "Gelenk",  // 'Innen', 'außen'
+                    nl: "Kneep",   // 'Schanier', 'Versterking'
+                    fr: "Charnière" },
+
+        "Fold" : { en: "Fold", 
+                   de: "Falz",
+                   nl: "Vouw" },
+        
+        "Wrap" : { en: "Wrap",
+                   de: "Einschlag",
+                   nl: "Wrap" }
+        
+        "Margin" : { en: "Margin", 
+                     de: "Ränder",
+                     nl: "Marges" }
+    }
+
+    ////////////
+    // expose //
+    ////////////
+      return {
+          UI : UI,
+          Parts : Parts
+    };
+
+})();
