@@ -1,7 +1,7 @@
 // CoverBuilder Localisation objects
 // Bruno Herfst 2015
-// Version: 0.5
-// English, German, Dutch
+// Version: 0.6
+// English, German, Dutch, French
 
 /*
 
@@ -14,8 +14,28 @@ such as 'en' for English and 'de' for German.
 
 The ISO 3166 standard defines a region code, another two-letter identifier, 
 which you can optionally append to the language identifier with an underscore. 
-For example, en_US identifies U.S. English, 
-while en_GB identifies British English.
+For example, en_US identifies U.S. English, while en_GB identifies British English.
+
+- Arabic:      ar_AE
+- Chinese:     zh_CN
+- Czech:       cs_CZ
+- Danish:      da_DK
++ Dutch:       nl_NL
++ English:     en_US, en_UK
++ German:      de_DE
+- Greek:       el_GR
+- Finnish:     fi_FI
++ French:      fr_FR
+- Hebrew:      he_IL
+- Italian:     it_IT
+- Japanese:    ja_JP
+- Korean:      ko_KR
+- Norwegian:   nb_NO
+- Polish:      pl_PL
+- Portuguese:  pt_BR
+- Russian:     ru_RU
+- Spanish:     es_ES
+- Swedish:     sv_SE
 
 */
 
@@ -23,84 +43,149 @@ while en_GB identifies British English.
     //////////////
     // privates //
     //////////////
-    // localise
-    var UI = {
-        "Help" : { en: "Help",
-                   de: "Hilfe",
-                   nl: "Help" },
-                       
-        "LastUsed" : { en: "Last Used",
-                       de: "Zuletzt Verwendet",
-                       nl: "Laatst Gebruikte" },
-                       
-        "Presets" : { en: "Presets", 
-                      de: "Vorgaben",
-                      nl: "Voorinstellingen" },
 
-        "MM"   : { en:"mm", 
-                   de:"mm",
-                   nl:"mm" },
+    var Menu = {
+    	NewCover : { en: "New cover...",
+                     de: "Neu buchhülle...",
+                     nl: "Nieuwe omslag...",
+                     fr: "Nouveau couverture" },
 
-        "INCH" : { en:"Inch", 
-                   de:"Inch",  // ursprünglich Zoll
-                   en:"Inch" } // Oorspronkelijk Duim
-    }
+        SaveAs : { en: "Save as...",
+                   de: "Speichern unter...",
+                   nl: "Opslaan als...",
+                   fr: "Enregistrer sous..." },
+                   
+        SendToPhotoshop : { en: "Send to Photoshop",
+                            de: "Senden an Photoshop",
+                            nl: "Stuur naar Photoshop",
+                            fr: "Envoyer à Photoshop" },
+        
+        Export : { en: "Export...",
+                   de: "Exportiere...",
+                   nl: "Exporteer...",
+                   fr: "Exporté..." },
+        
+        CorrectSpine : { en: "Correct spine...",
+                         de: "Ändern rug...",
+                         nl: "Corrigeer rug...",
+                         fr: "Corriger dos" },
+        
+        SlugTool : { en: "Slug tool...",
+                     de: "Infobereich werkzeug...",
+                     nl: "Witruimte gereedschap...",
+                     fr: "Ligne-bloc outils..." },
+        
+        LoadDocPresets : { en: "Load document presets...",
+                           de: "Load dokument vorgaben...",
+                           nl: "Laadt document instellingen...",
+                           fr: "Charge document paramétres..." },
+                           
+        OpenLibrary : { en: "Open library...",
+                        de: "Öffnen bibliothek...",
+                        nl: "Open bibliotheek...",
+                        fr: "Ouvrir bibliothèque..." },
+                        
+        CreateBarcode : { en: "Create barcode...",
+                          de: "Kreiert strichcode...",
+                          nl: "Creëer barcode...",
+                          fr: "Créer code-barres..." },
+                          
+        Help : { en: "Help",
+                 de: "Hilfe",
+                 nl: "Help",
+                 fr: "Aide" }
+    
+    };
+    
+    var UI = {         
+        LastUsed : { en: "Last used",
+                     de: "Zuletzt verwendet",
+                     nl: "Laatst gebruikte",
+                     fr: "Dernière occasion" },
+
+        Presets : { en: "Presets", 
+                    de: "Vorgaben",
+                    nl: "Instellingen",
+                    fr: "Paramétres" },
+
+        MM  : { en: "mm", 
+                de: "mm",
+                nl: "mm",
+                fr: "mm" },
+
+        INCH : { en: "Inch", 
+                 de: "Inch",  // ursprünglich Zoll
+                 en: "Inch",  // Oorspronkelijk Duim
+                 fr: "Inch" } // initialement Pouce
+    };
     
     var Parts = {
-        "Cover" : { en: "Cover",
-                    de: "Buchhülle",
-                    nl: "Omslag"},
+        Cover : { en: "Cover",
+                  de: "Buchhülle",
+                  nl: "Omslag",
+                  fr: "Couverture"},
 
-        "Width" : { en: "Width",
-                    de: "Breite",
-                    nl: "Breedte" },
+        Width : { en: "Width",
+                  de: "Breite",
+                  nl: "Breedte",
+                  fr: "Largeur" },
 
-        "Height" : { en: "Height", 
-                     de: "Höhe",
-                     nl: "Hoogte" },
+        Height : { en: "Height", 
+                   de: "Höhe",
+                   nl: "Hoogte",
+                   fr: "Hauteur" },
 
-        "Spine" : { en: "Spine", 
-                    de: "Rücken",
-                    nl: "Rug" },
+        Spine : { en: "Spine", 
+                  de: "Rücken",
+                  nl: "Rug",
+                  fr: "Dos" },
 
-        "Flaps" : { en: "Flaps", 
-                    de: "Klappen",
-                    nl: "Flappen" },
-                    
-        "Binding" : { en: "Binding", 
-                      de: "Einband",
-                      nl: "Band" },
+        Flaps : { en: "Flaps", 
+                  de: "Klappen",
+                  nl: "Flappen",
+                  fr: "Abattant" },
 
-        "Bleed" : { en: "Bleed", 
-                    de: "Anschnitt"
-                    nl: "Afloopgebied" },
+        Binding : { en: "Binding", 
+                    de: "Einband",
+                    nl: "Band",
+                    fr: "Mors de couvrure" },
 
-        "Slug" : { en: "Slug", 
-                   de: "Infobereich", 
-                   nl: "Witruimte" },
+        Bleed : { en: "Bleed", 
+                  de: "Anschnitt",
+                  nl: "Afloopgebied",
+                  fr: "Fond perdu" },
 
-        "Hinge" : { en: "Hinge",   // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
-                    de: "Gelenk",  // 'Innen', 'außen'
-                    nl: "Kneep",   // 'Schanier', 'Versterking'
-                    fr: "Charnière" },
+        Slug : { en: "Slug", 
+                 de: "Infobereich", 
+                 nl: "Witruimte",
+                 fr: "Ligne-bloc" },
 
-        "Fold" : { en: "Fold", 
-                   de: "Falz",
-                   nl: "Vouw" },
+        Hinge : { en: "Hinge",       // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
+                  de: "Gelenk",      // 'Innen', 'außen'
+                  nl: "Kneep",       // 'Schanier', 'Versterking'
+                  fr: "Charnière" }, // 'Encoche', reliure
+
+        Fold : { en: "Fold", 
+                 de: "Falz",
+                 nl: "Vouw",
+                 fr: "Reliure" },
         
-        "Wrap" : { en: "Wrap",
-                   de: "Einschlag",
-                   nl: "Wrap" }
+        Wrap : { en: "Wrap",
+                 de: "Einschlag",
+                 nl: "Wrap",
+                 fr: "Chasse" },
         
-        "Margin" : { en: "Margin", 
-                     de: "Ränder",
-                     nl: "Marges" }
-    }
+        Margin : { en: "Margin", 
+                   de: "Ränder",
+                   nl: "Marges",
+                   fr: "Marges" }
+    };
 
     ////////////
     // expose //
     ////////////
       return {
+          Menu : Menu,
           UI : UI,
           Parts : Parts
     };
