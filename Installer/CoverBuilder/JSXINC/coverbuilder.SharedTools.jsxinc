@@ -416,21 +416,23 @@
     //  LINK JUMPERS
     //-----------------------------------------------------------------------------------
     function emailTo(thisMAIL, thisURL){
-        var linkJumper = File(Folder.temp.fullName+"/contact.html");
-        linkJumper.open("w");
-        var linkBody = '<html><head><script>function load(){window.open("mailto:'+thisMAIL+'")}</script><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body onload="load()"></body></html>'
-        linkJumper.write(linkBody);
-        linkJumper.close();
-        linkJumper.execute();
+        contact('<html><head><script>function load(){window.open("mailto:'+thisMAIL+'")}</script><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body onload="load()"></body></html>');
     }
 
     function visitURL(thisURL){
-        var linkJumper = File(Folder.temp.fullName+"/contact.html");
-        linkJumper.open("w");
-        var linkBody = '<html><head><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body></body></html>'
-        linkJumper.write(linkBody);
-        linkJumper.close();
-        linkJumper.execute();
+    	contact('<html><head><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body></body></html>');
+    }
+    
+    function contact(source){
+    	try{
+        	var contact = File(myApp.PathTo.settingsFolder+"CoverBuilder.contact.html");
+        	contact.open("w");
+        	contact.write(source);
+        	contact.close();
+        	contact.execute();
+        } catch(e) {
+        	alert(e);
+        }
     }
 
     function getHelp(){

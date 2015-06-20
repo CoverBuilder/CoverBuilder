@@ -6,6 +6,19 @@
     //////////////
     // privates //
     //////////////
+    function formatPresetName(Preset){
+		if(Preset.name.length < 4){
+			var mt = "\t\t\t\t(";
+		} else if (Preset.name.length < 8){
+			var mt = "\t\t\t(";
+		} else if (Preset.name.length < 12){
+			var mt = "\t\t(";
+		} else {
+			var mt = "\t(";
+		}
+		return Preset.name.toUpperCase() + mt + Preset.height + " \u00D7 " + Preset.width + ")";
+	}
+		
     function CoverOrder(myApp, CoverObject){
         // The Cover Object this function will return
         var C = null;
@@ -25,155 +38,151 @@
         }
 
         var f = myApp.STools.getFile(myApp.PathTo.preferences);
-
+		
         //////////////
         //  window  //
         //////////////
         var myWindow = new Window ("dialog", "CoverBuilder " + myApp.Settings.version);
+            myWindow.orientation = "column";
+            myWindow.justify = "left";
+		    myWindow.alignment = "left";
+			myWindow.margins = [10,10,10,12];
+			myWindow.spacing = 0;
+		
+		var inbetween = 10; // This is what indesign puts in between new elements, not a custom value!
+		
+        var unitHeight = 25;
+        var unitWidthShort = 60;
+        var unitWidthLong = 1.5 * unitWidthShort;
+        var unitWidthCombo = unitWidthShort + unitWidthLong + inbetween;
+        var unitWidthLongShortLong = (unitWidthLong*2) + unitWidthShort + (inbetween*2);
+        var extraSpace = 10;
+        
         ///////////////////////////////////////////////////////////////////////////// START WINDOW
         var globalGroup = myWindow.add ("group");
-            globalGroup.spacing = 175; //design
-
-            //var hbpb = globalGroup.add ("dropdownlist", undefined, ["Paperback","Hardback","Jacket"]);
-            //hbpb.preferredSize.width = 115; //design
-            //hbpb.selection = 0;
-
-            var presets = globalGroup.add ("dropdownlist", undefined, ["-Presets-"]);
+        	globalGroup.orientation = "row";
+			globalGroup.alignment   = "left";
+			globalGroup.margins = [20,10,20,10];
+            var presets = globalGroup.add ("dropdownlist", [0,0,(unitWidthCombo*2)+inbetween,unitHeight], ["-PRESETS-"]);
             for (var i=0,len=MyPresets.presets.length;i<len;i++) {
-                if(MyPresets.presets[i].name.length <= 4){
-                    var mt = "\t\t\t(";
-                } else if (MyPresets.presets[i].name.length <= 6){
-                    var mt = "\t\t(";
-                } else {
-                    var mt = "\t("; //my tabs
-                }
-                presets.add('item', MyPresets.presets[i].name+mt+MyPresets.presets[i].width+"x"+MyPresets.presets[i].height+")");
+                presets.add('item', formatPresetName(MyPresets.presets[i]) );
             };
+            
             presets.selection = 0;
-            presets.preferredSize.width = 240; //design
-            var mminch = globalGroup.add ("dropdownlist", undefined, ["mm","inch"]);
+            
+            var whiteSpace = globalGroup.add ("statictext", [0,0,(unitWidthLong*2)+unitWidthShort+(inbetween*2),unitHeight], "");
+            	
+            var mminch = globalGroup.add ("dropdownlist", [0,0,unitWidthShort,unitHeight], ["mm","inch"]);
             mminch.selection = 0;
 
         /////////////////////////////////////////////////////////////////////////////
         var minimalGroup = myWindow.add ("group");
-            minimalGroup.margins = [20,0,20,0];
+			minimalGroup.margins = [0,extraSpace,0,10+extraSpace];
+            var myHeightLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], "Height:");
+            	myHeightLabel.justify = "right";	
+    
+            var myHeight = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-            minimalGroup.add ("statictext", undefined, "Height:");
-                var myHeight = minimalGroup.add ("edittext", undefined, "0");
-                myHeight.characters = 6;
+            var myWidthLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], "Width:");
+            	myWidthLabel.justify = "right";
+    
+            var myWidth = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-            minimalGroup.add ("statictext", undefined, "Width:");
-                var myWidth = minimalGroup.add ("edittext", undefined, "0");
-                myWidth.characters = 6;
+            var mySpineLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], "Spine:");
+            	mySpineLabel.justify = "right";
+            
+            var mySpine = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-            minimalGroup.add ("statictext", undefined, "Spine:");
-                var mySpine = minimalGroup.add ("edittext", undefined, "0");
-                mySpine.characters = 6;
-
-            minimalGroup.add ("statictext", undefined, "Bleed:");
-                var myBleed = minimalGroup.add ("edittext", undefined, "0");
-                myBleed.characters = 6;
+            var myBleedLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], "Bleed:");
+            	myBleedLabel.justify = "right";
+            	
+            var myBleed = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
         /////////////////////////////////////////////////////////////////////////////
         var optionalGroup = myWindow.add ("group");
             var optionalInputpanel = optionalGroup.add ("panel");
+            	optionalInputpanel.margins = [10+extraSpace,10+extraSpace,10+extraSpace,5+extraSpace];
                 optionalInputpanel.orientation =  "column";
-                optionalInputpanel.margins = 20;
-                optionalInputpanel.alignChildren =  "left";
-                //optionalInputpanel.text = "Optional Settings";
-                optionalInputpanel.preferredSize.width = 525; //design
+                optionalInputpanel.alignChildren = "left";
 
                 var optional2Group = optionalInputpanel.add ("group");
                     optional2Group.orientation =  "row";
-                    optional2Group.margins = [0,0,0,5];
 
-                    var hingeDropdown = optional2Group.add ("dropdownlist", undefined, ["- Hinge/Score:","+ Hinge/Score:"]);
+                    var hingeDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- Hinge/Score:","+ Hinge/Score:"]);
                     hingeDropdown.selection = 0;
-                    hingeDropdown.preferredSize.width = 170; //design
-                    var myHinge = optional2Group.add ("edittext", undefined, "0");
-                    myHinge.characters = 6;
+                    var myHinge = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-                    var wrapDropdown = optional2Group.add ("dropdownlist", undefined, ["- Wrap:","+ Wrap:"]);
+                    var wrapDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- Wrap:","+ Wrap:"]);
                     wrapDropdown.selection = 1;
-                    wrapDropdown.preferredSize.width = 160; //design
-                    var myWrap = optional2Group.add ("edittext", undefined, "0");
-                    myWrap.characters = 6;
+                    var myWrap = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
                 var optional1Group = optionalInputpanel.add ("group");
                     optional1Group.orientation =  "row";
-                    optional1Group.margins = [0,0,0,5];
 
-                    var flapQBDropdown = optional1Group.add ("dropdownlist", undefined, ["Flaps:","- Binding:","+ Binding:"]);
+                    var flapQBDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["Flaps:","- Binding:","+ Binding:"]);
                     flapQBDropdown.selection = 0;
-                    flapQBDropdown.preferredSize.width = 170; //design
-                    var myFlapQB = optional1Group.add ("edittext", undefined, "0");
-                    myFlapQB.characters = 6;
+                    var myFlapQB = optional1Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-                    var foldDropdown = optional1Group.add ("dropdownlist", undefined, ["- Fold: (Flap)","+ Fold:","- Fold: (Width)"]);
+                    var foldDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- Fold: (Flap)","+ Fold:","- Fold: (Width)"]);
                     foldDropdown.selection = 0;
-                    foldDropdown.preferredSize.width = 160; //design
                     foldDropdown.visible = false;
 
-                    var myFold = optional1Group.add ("edittext", undefined, "0");
-                    myFold.characters = 6;
+                    var myFold = optional1Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
                     myFold.visible = false;
 
                 var optional3Group = optionalInputpanel.add ("group");
                     optional3Group.orientation =  "row";
-                    optional3Group.margins = [0,0,0,5];
 
-                    //margin button
-                    var marginButAuto   = "Margins: Auto",
-                        marginButPreset = "Margins: Preset",
-                        marginButCustom = "Margins: Custom";
+				//margin button
+				var marginButAuto   = "Margins: Auto",
+					marginButPreset = "Margins: Preset",
+					marginButCustom = "Margins: Custom";
 
-                    var marginBut = optional3Group.add ("button", undefined, "Set Margin");
-                        marginBut.preferredSize.width = 170; //design
-                        var marginText = optional3Group.add ("statictext", undefined, "Getting Data...");
+				var marginBut = optional3Group.add ("button", [0,0,unitWidthCombo,unitHeight], "Set Margin");
+					var marginText = optional3Group.add ("statictext", undefined, "Getting Data...");
 
-                        function updateMarginText(){
-                            marginText.text = "Top: "+MarginObj.CVR14.top+", Out: "+MarginObj.CVR14.outside_right+", Bot: "+MarginObj.CVR14.bottom+", Ins: "+MarginObj.CVR14.inside_left+" (Cover 1-4)";
-                        }
-                        updateMarginText();
+					function updateMarginText(){
+						marginText.text = "Top: "+MarginObj.CVR14.top+", Out: "+MarginObj.CVR14.outside_right+", Bot: "+MarginObj.CVR14.bottom+", Ins: "+MarginObj.CVR14.inside_left+" (Cover 1-4)";
+					}
+					updateMarginText();
 
-                        try{
-                            marginText.graphics.font = ScriptUI.newFont ("Verdana", "Regular", 11);
-                        } catch(_){
-                            //do nothing
-                        }
+					try{
+						marginText.graphics.font = ScriptUI.newFont ("Verdana", "Regular", 10);
+					} catch(_){
+						//do nothing
+					}
 
-                        marginText.graphics.foregroundColor = marginText.graphics.newPen (myWindow.graphics.PenType.SOLID_COLOR, [0.5, 0.5, 0.5], 1);
+					marginText.graphics.foregroundColor = marginText.graphics.newPen (myWindow.graphics.PenType.SOLID_COLOR, [0.5, 0.5, 0.5], 0,5);
 
-                        marginBut.onClick = function () {
-                            if(showMarginWindow()){
-                                marginBut.text = marginButCustom;
-                                updateMarginText();
-                                if(presetChange == false){
-                                    presetBut.text = savePS;
-                                }
-                            }
-                        }
+					marginBut.onClick = function () {
+						if(showMarginWindow()){
+							marginBut.text = marginButCustom;
+							updateMarginText();
+							if(presetChange == false){
+								presetBut.text = savePS;
+							}
+						}
+					}
 
                 var optional4Group = optionalInputpanel.add ("group");
                     optional4Group.orientation =  "row";
-                    optional4Group.margins = [0,0,0,5];
 
         /////////////////////////////////////////////////////////////////////////////
         var myButtonGroup = myWindow.add ("group");
-            myButtonGroup.margins = [20,5,20,15];
+            myButtonGroup.margins = [20,20+extraSpace,20,10+extraSpace];
             myButtonGroup.alignment = "right";
 
             //register button
-            var helpBut = myButtonGroup.add ("button", undefined, "Help");
+            var helpBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], "Help");
                 helpBut.onClick = function () {
                     myApp.STools.getHelp();
                 }
 
             //save load preset button
-            var presetBut = myButtonGroup.add ("button", undefined, savePS);
+            var presetBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], savePS);
             //OK CANCEL buttons
-            var cancelBut = myButtonGroup.add ("button", undefined, "Cancel");
-            var buildBut = myButtonGroup.add ("button", undefined, "OK");
+            var cancelBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], "Cancel");
+            var buildBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], "Build", {name:"ok"});
 
         ///////////////////////////////////////////////////////////////////////////// END WINDOW
 
@@ -231,15 +240,7 @@
                     alert("Error creating presets \nplease check input fields");
                 } else {
                     //update dialog
-                    var i = MyPresets.presets.length-1;
-                    if(MyPresets.presets[i].name.length <= 4){
-                        var mt = "\t\t\t(";
-                    } else if (MyPresets.presets[i].name.length < 8){
-                        var mt = "\t\t(";
-                    } else {
-                        var mt = "\t("; //my tabs
-                    }
-                    presets.add('item', MyPresets.presets[i].name+mt+MyPresets.presets[i].width+"x"+MyPresets.presets[i].height+")");
+                    presets.add('item', formatPresetName(MyPresets.presets[i]) );
                     presets.items[MyPresets.presets.length].selected = true; //no need to subtract 1 as array includes --save presets-- item at 0
                     try{
                         myApp.JSON.saveFile(myApp, f, MyPresets);
@@ -247,7 +248,6 @@
                         alert("Error saving presets \n"+e.description);
                     }
                 }
-
             } else if(presetBut.text == clearPS){
                 //delete preset
                 var index = parseInt(presets.selection);
@@ -257,7 +257,7 @@
                 myApp.JSON.saveFile(myApp, f, MyPresets);
             }
         }
-
+		
         //--------------------------------------------------------------------------------------------------- START MARGIN WINDOW
         function showMarginWindow(){
             var marginWindow = new Window ("dialog", "Set Margins");
