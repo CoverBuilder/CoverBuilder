@@ -107,78 +107,147 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                     de: "Vorgaben",
                     nl: "Instellingen",
                     fr: "Paramétres" },
-
-        MM  : { en: "mm", 
+        
+        Preset : { en: "Preset", 
+                   de: "Vorgabe",
+                   nl: "Instelling",
+                   fr: "Paramétre" },
+		
+        Mm  : { en: "mm", 
                 de: "mm",
                 nl: "mm",
                 fr: "mm" },
 
-        INCH : { en: "Inch", 
-                 de: "Inch",  // ursprünglich Zoll
-                 en: "Inch",  // Oorspronkelijk Duim
-                 fr: "Inch" } // initialement Pouce
-    };
-    
-    var Parts = {
-        Cover : { en: "Cover",
-                  de: "Buchhülle",
-                  nl: "Omslag",
-                  fr: "Couverture"},
+        Inch : { en: "Inch", 
+                 de: "Zoll",
+                 nl: "Inch",
+                 fr: "Pouce" },
+
+		Height : { en: "Height", 
+                   de: "Höhe",
+                   nl: "Hoogte",
+                   fr: "Hauteur" },
 
         Width : { en: "Width",
                   de: "Breite",
                   nl: "Breedte",
                   fr: "Largeur" },
-
-        Height : { en: "Height", 
-                   de: "Höhe",
-                   nl: "Hoogte",
-                   fr: "Hauteur" },
-
+        
         Spine : { en: "Spine", 
                   de: "Rücken",
                   nl: "Rug",
                   fr: "Dos" },
-
-        Flaps : { en: "Flaps", 
-                  de: "Klappen",
-                  nl: "Flappen",
-                  fr: "Abattant" },
-
-        Binding : { en: "Binding", 
-                    de: "Einband",
-                    nl: "Band",
-                    fr: "Mors de couvrure" },
-
+                  
         Bleed : { en: "Bleed", 
                   de: "Anschnitt",
                   nl: "Afloopgebied",
                   fr: "Fond perdu" },
-
-        Slug : { en: "Slug", 
-                 de: "Infobereich", 
-                 nl: "Witruimte",
-                 fr: "Ligne-bloc" },
-
-        Hinge : { en: "Hinge",       // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
+                  
+    	Hinge : { en: "Hinge",       // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
                   de: "Gelenk",      // 'Innen', 'außen'
-                  nl: "Kneep",       // 'Schanier', 'Versterking'
-                  fr: "Charnière" }, // 'Encoche', reliure
-
-        Fold : { en: "Fold", 
-                 de: "Falz",
-                 nl: "Vouw",
-                 fr: "Reliure" },
+                  nl: "Versterking", // 'Schanier',
+                  fr: "Charnière" }, // 'Encoche'
+        
+        Score : { en: "Score",
+        		  de: "Außen",
+        		  nl: "Kneep",
+        		  fr: "Reliure" },
         
         Wrap : { en: "Wrap",
                  de: "Einschlag",
                  nl: "Wrap",
                  fr: "Chasse" },
+                 
+        Flaps : { en: "Flaps", 
+                  de: "Klappen",
+                  nl: "Flappen",
+                  fr: "Abattant" },
+        
+        Binding : { en: "Binding", 
+                    de: "Einband",
+                    nl: "Band",
+                    fr: "Mors de couvrure" },
+                    
+        Fold : { en: "Fold", 
+                 de: "Falz",
+                 nl: "Vouw",
+                 fr: "Reliure" },
         
         Margin : { en: "Margin", 
                    de: "Ränder",
                    nl: "Marges",
-                   fr: "Marges" }
+                   fr: "Marges" },
+                   
+        Auto : { en: "Auto",
+                 de: "Auto",
+                 nl: "Auto",
+                 fr: "Auto" },
+                 
+        Custom : { en: "Custom", 
+                   de: "Brauch",
+                   nl: "Aangepast",
+                   fr: "Personalisé" },
+
+        SetMargin : { en: "Set margin", 
+                      de: "Satz ränder",
+                      nl: "Marges instellen",
+                      fr: "Ensemble marges" },
+        
+        GettingData : { en: "Getting data...", 
+                        de: "Abrufen von Daten...",
+                        nl: "Gegevens ophalen...",
+                        fr: "Obtenir des données..." },
+                        
+        Top : { en: "Top",
+                de: "Oben",
+                nl: "Boven",
+                fr: "Tête" },
+        
+        Bottom : { en: "Bottom",
+                   de: "Unten",
+                   nl: "Onder",
+                   fr: "Pied" },
+    
+        Inside : { en: "Inside",
+                   de: "Innen",
+                   nl: "Binnen",
+                   fr: "Fond" },
+                   
+        Outside : { en: "Outside",
+                    de: "Außen",
+                    nl: "Buiten",
+                    fr: "Grand" },
+		
+		Cover : { en: "Cover",
+                  de: "Buchhülle",
+                  nl: "Omslag",
+                  fr: "Couverture" },
+
+        Ok : { en: "OK", 
+               de: "OK",
+               nl: "OK",
+               fr: "OK" },
+               
+        Cancel : { en: "Cancel", 
+                   de: "Abbrechen",
+                   nl: "Annuleren",
+                   fr: "Annuler" },
+        
+        SavePreset : { en: "Save Preset", 
+                       de: "Vorgabe Speichern",
+                       nl: "Instelling Opslaan",
+                       fr: "Enregistrer Paramétre" },
+        
+        ClearPreset : { en: "Clear Preset", 
+                        de: "Vorgabe Deaktivieren",
+                        nl: "Instelling Verwijderen",
+                        fr: "Désactivez Paramétre" },
+               
+        Help : { en: "Help",
+                 de: "Hilfe",
+                 nl: "Help",
+                 fr: "Aide" }
+
     };
 
     ////////////
@@ -187,7 +256,6 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
       return {
           Menu : Menu,
           UI : UI,
-          Parts : Parts
     };
 
 })();
