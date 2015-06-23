@@ -21,8 +21,7 @@
 
     var PresetObj = {"presets": [
             {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
-            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
-            {name:"-Last Used-", width:0, height:0, spine: 0, ppi:0, bleed:0, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0}
+            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0}
         ]};
 
     //-----------------------------------------------------------------------------------
@@ -422,7 +421,7 @@
     function visitURL(thisURL){
     	contact('<html><head><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body></body></html>');
     }
-    
+
     function contact(source){
     	try{
         	var contact = File(myApp.PathTo.settingsFolder+"CoverBuilder.contact.html");

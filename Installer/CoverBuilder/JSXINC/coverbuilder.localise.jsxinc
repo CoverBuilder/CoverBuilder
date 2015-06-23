@@ -5,15 +5,15 @@
 
 /*
 
-A locale name is an identifier string in that contains an ISO 639 language specifier, 
-and optionally an ISO 3166 region specifier, separated from the language specifier 
+A locale name is an identifier string in that contains an ISO 639 language specifier,
+and optionally an ISO 3166 region specifier, separated from the language specifier
 by an underscore.
 
-The ISO 639 standard defines a set of two-letter language abbreviations, 
+The ISO 639 standard defines a set of two-letter language abbreviations,
 such as 'en' for English and 'de' for German.
 
-The ISO 3166 standard defines a region code, another two-letter identifier, 
-which you can optionally append to the language identifier with an underscore. 
+The ISO 3166 standard defines a region code, another two-letter identifier,
+which you can optionally append to the language identifier with an underscore.
 For example, en_US identifies U.S. English, while en_GB identifies British English.
 
 - Arabic:      ar_AE
@@ -54,76 +54,81 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                    de: "Speichern unter...",
                    nl: "Opslaan als...",
                    fr: "Enregistrer sous..." },
-                   
+
         SendToPhotoshop : { en: "Send to Photoshop",
                             de: "Senden an Photoshop",
                             nl: "Stuur naar Photoshop",
                             fr: "Envoyer à Photoshop" },
-        
+
         Export : { en: "Export...",
                    de: "Exportiere...",
                    nl: "Exporteer...",
                    fr: "Exporté..." },
-        
+
         CorrectSpine : { en: "Correct spine...",
                          de: "Ändern rug...",
                          nl: "Corrigeer rug...",
                          fr: "Corriger dos" },
-        
+
         SlugTool : { en: "Slug tool...",
                      de: "Infobereich werkzeug...",
                      nl: "Witruimte gereedschap...",
                      fr: "Ligne-bloc outils..." },
-        
+
         LoadDocPresets : { en: "Load document presets...",
                            de: "Load dokument vorgaben...",
                            nl: "Laadt document instellingen...",
                            fr: "Charge document paramétres..." },
-                           
+
         OpenLibrary : { en: "Open library...",
                         de: "Öffnen bibliothek...",
                         nl: "Open bibliotheek...",
                         fr: "Ouvrir bibliothèque..." },
-                        
+
         CreateBarcode : { en: "Create barcode...",
                           de: "Kreiert strichcode...",
                           nl: "Creëer barcode...",
                           fr: "Créer code-barres..." },
-                          
+
         Help : { en: "Help",
                  de: "Hilfe",
                  nl: "Help",
                  fr: "Aide" }
-    
-    };
-    
-    var UI = {         
-        LastUsed : { en: "Last used",
-                     de: "Zuletzt verwendet",
-                     nl: "Laatst gebruikte",
-                     fr: "Dernière occasion" },
 
-        Presets : { en: "Presets", 
-                    de: "Vorgaben",
-                    nl: "Instellingen",
-                    fr: "Paramétres" },
-        
-        Preset : { en: "Preset", 
+    };
+
+    var UI = {
+        LastUsed : { en: "-Last used-",
+                     de: "-Zuletzt verwendet-",
+                     nl: "-Laatst gebruikte-",
+                     fr: "-Dernière occasion-" },
+
+        Presets : { en: "-Presets-",
+                    de: "-Vorgaben-",
+                    nl: "-Instellingen-",
+                    fr: "-Paramétres-" },
+
+        Preset : { en: "Preset",
                    de: "Vorgabe",
                    nl: "Instelling",
                    fr: "Paramétre" },
-		
-        Mm  : { en: "mm", 
+
+        Mm  : { en: "mm",
                 de: "mm",
                 nl: "mm",
                 fr: "mm" },
 
-        Inch : { en: "Inch", 
-                 de: "Zoll",
-                 nl: "Inch",
-                 fr: "Pouce" },
+        Inch : { en: "inch",
+                 de: "zoll",
+                 nl: "inch",
+                 fr: "pouce" },
 
-		Height : { en: "Height", 
+        Pt : { en: "pt",
+               de: "pt", //Punkt
+               nl: "pt",
+               fr: "pt" },
+
+		Height : { en: "Height",
                    de: "Höhe",
                    nl: "Hoogte",
                    fr: "Hauteur" },
@@ -132,122 +137,141 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                   de: "Breite",
                   nl: "Breedte",
                   fr: "Largeur" },
-        
-        Spine : { en: "Spine", 
+
+        Spine : { en: "Spine",
                   de: "Rücken",
                   nl: "Rug",
                   fr: "Dos" },
-                  
-        Bleed : { en: "Bleed", 
+
+        Bleed : { en: "Bleed",
                   de: "Anschnitt",
                   nl: "Afloopgebied",
                   fr: "Fond perdu" },
-                  
+
     	Hinge : { en: "Hinge",       // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
                   de: "Gelenk",      // 'Innen', 'außen'
                   nl: "Versterking", // 'Schanier',
                   fr: "Charnière" }, // 'Encoche'
-        
+
         Score : { en: "Score",
         		  de: "Außen",
         		  nl: "Kneep",
         		  fr: "Reliure" },
-        
+
         Wrap : { en: "Wrap",
                  de: "Einschlag",
                  nl: "Wrap",
                  fr: "Chasse" },
-                 
-        Flaps : { en: "Flaps", 
+
+        Flaps : { en: "Flaps",
                   de: "Klappen",
                   nl: "Flappen",
                   fr: "Abattant" },
-        
-        Binding : { en: "Binding", 
+
+        Binding : { en: "Binding",
                     de: "Einband",
                     nl: "Band",
                     fr: "Mors de couvrure" },
-                    
-        Fold : { en: "Fold", 
+
+        Fold : { en: "Fold",
                  de: "Falz",
                  nl: "Vouw",
                  fr: "Reliure" },
-        
-        Margin : { en: "Margin", 
+
+        Margin : { en: "Margin",
                    de: "Ränder",
                    nl: "Marges",
                    fr: "Marges" },
-                   
+
         Auto : { en: "Auto",
                  de: "Auto",
                  nl: "Auto",
                  fr: "Auto" },
-                 
-        Custom : { en: "Custom", 
+
+        Custom : { en: "Custom",
                    de: "Brauch",
                    nl: "Aangepast",
                    fr: "Personalisé" },
 
-        SetMargin : { en: "Set margin", 
+        SetMargin : { en: "Set margin",
                       de: "Satz ränder",
                       nl: "Marges instellen",
                       fr: "Ensemble marges" },
-        
-        GettingData : { en: "Getting data...", 
+
+        GettingData : { en: "Getting data...",
                         de: "Abrufen von Daten...",
                         nl: "Gegevens ophalen...",
                         fr: "Obtenir des données..." },
-                        
+
         Top : { en: "Top",
                 de: "Oben",
                 nl: "Boven",
                 fr: "Tête" },
-        
+
         Bottom : { en: "Bottom",
                    de: "Unten",
                    nl: "Onder",
                    fr: "Pied" },
-    
+
         Inside : { en: "Inside",
                    de: "Innen",
                    nl: "Binnen",
                    fr: "Fond" },
-                   
+
         Outside : { en: "Outside",
                     de: "Außen",
                     nl: "Buiten",
                     fr: "Grand" },
-		
+
+        Left : { en: "Left",
+                 de: "Links",
+                 nl: "Links",
+                 fr: "Gauche" },
+
+        Right : { en: "Right",
+                  de: "Rechts",
+                  nl: "Rechts",
+                  fr: "Droite" },
+
 		Cover : { en: "Cover",
                   de: "Buchhülle",
                   nl: "Omslag",
                   fr: "Couverture" },
 
-        Ok : { en: "OK", 
+        Ok : { en: "OK",
                de: "OK",
                nl: "OK",
                fr: "OK" },
-               
-        Cancel : { en: "Cancel", 
+
+        Cancel : { en: "Cancel",
                    de: "Abbrechen",
                    nl: "Annuleren",
                    fr: "Annuler" },
-        
-        SavePreset : { en: "Save Preset", 
+
+        SavePreset : { en: "Save Preset",
                        de: "Vorgabe Speichern",
                        nl: "Instelling Opslaan",
                        fr: "Enregistrer Paramétre" },
-        
-        ClearPreset : { en: "Clear Preset", 
+
+        ClearPreset : { en: "Clear Preset",
                         de: "Vorgabe Deaktivieren",
                         nl: "Instelling Verwijderen",
                         fr: "Désactivez Paramétre" },
-               
+
         Help : { en: "Help",
                  de: "Hilfe",
                  nl: "Help",
-                 fr: "Aide" }
+                 fr: "Aide" },
 
+        FrontPlusBackCover : { en: "Front + Back cover",
+			                   de: "Vorder + Rückseite",
+                               nl: "Voor + Achterplat",
+                               fr: "Premiére + Quatriéme" },
+
+        Link : { en: "Link",
+                 de: "Link",
+                 nl: "Link",
+                 fr: "Lien" }
     };
 
     ////////////
