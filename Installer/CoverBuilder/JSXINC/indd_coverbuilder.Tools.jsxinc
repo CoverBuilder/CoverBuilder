@@ -148,7 +148,7 @@
         app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
 
         if (app.documents.length <= 0) {
-            alert("Open a document before using this function.");
+            alert(String(myApp.Localise.UIalert['Open_document_before_using_function']));
             exit();
         }
 
@@ -157,10 +157,7 @@
         if(returnDoc || isBuildWithCoverBuilder(myApp, myCover)){
             return myCover;
         } else {
-            var visit = confirm("This document is not build with the latest version of CoverBuilder.\nDo you want to download the latest version now?");
-            if(visit){
-                myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
-            }
+            alert(String(myApp.Localise.UIalert['doc_not_build_with_coverBuilder'])); 
             exit();
         }
     }
@@ -179,7 +176,7 @@
         mPage.page   = mPage.spread.pages[myPage];
 
         if(!mPage.page.isValid){
-            alert("Can’t find the requested page!\nWhat happend to master spread "+mPage.name+"?");
+            alert("Can’t find the requested page!\nWhat happend to master spread " + mPage.name+"?");
             exit(); // I’m done here
         }
 

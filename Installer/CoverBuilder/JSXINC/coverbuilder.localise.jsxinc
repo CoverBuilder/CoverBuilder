@@ -1,6 +1,6 @@
 // CoverBuilder Localisation objects
 // Bruno Herfst 2015
-// Version: 0.6
+// Version: 0.7
 // English, German, Dutch, French
 
 /*
@@ -45,10 +45,10 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
     //////////////
 
     var Menu = {
-    	NewCover : { en: "New cover...",
-                     de: "Neu buchhülle...",
-                     nl: "Nieuwe omslag...",
-                     fr: "Nouveau couverture" },
+        NewCover : { en: "New cover...",
+                   de: "Neu buchhülle...",
+                   nl: "Nieuwe omslag...",
+                   fr: "Nouveau couverture" },
 
         SaveAs : { en: "Save as...",
                    de: "Speichern unter...",
@@ -128,7 +128,7 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                nl: "pt",
                fr: "pt" },
 
-		Height : { en: "Height",
+        Height : { en: "Height",
                    de: "Höhe",
                    nl: "Hoogte",
                    fr: "Hauteur" },
@@ -148,15 +148,15 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                   nl: "Afloopgebied",
                   fr: "Fond perdu" },
 
-    	Hinge : { en: "Hinge",       // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
+        Hinge : { en: "Hinge",       // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
                   de: "Gelenk",      // 'Innen', 'außen'
                   nl: "Versterking", // 'Schanier',
                   fr: "Charnière" }, // 'Encoche'
 
         Score : { en: "Score",
-        		  de: "Außen",
-        		  nl: "Kneep",
-        		  fr: "Reliure" },
+                  de: "Außen",
+                  nl: "Kneep",
+                  fr: "Reliure" },
 
         Wrap : { en: "Wrap",
                  de: "Einschlag",
@@ -233,7 +233,7 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                   nl: "Rechts",
                   fr: "Droite" },
 
-		Cover : { en: "Cover",
+        Cover : { en: "Cover",
                   de: "Buchhülle",
                   nl: "Omslag",
                   fr: "Couverture" },
@@ -258,20 +258,113 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                         nl: "Instelling Verwijderen",
                         fr: "Désactivez Paramétre" },
 
+        overwrite_preset : { en: "There is allready a preset with that name.\nDo you want to overwrite it?",
+                             de: "There is allready a preset with that name.\nDo you want to overwrite it?",
+                             nl: "There is allready a preset with that name.\nDo you want to overwrite it?",
+                             fr: "There is allready a preset with that name.\nDo you want to overwrite it?" },
+
         Help : { en: "Help",
                  de: "Hilfe",
                  nl: "Help",
                  fr: "Aide" },
 
         FrontPlusBackCover : { en: "Front + Back cover",
-			                   de: "Vorder + Rückseite",
+                               de: "Vorder + Rückseite",
                                nl: "Voor + Achterplat",
                                fr: "Premiére + Quatriéme" },
 
         Link : { en: "Link",
                  de: "Link",
                  nl: "Link",
-                 fr: "Lien" }
+                 fr: "Lien" },
+
+        Name : { en: "Name:",
+                 de: "Name:",
+                 nl: "Naam:",
+                 fr: "Nom:" }
+    };
+
+    var UIalert = {
+        Binding_should_cover_Hinge_or_Score : { en: "Binding should cover the Hinge or Score.",
+                                                de: "Binding should cover the Hinge or Score.",
+                                                nl: "Binding should cover the Hinge or Score.",
+                                                fr: "Binding should cover the Hinge or Score." },
+
+         SPINE_WIDTH_HEIGHT_should_be_at_least : { en: "SPINE, WIDTH and HEIGHT should be at least ",
+                                                   de: "SPINE, WIDTH and HEIGHT should be at least ",
+                                                   nl: "SPINE, WIDTH and HEIGHT should be at least ",
+                                                   fr: "SPINE, WIDTH and HEIGHT should be at least " },
+
+        trouble_saving_settings : { en: "Sorry!\nI'm having trouble saving settings",
+                                    de: "Sorry!\nI'm having trouble saving settings",
+                                    nl: "Sorry!\nI'm having trouble saving settings",
+                                    fr: "Sorry!\nI'm having trouble saving settings" },
+
+        encountered_error : { en: "CoverBuilder encountered an error: \n",
+                              de: "CoverBuilder encountered an error: \n",
+                              nl: "CoverBuilder encountered an error: \n",
+                              fr: "CoverBuilder encountered an error:\n" },
+
+        Error_reading_settings : { en: "CoverBuilder \nError reading settings",
+                                   de: "CoverBuilder \nError reading settings",
+                                   nl: "CoverBuilder \nError reading settings",
+                                   fr: "CoverBuilder \nError reading settings" },
+
+        Error_creating_presets : { en: "Error creating presets \n",
+                                   de: "Error creating presets \n",
+                                   nl: "Error creating presets \n",
+                                   fr: "Error creating presets \n" },
+
+        Error_saving_presets : { en: "Error saving presets \n",
+                                 de: "Error saving presets \n",
+                                 nl: "Error saving presets \n",
+                                 fr: "Error saving presets \n" },
+
+        Please_check_input : { en: "Please check input fields.",
+                               de: "Please check input fields.",
+                               nl: "Please check input fields.",
+                               fr: "Please check input fields." },
+
+        Convert_numbers : { en: "Do you want to convert numbers?",
+                            de: "Do you want to convert numbers?",
+                            nl: "Do you want to convert numbers?",
+                            fr: "Do you want to convert numbers?" },
+
+        Cant_subtract_wrap_from_bleed : { en: "Can't subtract wrap from bleed!\nBleed not wide enough...",
+                                          de: "Can't subtract wrap from bleed!\nBleed not wide enough...",
+                                          nl: "Can't subtract wrap from bleed!\nBleed not wide enough...",
+                                          fr: "Can't subtract wrap from bleed!\nBleed not wide enough..." },
+
+        Cant_subtract_hinge_from_cover : { en: "Can't subtract hinge from cover!\nCover not wide enough...",
+                                           de: "Can't subtract hinge from cover!\nCover not wide enough...",
+                                           nl: "Can't subtract hinge from cover!\nCover not wide enough...",
+                                           fr: "Can't subtract hinge from cover!\nCover not wide enough..." },
+
+        Cant_subtract_foldover_from_flaps : { en: "Can't subtract Fold-Over from Flaps!\nFlaps not wide enough...",
+                                              de: "Can't subtract Fold-Over from Flaps!\nFlaps not wide enough...",
+                                              nl: "Can't subtract Fold-Over from Flaps!\nFlaps not wide enough...",
+                                              fr: "Can't subtract Fold-Over from Flaps!\nFlaps not wide enough..." },
+
+        Cant_subtract_wrap_from_bleed : { en: "Can't subtract wrap from bleed!\nBleed not wide enough...",
+                                          de: "Can't subtract wrap from bleed!\nBleed not wide enough...",
+                                          nl: "Can't subtract wrap from bleed!\nBleed not wide enough...",
+                                          fr: "Can't subtract wrap from bleed!\nBleed not wide enough..." },
+
+        Unable_to_convert_values : { en: "Unable to convert values",
+                                     de: "Unable to convert values",
+                                     nl: "Unable to convert values",
+                                     fr: "Unable to convert values" },
+                                     
+         Open_document_before_using_function : { en: "Open a document before using this function.",
+                                                 de: "Open a document before using this function.",
+                                                 nl: "Open a document before using this function.",
+                                                 fr: "Open a document before using this function." },
+                                                 
+         doc_not_build_with_coverBuilder : { en: "This document is not build with CoverBuilder.",
+                                             de: "This document is not build with CoverBuilder.",
+                                             nl: "This document is not build with CoverBuilder.",
+                                             fr: "This document is not build with CoverBuilder." }
+
     };
 
     ////////////

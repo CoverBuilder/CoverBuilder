@@ -7,7 +7,6 @@
     //////////////
     // privates //
     //////////////
-    var ButtonTXT = {savePS : "Save Preset", clearPS : "Clear Preset"};
     var validMeasurementUnits = ["mm", "inch", "pt"]; // In that order! This is how they appear in the dropdowns and this script saves the indexes as a preset
 
     //-----------------------------------------------------------------------------------
@@ -451,7 +450,6 @@
         getFile              : getFile,
         MarginObj            : MarginObj,
         PresetObj            : PresetObj,
-        ButtonTXT            : ButtonTXT,
         getPresets           : getPresets,
         validMeasurementUnits: validMeasurementUnits,
         // Validator
