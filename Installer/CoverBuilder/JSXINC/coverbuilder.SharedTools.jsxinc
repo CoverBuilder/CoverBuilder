@@ -1,13 +1,14 @@
 // Shared Tools
 // Indesign helpers for CoverBuilder and CoverBuilderPS
 // Bruno Herfst 2014
+// Version 1.1
 
 (function() {
     //////////////
     // privates //
     //////////////
     var ButtonTXT = {savePS : "Save Preset", clearPS : "Clear Preset"};
-    var validMeasurementUnits = ["mm", "inch", "pt"]; // In that order
+    var validMeasurementUnits = ["mm", "inch", "pt"]; // In that order! This is how they appear in the dropdowns and this script saves the indexes as a preset
 
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS variables
@@ -419,18 +420,18 @@
     }
 
     function visitURL(thisURL){
-    	contact('<html><head><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body></body></html>');
+        contact('<html><head><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body></body></html>');
     }
 
     function contact(source){
-    	try{
-        	var contact = File(myApp.PathTo.settingsFolder+"CoverBuilder.contact.html");
-        	contact.open("w");
-        	contact.write(source);
-        	contact.close();
-        	contact.execute();
+        try{
+            var contact = File(myApp.PathTo.settingsFolder+"CoverBuilder.contact.html");
+            contact.open("w");
+            contact.write(source);
+            contact.close();
+            contact.execute();
         } catch(e) {
-        	alert(e);
+            alert(e);
         }
     }
 

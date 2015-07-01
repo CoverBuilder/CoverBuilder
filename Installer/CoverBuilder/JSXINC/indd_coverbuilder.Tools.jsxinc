@@ -1,64 +1,143 @@
 // Tools for InDesign
 // Indesign helpers for CoverBuilder
 // Bruno Herfst 2014
-// Version 1.0.1
+// Version 1.1
 
 (function() {
     //////////////
     // privates //
     //////////////
-    
+
     //-----------------------------------------------------------------------------------
-    //  SELECTION TOOLS
+    // APPLICATION TOOLS
     //-----------------------------------------------------------------------------------
-    function itemsSelected(myApp, tellUser){
-        // This function needs more work which can be done when needed.
-        // Always return a Boolean
-        var tellUser = tellUser || false;
-        var selectionType = "something";
-        if(app.selection.length < 1){
-            if(tellUser){
-                alert("Please select " + selectionType + " before running this function.");
+    function setRuler(myCover, myNewUnits){
+        var myOldUnits = {xruler : myCover.viewPreferences.horizontalMeasurementUnits, yruler: myCover.viewPreferences.verticalMeasurementUnits}
+
+        if(myNewUnits.hasOwnProperty('xruler') && myNewUnits.hasOwnProperty('yruler')){
+            // reset original rulers
+            myCover.viewPreferences.horizontalMeasurementUnits = myNewUnits.xruler;
+            myCover.viewPreferences.verticalMeasurementUnits   = myNewUnits.yruler;
+            return myOldUnits;
+        }
+
+        with(myCover.viewPreferences){
+            switch(myNewUnits) {
+                case 0 || "mm":
+                    horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+                    verticalMeasurementUnits   = MeasurementUnits.MILLIMETERS;
+                    break;
+                case 1 || "inch":
+                    horizontalMeasurementUnits = MeasurementUnits.INCHES_DECIMAL;
+                    verticalMeasurementUnits   = MeasurementUnits.INCHES_DECIMAL;
+                    break;
+                case 2 || "pt":
+                    horizontalMeasurementUnits = MeasurementUnits.POINTS;
+                    verticalMeasurementUnits   = MeasurementUnits.POINTS;
+                    break;
+                default:
+                    alert("indd_coverbuilder.Build.cover: Could not parse MeasurementUnits from C.measureUnit");
+                    break;
             }
+            rulerOrigin = RulerOrigin.pageOrigin;
+        }
+        return myOldUnits;
+    }
+
+    //-----------------------------------------------------------------------------------
+    // DOCUMENT TOOLS
+    //-----------------------------------------------------------------------------------
+    function isBuildWithCoverBuilder(myApp, myDoc){
+        var mySpine = myDoc.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]");
+        if(mySpine == "") {
             return false;
+        } else {
+            return true;
         }
-        return true;
     }
-    
-    //-----------------------------------------------------------------------------------
-    //  LAYER TOOLS
-    //-----------------------------------------------------------------------------------
-    function getSelectAndMoveLayer(doc, name, afterlayerNo){
-        return moveLayer(getAndSelectLayer(doc, name), afterlayerNo);
-    }
-    function getAndSelectLayer(doc, name) {
-        return selectLayer(doc, getLayer(doc, name));
-    }
-    function getLayer(doc, name) {
-        for (i=0; i<doc.layers.length; i++) {
-            if (doc.layers[i].name==name) return doc.layers[i];
+
+    function guessMarginObj(myApp, myDoc){
+        // Clone standard margin Object
+        try{
+            var MarginObj = myApp.JSON.parse(myApp.JSON.stringify(myApp.STools.MarginObj));
+        } catch (err) {
+            alert(err);
         }
-        return doc.layers.add({name:name});
-    }
-    function selectLayer(doc, layer){
-        doc.activeLayer = layer;
-        return layer;
-    }
-    function moveLayer(layer, afterlayerNo){
-        try {
-            layer.move(LocationOptions.AFTER,layer.parent.layers[afterlayerNo]);
-            return layer
-        } catch (e) {
-            alert("CoverBuilder.Tools MoveLayer\n" + e.description);
+        // !! Make sure measure units are set properly
+        for(var page in MarginObj){
+            MarginObj[page].top           = myDoc.pages.item(0).marginPreferences.top;
+            MarginObj[page].outside_right = myDoc.pages.item(0).marginPreferences.right;
+            MarginObj[page].inside_left   = myDoc.pages.item(0).marginPreferences.left;
+            MarginObj[page].bottom        = myDoc.pages.item(0).marginPreferences.bottom;
+            MarginObj[page].bottom        = myDoc.pages.item(0).marginPreferences.bottom;
         }
+        return MarginObj;
+    }
+
+    function guessC(myApp, myDoc){
+        // This function expects a valid document for param myDoc
+        // It will return a valid C object or null
+        // The function will try and construct a C object from a document not build with CoverBuilder
+        var C = null;
+
+        if(isBuildWithCoverBuilder(myApp, myDoc)){
+            // myDoc is build with CoverBuilder
+            C = myApp.XMP.retrieveCoverObject(myApp, myDoc);
+            if( C != null ){
+                return C;
+            }
+        }
+
+        // myDoc is not build with CoverBuilder
+        // Check if one of the rulers is in a valid measure unit and set them both the same
+        // Then safe the measurements + measuereunit
+
+        // myApp.NumCon.cUnit(myApp, myDoc.viewPreferences.horizontalMeasurementUnits);
+        // setRuler(myCover, myNewUnits);
+
+        var docPrefs = myDoc.documentPreferences;
+
+        var NewC = { name              : "PP-B",
+                     width             : myApp.NumCon.doRound( docPrefs.pageWidth  ,3),
+                     height            : myApp.NumCon.doRound( docPrefs.pageHeight ,3),
+                     spine             : 0,
+                     ppi               : myApp.Settings.standardPPI,
+                     bleed             : myApp.NumCon.doRound( docPrefs.documentBleedTopOffset ,3),
+                     hinge             : 0,
+                     inExCludeHinge    : 0,
+                     binding           : 0,
+                     inExCludeQB       : 0,
+                     flap              : 0,
+                     fold              : 0,
+                     inExCludeFold     : 0,
+                     wrap              : 0,
+                     inExCludeWrap     : 0,
+                     margin            : guessMarginObj(myApp, myDoc),
+                     measureUnit       : 0 }; //!! set to the right measure unit
+
+        //Now we have a cover object let's check if the document might be a cover
+        if(!docPrefs.facingPages){
+            var firstPage = myDoc.pages.item(0);
+            if( firstPage.marginPreferences.columnCount == 2 ){
+                var assumeSpine = firstPage.marginPreferences.columnGutter;
+                var assumeWidth = (NewC.width-assumeSpine)/2;
+                NewC.width = assumeWidth;
+                NewC.spine = assumeSpine;
+            }
+        }
+
+        C = myApp.STools.Cparser(myApp, NewC);
+
+        return C;
     }
 
     //-----------------------------------------------------------------------------------
     //  PAGE TOOLS
     //-----------------------------------------------------------------------------------
-    function getActiveCover(myApp, myDoc){
+
+    function getActiveCover(myApp, returnDoc){
         // Check if we want to return Active Document if it is not a cover
-        var returnDoc = myDoc || false;
+        var returnDoc = returnDoc || false;
         if(returnDoc.constructor != Boolean){
             returnDoc =  false;
             //This should never happen but I want to know if it is used wrong
@@ -74,20 +153,18 @@
         }
 
         var myCover = app.activeDocument;
-        //check if cover is build with CoverBuilder
-        var myOldSpine = myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]");
-        if(myOldSpine == "") {
-            if(!returnDoc){
-                var visit = confirm("This document is not build with the latest version of CoverBuilder.\nDo you want to download the latest version now?");
-                if(visit){
-                    myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
-                }
-                exit();
+
+        if(returnDoc || isBuildWithCoverBuilder(myApp, myCover)){
+            return myCover;
+        } else {
+            var visit = confirm("This document is not build with the latest version of CoverBuilder.\nDo you want to download the latest version now?");
+            if(visit){
+                myApp.STools.visitURL("http://coverbuilder.brunoherfst.com/");
             }
+            exit();
         }
-        return myCover;
     }
-    
+
     function addPageInfo(myApp, myPage){
         myPage.bounds = myPage.page.bounds;
         myPage.w = myPage.bounds[3]-myPage.bounds[1];
@@ -109,7 +186,7 @@
         mPage = myApp.Tools.addPageInfo(myApp, mPage);
         return mPage;
     }
-    
+
     function getCVR1pageNo(myApp){
         var myCover = myApp.Tools.getActiveCover(myApp);
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
@@ -121,8 +198,8 @@
             return 3;
         }
     }
-    
-    function getPageBleedBounds(myApp, myCover, myPage, selector){   
+
+    function getPageBleedBounds(myApp, myCover, myPage, selector){
         var myCoverBleed = {
                 Top    : myCover.documentPreferences.documentBleedTopOffset,
                 Bottom : myCover.documentPreferences.documentBleedBottomOffset,
@@ -154,19 +231,19 @@
                 break;
         }
     }
-    
+
     function getItemByLabel(myPageOrSpread, myLabel, returnAll){
         //returns array of all items that have label unless returnAll is set to true, then it return the first item;
         //if nothing is found this function returns null
         returnAll = returnAll || false;
         var allItems = new Array();
-        if(myPageOrSpread.isValid){        
+        if(myPageOrSpread.isValid){
             var myElements = myPageOrSpread.allPageItems;
             var len = myElements.length;
             for (var i = len-1; i >= 0; i--){
                 if(myElements[i].label == myLabel){
                     if(returnAll){
-                        allItems.push(myElements[i]); 
+                        allItems.push(myElements[i]);
                     } else {
                         return myElements[i];
                     }
@@ -179,40 +256,50 @@
             return allItems;
         } else { return null; }
     }
+
     //-----------------------------------------------------------------------------------
-    // APPLICATION SETTINGS TOOLS
+    //  LAYER TOOLS
     //-----------------------------------------------------------------------------------
-    function setRuler(myCover, myNewUnits){
-        var myOldUnits = {xruler : myCover.viewPreferences.horizontalMeasurementUnits, yruler: myCover.viewPreferences.verticalMeasurementUnits}
-        
-        if(myNewUnits.hasOwnProperty('xruler') && myNewUnits.hasOwnProperty('yruler')){
-            // reset original rulers
-            myCover.viewPreferences.horizontalMeasurementUnits = myNewUnits.xruler;
-            myCover.viewPreferences.verticalMeasurementUnits   = myNewUnits.yruler;
-            return myOldUnits;
+    function getSelectAndMoveLayer(doc, name, afterlayerNo){
+        return moveLayer(getAndSelectLayer(doc, name), afterlayerNo);
+    }
+    function getAndSelectLayer(doc, name) {
+        return selectLayer(doc, getLayer(doc, name));
+    }
+    function getLayer(doc, name) {
+        for (i=0; i<doc.layers.length; i++) {
+            if (doc.layers[i].name==name) return doc.layers[i];
         }
-        
-        with(myCover.viewPreferences){
-            switch(myNewUnits) {
-                case 0:
-                    horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
-                    verticalMeasurementUnits   = MeasurementUnits.MILLIMETERS;
-                    break;
-                case 1:
-                    horizontalMeasurementUnits = MeasurementUnits.INCHES_DECIMAL;
-                    verticalMeasurementUnits   = MeasurementUnits.INCHES_DECIMAL;
-                    break;
-                case 2:
-                    horizontalMeasurementUnits = MeasurementUnits.POINTS;
-                    verticalMeasurementUnits   = MeasurementUnits.POINTS;
-                    break;
-                default:
-                    alert("indd_coverbuilder.Build.cover: Could not parse MeasurementUnits from C.measureUnit");
-                    break;
+        return doc.layers.add({name:name});
+    }
+    function selectLayer(doc, layer){
+        doc.activeLayer = layer;
+        return layer;
+    }
+    function moveLayer(layer, afterlayerNo){
+        try {
+            layer.move(LocationOptions.AFTER,layer.parent.layers[afterlayerNo]);
+            return layer
+        } catch (e) {
+            alert("CoverBuilder.Tools MoveLayer\n" + e.description);
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  SELECTION TOOLS
+    //-----------------------------------------------------------------------------------
+    function itemsSelected(myApp, tellUser){
+        // This function needs more work which can be done when needed.
+        // Always return a Boolean
+        var tellUser = tellUser || false;
+        var selectionType = "something";
+        if(app.selection.length < 1){
+            if(tellUser){
+                alert("Please select " + selectionType + " before running this function.");
             }
-            rulerOrigin = RulerOrigin.pageOrigin;
+            return false;
         }
-        return myOldUnits;
+        return true;
     }
 
     //-----------------------------------------------------------------------------------
@@ -247,29 +334,33 @@
         }
         return myColor;
     }
+
     ////////////
     // expose //
     ////////////
     // Return an object exposed to the public
     return {
-        // application settings Tools
-        setRuler              : setRuler,
-        // SelectionTools
-        itemsSelected         : itemsSelected,
-        // LayerTools
-        moveLayer             : moveLayer,
-        selectLayer           : selectLayer,
-        getLayer              : getLayer,
-        getAndSelectLayer     : getAndSelectLayer,
-        getSelectAndMoveLayer : getSelectAndMoveLayer,
-        // PageTools
-        addPageInfo           : addPageInfo,
-        getActiveCover        : getActiveCover,
-        getMasterPage         : getMasterPage,
-        getCVR1pageNo         : getCVR1pageNo,
-        getPageBleedBounds    : getPageBleedBounds,
-        getItemByLabel        : getItemByLabel,
-        // ColourTools
-        addColor              : addColor
+        // APPLICATION TOOLS
+        setRuler                : setRuler,
+        isBuildWithCoverBuilder : isBuildWithCoverBuilder,
+        // DOCUMENT TOOLS
+        guessC                  : guessC,
+        // PAGE TOOLS
+        addPageInfo             : addPageInfo,
+        getActiveCover          : getActiveCover,
+        getMasterPage           : getMasterPage,
+        getCVR1pageNo           : getCVR1pageNo,
+        getPageBleedBounds      : getPageBleedBounds,
+        getItemByLabel          : getItemByLabel,
+        // LAYER TOOLS
+        moveLayer               : moveLayer,
+        selectLayer             : selectLayer,
+        getLayer                : getLayer,
+        getAndSelectLayer       : getAndSelectLayer,
+        getSelectAndMoveLayer   : getSelectAndMoveLayer,
+        // SELECTION TOOLS
+        itemsSelected           : itemsSelected,
+        // COLOUR TOOLS
+        addColor                : addColor
     };
 })();

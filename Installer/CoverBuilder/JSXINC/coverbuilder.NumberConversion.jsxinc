@@ -1,5 +1,6 @@
 // Number Conversion
 // Bruno Herfst 2014
+// Version 1.1
 
 (function() {
     //////////////
@@ -29,7 +30,32 @@
         //1 millimetre = 2.83464567 PostScript points
         return num/2.83464567;
     }
-    
+
+    function cUnit(myApp, mUnits){
+        switch (mUnits) {
+            case 0:
+            case "mm":
+            case "MILLIMETERS":
+            case 2053991795: //mm
+                return 0;
+                break;
+            case 1:
+            case "inch":
+            case "INCHES":
+            case 2053729891: //inch
+                return 1;
+                break;
+            case 2:
+            case "pt":
+            case "POINTS":
+            case 2054188905: //pt
+                return 2;
+                break;
+            default:
+                return null;
+        }
+    }
+
     function convert(myApp, measure, unitInput, unitOutput, roundDec){
         // validate input
         try{
@@ -38,7 +64,7 @@
         } catch(err){
             alert(err);
         }
-        
+
         if( (typeof validInput == "number") && (typeof validOutput == "number") && (typeof measure == "number") ){
             var convertedMeasure = undefined;
             // Lets convert the items
@@ -95,7 +121,7 @@
                     alert("number.conversion.convert: Could not convert units.");
                     break;
             }
-            // R E T U R N 
+            // R E T U R N
             // Round Units
             if(typeof roundDec == "number"){
                 roundDec = parseInt(roundDec);
@@ -108,7 +134,7 @@
            return measure;
         }
     }
-    
+
     function NaN20(num){
         if(isNaN(num)){
             return 0;
@@ -121,7 +147,7 @@
         var roundMulit = Math.pow(10,roundDec);
         return Math.round(num*roundMulit)/roundMulit;
     }
-    
+
     function constrain(_number, _min, _max, _warn, _message){
         var warn = _warn || false;
         var clipped = Math.max(Math.min(_number, _max), _min);
@@ -130,7 +156,7 @@
         }
         return clipped;
     }
-    
+
     ////////////
     // expose //
     ////////////
@@ -142,6 +168,7 @@
         inch2pt        : inch2pt,
         pt2inch        : pt2inch,
         pt2mm          : pt2mm,
+        cUnit          : cUnit,
         NaN20          : NaN20,
         constrain      : constrain,
         doRound        : doRound
