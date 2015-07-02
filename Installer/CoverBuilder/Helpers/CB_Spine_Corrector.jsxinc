@@ -55,7 +55,7 @@
         var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", C.measureUnit);
 
         // set + safe original rulers
-        var myOldRulers = myApp.Tools.setRuler(myCover,C.measureUnit);
+        var myOldRulers = myApp.Tools.setRuler(myApp, myCover,C.measureUnit);
 
         // Tidy.
         var docBleed = myCover.documentPreferences.documentBleedTopOffset;
@@ -115,7 +115,7 @@
         }
 
         // reset original rulers
-        myApp.Tools.setRuler(myCover,myOldRulers);
+        myApp.Tools.setRuler(myApp, myCover,myOldRulers);
     }
     ////////////
     // expose //

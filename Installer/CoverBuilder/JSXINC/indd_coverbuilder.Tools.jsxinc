@@ -1,7 +1,7 @@
 // Tools for InDesign
 // Indesign helpers for CoverBuilder
 // Bruno Herfst 2014
-// Version 1.1
+// Version 1.2
 
 (function() {
     //////////////
@@ -11,7 +11,7 @@
     //-----------------------------------------------------------------------------------
     // APPLICATION TOOLS
     //-----------------------------------------------------------------------------------
-    function setRuler(myCover, myNewUnits){
+    function setRuler(myApp, myCover, myNewUnits){
         var myOldUnits = {xruler : myCover.viewPreferences.horizontalMeasurementUnits, yruler: myCover.viewPreferences.verticalMeasurementUnits}
 
         if(myNewUnits.hasOwnProperty('xruler') && myNewUnits.hasOwnProperty('yruler')){
@@ -23,20 +23,20 @@
 
         with(myCover.viewPreferences){
             switch(myNewUnits) {
-                case 0 || "mm":
+                case 0:
                     horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
                     verticalMeasurementUnits   = MeasurementUnits.MILLIMETERS;
                     break;
-                case 1 || "inch":
+                case 1:
                     horizontalMeasurementUnits = MeasurementUnits.INCHES_DECIMAL;
                     verticalMeasurementUnits   = MeasurementUnits.INCHES_DECIMAL;
                     break;
-                case 2 || "pt":
+                case 2:
                     horizontalMeasurementUnits = MeasurementUnits.POINTS;
                     verticalMeasurementUnits   = MeasurementUnits.POINTS;
                     break;
                 default:
-                    alert("indd_coverbuilder.Build.cover: Could not parse MeasurementUnits from C.measureUnit");
+                    alert("indd_coverbuilder.Tools.setRuler:\nCould not parse MeasurementUnits: " + typeof(myNewUnits) + " " + myNewUnits );
                     break;
             }
             rulerOrigin = RulerOrigin.pageOrigin;
@@ -56,20 +56,21 @@
         }
     }
 
-    function guessMarginObj(myApp, myDoc){
+    function guessMarginObj(myApp, myDoc, cUnit){
         // Clone standard margin Object
         try{
             var MarginObj = myApp.JSON.parse(myApp.JSON.stringify(myApp.STools.MarginObj));
         } catch (err) {
             alert(err);
         }
-        // !! Make sure measure units are set properly
+        // !! This function expects the document rulers to be set in the right measure units
         for(var page in MarginObj){
             MarginObj[page].top           = myDoc.pages.item(0).marginPreferences.top;
             MarginObj[page].outside_right = myDoc.pages.item(0).marginPreferences.right;
             MarginObj[page].inside_left   = myDoc.pages.item(0).marginPreferences.left;
             MarginObj[page].bottom        = myDoc.pages.item(0).marginPreferences.bottom;
             MarginObj[page].bottom        = myDoc.pages.item(0).marginPreferences.bottom;
+            MarginObj[page].units         = parseInt(cUnit);
         }
         return MarginObj;
     }
@@ -81,7 +82,7 @@
         var C = null;
 
         if(isBuildWithCoverBuilder(myApp, myDoc)){
-            // myDoc is build with CoverBuilder
+            // myDoc is build with CoverBuilder: Let's retrieve the Cover object
             C = myApp.XMP.retrieveCoverObject(myApp, myDoc);
             if( C != null ){
                 return C;
@@ -89,11 +90,16 @@
         }
 
         // myDoc is not build with CoverBuilder
-        // Check if one of the rulers is in a valid measure unit and set them both the same
-        // Then safe the measurements + measuereunit
+        // ------------------------------------
+        // Check if one of the rulers is in a valid measure unit
+        // Then set them both the same and safe the measuereunit
+        var cUnit = myApp.NumCon.cUnit(myApp, myDoc.viewPreferences.horizontalMeasurementUnits) || myApp.NumCon.cUnit(myApp, myDoc.viewPreferences.verticalMeasurementUnits);
+        if( cUnit == null ){
+            cUnit = 0;
+        }
 
-        // myApp.NumCon.cUnit(myApp, myDoc.viewPreferences.horizontalMeasurementUnits);
-        // setRuler(myCover, myNewUnits);
+        // Safe current document rulers and set both rulers to a valid measure
+        var oldRulers = setRuler(myApp, myDoc, cUnit);
 
         var docPrefs = myDoc.documentPreferences;
 
@@ -112,8 +118,8 @@
                      inExCludeFold     : 0,
                      wrap              : 0,
                      inExCludeWrap     : 0,
-                     margin            : guessMarginObj(myApp, myDoc),
-                     measureUnit       : 0 }; //!! set to the right measure unit
+                     margin            : guessMarginObj(myApp, myDoc, cUnit),
+                     measureUnit       : cUnit }; //!! set to the right measure unit
 
         //Now we have a cover object let's check if the document might be a cover
         if(!docPrefs.facingPages){
@@ -127,6 +133,9 @@
         }
 
         C = myApp.STools.Cparser(myApp, NewC);
+
+        // Reset original rulers
+        setRuler(myApp, myDoc, oldRulers);
 
         return C;
     }
@@ -157,7 +166,7 @@
         if(returnDoc || isBuildWithCoverBuilder(myApp, myCover)){
             return myCover;
         } else {
-            alert(String(myApp.Localise.UIalert['doc_not_build_with_coverBuilder'])); 
+            alert(String(myApp.Localise.UIalert['doc_not_build_with_coverBuilder']));
             exit();
         }
     }

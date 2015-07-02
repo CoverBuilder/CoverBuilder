@@ -44,14 +44,14 @@
         var addSpine = true; // It is nice we can send a spread or page to photoshop
 
         if(C == null){ // Not a cover build with CoverBuilder
-			var myPPI = 300;
-			if(!isNaN(myApp.Settings.standardPPI)){
-				myPPI = myApp.Settings.standardPPI;
-			}
+            var myPPI = 300;
+            if(!isNaN(myApp.Settings.standardPPI)){
+                myPPI = myApp.Settings.standardPPI;
+            }
 
             // Safe rulers add set to MM
             // safe original rulers
-            var myOldRulers = myApp.Tools.setRuler(myCover,0);
+            var myOldRulers = myApp.Tools.setRuler(myApp, myCover,0);
 
             // get doc bleed settings //this can be improved
             var currSpread = app.activeWindow.activeSpread;
@@ -77,7 +77,7 @@
                 alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to ask for finalising.");
             }
             // Reset original rulers
-            myApp.Tools.setRuler(myCover,myOldRulers);
+            myApp.Tools.setRuler(myApp, myCover,myOldRulers);
         }
         // We have a valid Cover object
         CreateBridgeTalkMessage(myApp,C,addSpine);
