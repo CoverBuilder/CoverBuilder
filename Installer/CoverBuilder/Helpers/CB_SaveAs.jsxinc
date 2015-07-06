@@ -21,7 +21,7 @@
     //////////////
     function getBookTitleUI(){
         var thisTitle = null;
-        var bookTitleUI = app.dialogs.add({name:"What is the title of this book?",canCancel:true});
+        var bookTitleUI = app.dialogs.add({name:String(myApp.Localise.Meta['WhatIsTheTitleOfThisBook']),canCancel:true}); 
         with(bookTitleUI){
             with(dialogColumns.add()){
                 var titleEditField = textEditboxes.add({editContents:"", minWidth:200});

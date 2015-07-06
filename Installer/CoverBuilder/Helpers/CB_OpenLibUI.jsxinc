@@ -20,10 +20,6 @@
     //////////////
     // privates //
     //////////////
-    var strNoFiles   = String("-- No libraries found --"); // shows if no libraries found
-    var strWinTitle  = String("Library opener");
-    var strSelectLib = String("Select library:");
-
     function loadUI(myApp) {
         // Code to open UI here
         var myFiles    = Folder(myApp.PathTo.libraryFolder).getFiles("*.indl");
@@ -31,25 +27,20 @@
         var myLibFiles = new Array();
 
         if(!myFilesNo){
-             myLibFiles[0] = strNoFiles;
+             myLibFiles[0] = String(myApp.Localise.Menu['NoFilesFound']);
         }else{
              for(var i=0; i < myFilesNo; i++){
                   myLibFiles.push(myFiles[i].displayName.substr(0,myFiles[i].displayName.lastIndexOf(".")));
              }
         }
 
-        var myDialog = app.dialogs.add({name:strWinTitle, canCancel:true});
+        var myDialog = app.dialogs.add({name:String(myApp.Localise.Menu['OpenLibrary']), canCancel:true});
         with(myDialog){
           with(dialogColumns.add()){
                with(dialogRows.add()){
-                    with(borderPanels.add()){
-                         with(dialogColumns.add()){
-                              staticTexts.add({staticLabel:strSelectLib});
-                         }
-                         with(dialogColumns.add()){
-                              var myLib = dropdowns.add({stringList:myLibFiles, selectedIndex:0});
-                         }
-                    }
+                    with(dialogColumns.add()){
+                          var myLib = dropdowns.add({stringList:myLibFiles, selectedIndex:0});
+                     }
                }
           }
         }

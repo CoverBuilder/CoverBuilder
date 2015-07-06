@@ -1,6 +1,6 @@
 // CoverBuilder Localisation objects
 // Bruno Herfst 2015
-// Version: 0.8
+// Version: 0.9
 // English, German, Dutch, French
 
 /*
@@ -46,9 +46,9 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
 
     var Menu = {
         NewCover : { en: "New cover...",
-                   de: "Neu buchhülle...",
-                   nl: "Nieuwe omslag...",
-                   fr: "Nouveau couverture" },
+                     de: "Neu buchhülle...",
+                     nl: "Nieuwe omslag...",
+                     fr: "Nouveau couverture" },
 
         SaveAs : { en: "Save as...",
                    de: "Speichern unter...",
@@ -98,6 +98,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
     };
 
     var UI = {
+        NoFilesFound : { en: "-No files found-",
+                         de: "-Kein ergebnis-",
+                         nl: "-Geen bestanden gevonden-",
+                         fr: "-Aucun résultat-" },
+
         LastUsed : { en: "-Last used-",
                      de: "-Zuletzt verwendet-",
                      nl: "-Laatst gebruikte-",
@@ -267,6 +272,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                  de: "Hilfe",
                  nl: "Help",
                  fr: "Aide" },
+                 
+        Other : { en: "Other",
+                  de: "Andere",
+                  nl: "Ander",
+                  fr: "Autre" },
 
         FrontPlusBackCover : { en: "Front + Back cover",
                                de: "Vorder + Rückseite",
@@ -281,9 +291,71 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
         Name : { en: "Name:",
                  de: "Name:",
                  nl: "Naam:",
-                 fr: "Nom:" }
+                 fr: "Nom:" },
+                 
+        New_spine_width : { en: "New spine width",
+                            de: "New spine width",
+                            nl: "New spine width",
+                            fr: "New spine width" },
+                          
+        Break_frames_over_spine : { en: "Break frames over spine",
+                                    de: "Break frames over spine",
+                                    nl: "Break frames over spine",
+                                    fr: "Break frames over spine" },
+                                    
+        Page_measurements_in_slug : { en: "Page measurements in slug",
+                                      de: "Page measurements in slug",
+                                      nl: "Page measurements in slug",
+                                      fr: "Page measurements in slug" }
     };
+    
+    var Export = {
+        Spreads : { en: "Spreads",
+                    de: "Spreads",
+                    nl: "Spreads",
+                    fr: "Spreads" },
 
+        Pages : { en: "Pages",
+                  de: "Pages",
+                  nl: "Pages",
+                  fr: "Pages" },
+                  
+        Front_Only : { en: "Front Only",
+                       de: "Front Only",
+                       nl: "Front Only",
+                       fr: "Front Only" },
+
+        Current_Spread : { en: "Current Spread",
+                          de: "Current Spread",
+                          nl: "Current Spread",
+                          fr: "Current Spread" },
+                                     
+        All_Spreads : { en: "All Spreads",
+                       de: "All Spreads",
+                       nl: "All Spreads",
+                       fr: "All Spreads" },
+                       
+        Press_Ready : { en: "Press ready",
+                       de: "Druckfertig",
+                       nl: "Druk klaar",
+                       fr: "Appuyez prêt" },
+                       
+        HighRes : { en: "High-Res",
+                    de: "High-Res",
+                    nl: "High-Res",
+                    fr: "High-Res" },
+                     
+        MidRes : { en: "Mid-Res",
+                   de: "Mid-Res",
+                   nl: "Mid-Res",
+                   fr: "Mid-Res" },
+                     
+        LowRes : { en: "Low-Res",
+                   de: "Low-Res",
+                   nl: "Low-Res",
+                   fr: "Low-Res" }
+    };
+    
     var UIalert = {
         Binding_should_cover_Hinge_or_Score : { en: "Binding should cover the Hinge or Score.",
                                                 de: "Binding should cover the Hinge or Score.",
@@ -355,25 +427,38 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                                      nl: "Unable to convert values",
                                      fr: "Unable to convert values" },
 
-         Open_document_before_using_function : { en: "Open a document before using this function.",
+        Open_document_before_using_function : { en: "Open a document before using this function.",
                                                  de: "Open a document before using this function.",
                                                  nl: "Open a document before using this function.",
                                                  fr: "Open a document before using this function." },
 
-         doc_not_build_with_coverBuilder : { en: "This document is not build with CoverBuilder.",
+        doc_not_build_with_coverBuilder : { en: "This document is not build with CoverBuilder.",
                                              de: "This document is not build with CoverBuilder.",
                                              nl: "This document is not build with CoverBuilder.",
                                              fr: "This document is not build with CoverBuilder." }
-
     };
-
+    
+    var Meta = {
+        WhatIsTheTitleOfThisBook : { en: "What is the title of this book?",
+                                     de: "Was ist der titel dieses buches?",
+                                     nl: "Wat is de title van dit book?",
+                                     fr: "Quel est le titre de ce livre?" },
+                                     
+        WhatIsTheISBNOfThisBook : { en: "What is the ISBN of this book?",
+                                    de: "Was ist der ISBN dieses buches?",
+                                    nl: "Wat is de ISBN van dit book?",
+                                    fr: "Quel est le ISBN de ce livre?" }
+    };
+    
     ////////////
     // expose //
     ////////////
       return {
           Menu      : Menu,
           UI        : UI,
-          UIalert   : UIalert
+          Export    : Export,
+          UIalert   : UIalert,
+          Meta      : Meta
     };
 
 })();

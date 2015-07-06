@@ -16,6 +16,7 @@
     //////////////
     // privates //
     //////////////
+    
     var myCMYKSwatches = [{
         name: "Cyan"
     }, {
@@ -25,10 +26,15 @@
     }, {
         name: "Black"
     }];
+    
     var myFinishes = [{
         name: "Lamination (Gloss)"
     }, {
+        name: "Lamination (Gloss Textured)"
+    },{
         name: "Lamination (Matte)"
+    },{
+        name: "Lamination (Matte Textured)"
     }, {
         name: "Lamination (Silk)"
     }, {
@@ -171,18 +177,19 @@
                     // C U S T O M
                     with(borderPanels.add()) {
                         myNoteCheckbox = checkboxControls.add({
-                                    staticLabel: "NOTE:",
+                                    staticLabel: "OTHER:",
                                     checkedState: false
                                 });
                         with(dialogColumns.add()) {
                             myNoteTextField = textEditboxes.add();
+                            myNoteTextField.minWidth = 150;
                         }
                     }
                 }
                 // P A G E S I Z E S
                 with(borderPanels.add()) {
                     myPageSizeSlugCheckbox = checkboxControls.add({
-                                staticLabel: "Page measurements in slug.",
+                                staticLabel: "Page measurements in slug",
                                 checkedState: true
                             });
                 }
