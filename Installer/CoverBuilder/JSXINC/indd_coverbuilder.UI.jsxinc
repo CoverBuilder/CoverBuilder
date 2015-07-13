@@ -243,7 +243,7 @@
                     alert(String(myApp.Localise.UIalert['Error_creating_presets']) + String(myApp.Localise.UIalert['Please_check_input']));
                 } else {
                     //update dialog
-                    presets.add('item', formatPresetName(MyPresets.presets[i]) );
+                    presets.add('item', formatPresetName(MyPresets.presets[MyPresets.presets.length-1]) );
                     presets.items[MyPresets.presets.length].selected = true; //no need to subtract 1 as array includes --save presets-- item at 0
                     try{
                         myApp.JSON.saveFile(myApp, f, MyPresets);
