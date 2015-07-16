@@ -45,6 +45,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
     //////////////
 
     var Menu = {
+        File : { en: "File",
+                 de: "Datei",
+                 nl: "Bestand",
+                 fr: "Fichier" },
+
         NewCover : { en: "New cover...",
                      de: "Neu buchhülle...",
                      nl: "Nieuwe omslag...",

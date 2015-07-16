@@ -69,8 +69,8 @@
         myCover.save(tempfile);
 
         var myMenu = app.menus.item("Main");
-        var fileMenu = myMenu.menuElements.item("File");
-        var mySaveAsMenu = fileMenu.menuItems.item("Save As...");
+        var fileMenu = myMenu.menuElements.item(String(myApp.Localise.Menu['File']));
+        var mySaveAsMenu = fileMenu.menuItems.item(String(myApp.Localise.Menu['SaveAs']));
         mySaveAsMenu.associatedMenuAction.invoke(tempfile.remove());
     }
 
