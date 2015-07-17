@@ -35,8 +35,8 @@
                     mnuAction.eventListeners.add(ev,mnuHandlers[ev]);
                     }
 
-                var fileMenu = app.menus.item("$ID/Main").submenus.item("$ID/&File").submenus.item("$ID/&New");
-                var refItem = fileMenu.menuItems.item("$ID/Document...");
+                var fileMenu = app.menus.item("$ID/Main").submenus.item("$ID/&"+String(myApp.Localise.Menu['File'])).submenus.item("$ID/&"+String(myApp.Localise.Menu['New']));
+                var refItem = fileMenu.menuItems.item("$ID/"+String(myApp.Localise.Menu['Document']));
 
                 fileMenu.menuItems.add(mnuAction,LocationOptions.after,refItem);
 

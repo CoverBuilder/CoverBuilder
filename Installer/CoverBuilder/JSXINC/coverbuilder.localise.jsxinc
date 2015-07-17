@@ -1,6 +1,6 @@
 // CoverBuilder Localisation objects
 // Bruno Herfst 2015
-// Version: 0.9
+// Version: 1.0
 // English, German, Dutch, French
 
 /*
@@ -49,6 +49,16 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                  de: "Datei",
                  nl: "Bestand",
                  fr: "Fichier" },
+                 
+        New : { en: "New",
+                de: "Neu",
+                nl: "Nieuw",
+                fr: "Nouveau" },
+                
+        Document : { en: "Document...",
+                     de: "Dokument...",
+                     nl: "Document...",
+                     fr: "Document..." },
 
         NewCover : { en: "New cover...",
                      de: "Neu buchhülle...",
