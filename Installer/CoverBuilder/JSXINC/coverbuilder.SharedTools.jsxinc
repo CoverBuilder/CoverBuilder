@@ -414,26 +414,38 @@
     //-----------------------------------------------------------------------------------
     //  LINK JUMPERS
     //-----------------------------------------------------------------------------------
-    function emailTo(thisMAIL, thisURL){
-        contact('<html><head><script>function load(){window.open("mailto:'+thisMAIL+'")}</script><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body onload="load()"></body></html>');
-    }
+    /*
+    Thanks to Gerald Singelmann and Marc Autret for the visitURL function
+    The advantage of this approach is that it works event while InDesign is locked in a modal state...
+    https://forums.adobe.com/message/3180866
+    */
+    
+    function visitURL(/*str*/ url) {
+         var isMac = (File.fs == "Macintosh"),
+              fName = 'tmp' + (+new Date()) + (isMac ? '.webloc' : '.url'),
+              fCode = isMac ?
+                   ('<?xml version="1.0" encoding="UTF-8"?>\r'+
+                   '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '+
+                   '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\r'+
+                   '<plist version="1.0">\r'+
+                   '<dict>\r'+
+                        '\t<key>URL</key>\r'+
+                        '\t<string>%url%</string>\r'+
+                   '</dict>\r'+
+                   '</plist>') :
+                   '[InternetShortcut]\rURL=%url%\r';
 
-    function visitURL(thisURL){
-        contact('<html><head><meta http-equiv="refresh" content="0; url='+thisURL+'"></head><body></body></html>');
-    }
+         var f = new File(Folder.temp.absoluteURI + '/' + fName);
+         if(! f.open('w') ) return false;
 
-    function contact(source){
-        try{
-            var contact = File(myApp.PathTo.settingsFolder+"CoverBuilder.contact.html");
-            contact.open("w");
-            contact.write(source);
-            contact.close();
-            contact.execute();
-        } catch(e) {
-            alert(e);
-        }
+         f.write(fCode.replace('%url%',url));
+         f.close();
+         f.execute();
+         $.sleep(500);     // 500 ms timer
+         f.remove();
+         return true;
     }
-
+    
     function getHelp(){
         visitURL("http://coverbuilder.brunoherfst.com/faq/");
     }
@@ -466,7 +478,6 @@
         // Link Jumpers
         getHelp              : getHelp,
         createBarcode        : createBarcode,
-        emailTo              : emailTo,
         visitURL             : visitURL
     };
 })();
