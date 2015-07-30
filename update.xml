@@ -1,9 +1,10 @@
 <ExtensionUpdateInformation>
-	<version>2.9.6</version>
-	<download>http://github.com/GitBruno/CoverBuilder/raw/master/Installer/CoverBuilder_296.zxp</download>
+	<version>2.9.7</version>
+	<download>http://github.com/GitBruno/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
 	<description url="http://coverbuilder.brunoherfst.com">
 	<![CDATA[
-	        Bug-fixes.
+	    - It now speaks some French, German, and Dutch.
+	    - Minor bug fixes
 	]]>
 	</description>
 </ExtensionUpdateInformation>
