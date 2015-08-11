@@ -1,7 +1,7 @@
 // Shared Tools
 // Indesign helpers for CoverBuilder and CoverBuilderPS
 // Bruno Herfst 2014
-// Version 1.1
+// Version 1.2
 
 (function() {
     //////////////
@@ -20,8 +20,8 @@
         };
 
     var PresetObj = {"presets": [
-            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0},
-            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0}
+            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false},
+            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false}
         ]};
 
     //-----------------------------------------------------------------------------------
@@ -146,23 +146,23 @@
             // This function tries to create a valid C object from a C object from an older version.
             // TODO: Make a Margin validator
             var Cool = {
-                name:           (String(     C.name)           || "undefined"),
-                width:          (parseFloat( C.width)          || 0),
-                height:         (parseFloat( C.height)         || 0),
-                spine:          (parseFloat( C.spine)          || 0),
-                ppi:            (parseInt(   C.ppi)            || 600),
-                bleed:          (parseFloat( C.bleed)          || 0),
-                hinge:          (parseFloat( C.hinge)          || 0),
-                inExCludeHinge: (parseFloat( C.inExCludeHinge) || 0),
-                binding:        (parseFloat( C.binding)        || 0),
-                inExCludeQB:    (parseInt(   C.inExCludeQB)    || 0),
-                flap:           (parseFloat( C.flap)           || 0),
-                fold:           (parseFloat( C.fold)           || 0),
-                inExCludeFold:  (parseInt(   C.inExCludeFold)  || 0),
-                wrap:           (parseFloat( C.wrap)           || 0),
-                inExCludeWrap:  (parseInt(   C.inExCludeWrap)  || 0),
-                margin:         (C.margin                      || MarginObj),
-                measureUnit:    (parseInt(   C.measureUnit)    || 0),
+                name:           (String(     C.name)             || "undefined"),
+                width:          (parseFloat( C.width)            || 0),
+                height:         (parseFloat( C.height)           || 0),
+                spine:          (parseFloat( C.spine)            || 0),
+                ppi:            (parseInt(   C.ppi)              || 600),
+                bleed:          (parseFloat( C.bleed)            || 0),
+                hinge:          (parseFloat( C.hinge)            || 0),
+                inExCludeHinge: (parseFloat( C.inExCludeHinge)   || 0),
+                binding:        (parseFloat( C.binding)          || 0),
+                inExCludeQB:    (parseInt(   C.inExCludeQB)      || 0),
+                flap:           (parseFloat( C.flap)             || 0),
+                fold:           (parseFloat( C.fold)             || 0),
+                inExCludeFold:  (parseInt(   C.inExCludeFold)    || 0),
+                wrap:           (parseFloat( C.wrap)             || 0),
+                inExCludeWrap:  (parseInt(   C.inExCludeWrap)    || 0),
+                margin:         (C.margin                        || MarginObj),
+                measureUnit:    (parseInt(   C.measureUnit)      || 0),
                 resolved:       Boolean(    C.resolved == true)
             }
             //alert(myApp.JSON.stringify(C));
@@ -172,31 +172,34 @@
         return null
     }
 
-
     function convertMargins(myApp, coverMargins, to_unit){
         var myMargins = ["top","outside_right","inside_left","bottom"];
         for(var page in coverMargins){
             var pagemargins = coverMargins[page];
-            for(var i in myMargins) {
-                pagemargins[myMargins[i]] = myApp.NumCon.convert(myApp, pagemargins[myMargins[i]], pagemargins.units, to_unit, 3); ;
-            }
+
+            var mlen = myMargins.length;
+			for (var i = 0; i < mlen; i++) {
+				pagemargins[myMargins[i]] = myApp.NumCon.convert(myApp, pagemargins[myMargins[i]], pagemargins.units, to_unit, 3);
+			}
+
             pagemargins.units = checkMeasureUnit(myApp, to_unit);
         }
         return coverMargins;
     }
 
     function convertUnits(myApp, C, to_unit){
-       // Check if we can convert the cover object
+		// Check if we can convert the cover object
         if(!C.hasOwnProperty("measureUnit")){
             alert("Not a valid C object.");
             return C;
         }
 
-        var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
+		var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
+		var dlen = dimensions.length;
+		for (var i = 0; i < dlen; i++) {
+			C[dimensions[i]] = myApp.NumCon.convert(myApp, C[dimensions[i]], C.measureUnit, to_unit);
+		}
 
-        for(var size in dimensions) {
-            C[dimensions[size]] = myApp.NumCon.convert(myApp, C[dimensions[size]], C.measureUnit, to_unit);
-        }
         // Do margin
         C.margin      = convertMargins(myApp, C.margin, to_unit);
         C.measureUnit = checkMeasureUnit(myApp, to_unit);
@@ -249,36 +252,50 @@
             }());
         }
 
-        var induceProps = Object.keys( induceObj ),
-            sampleProps = Object.keys( sampleObj );
-
-        if ( induceProps.length == sampleProps.length ) {
-            for (key in induceObj) {
-                if (sampleObj.hasOwnProperty(key)) {
-                    if(induceObj[key].constructor != sampleObj[key].constructor){
-                        return false;
-                    }
-                    switch(induceObj[key].constructor){
-                        case Object:
-                            if(!sameProps( induceObj[key], sampleObj[key])){
-                                return false;
-                            }
-                            break;
-                        case Array:
-                            if(!sameKeys( induceObj[key], sampleObj[key])){
-                                return false;
-                            }
-                            break;
-                        default:
-                            //do nothing
-                    }
-                } else {
-                    return false;
-                }
-            }
-        } else {
-            return false;
-        }
+		try{
+        	var induceProps = Object.keys( induceObj ),
+            	sampleProps = Object.keys( sampleObj );
+		} catch(_err){
+			alert("sameProps 7956: " + _err);
+		}
+		try{
+			// Objects are bigger as long as they have the requested keyNames
+			if ( induceProps.length != sampleProps.length ) {
+				alert(myApp.JSON.stringify(induceProps));
+				alert(myApp.JSON.stringify(sampleProps));
+				return false;
+			}
+			for (key in induceObj) {
+				if (sampleObj.hasOwnProperty(key)) {
+					if(induceObj[key].constructor != sampleObj[key].constructor){
+						//alert("Return false: Property name is different constructor");
+						return false;
+					}
+					switch(induceObj[key].constructor){
+						case Object:
+							if(!sameProps( induceObj[key], sampleObj[key])){
+								//alert("Return false: Sub object does not validate");
+								return false;
+							}
+							break;
+						case Array:
+							if(!sameKeys( induceObj[key], sampleObj[key])){
+								//alert("Return false: Array does not match up");
+								return false;
+							}
+							break;
+						default:
+							break; //do nothing
+					}
+				} else {
+					//alert("Return false: Does not have same property");
+					return false;
+				}
+			}
+		} catch(_err){
+			alert("sameProps 51489: " + _err);
+			return false;
+		}
         // Seems OK
         return true;
     }
@@ -379,28 +396,29 @@
     //  ARRAY TOOLS
     //-----------------------------------------------------------------------------------
     function sameKeys(induceArr, sampleArr){
-        // Note: we don't care about array length!
-        for (key in induceArr) {
-             // we can’t have different types of contructors in arrays
-             // but the array may be longer (That what arrays are for!)
-            if(induceArr[key].constructor == sampleArr[0].constructor){
-                switch(induceArr[key].constructor){
-                    case Object:
+        var arrlen = induceArr.length;
+		for (var key = 0; key < arrlen; key++) {
+			// we can’t have different types of contructors in arrays
+            // but the array may be longer (That what arrays are for!)
+            if(typeof(induceArr[key]) == typeof(sampleArr[0])){
+                switch(typeof(induceArr[key])){
+                    case "object":
                         if(!sameProps( induceArr[key], sampleArr[0])){
                             return false;
                         }
                         break;
-                    case Array:
+                    case "array":
                         if(!sameKeys( induceArr[key], sampleArr[0])){
                             return false;
                         }
                         break;
                     default:
-                        alert(induceArr[key].constructor);
                         //do nothing
                 }
-            } else { return false; }
-        }
+            } else {
+            	return false;
+            }
+		}
         // Seems OK
         return true;
     }
@@ -419,7 +437,7 @@
     The advantage of this approach is that it works event while InDesign is locked in a modal state...
     https://forums.adobe.com/message/3180866
     */
-    
+
     function visitURL(/*str*/ url) {
          var isMac = (File.fs == "Macintosh"),
               fName = 'tmp' + (+new Date()) + (isMac ? '.webloc' : '.url'),
@@ -445,7 +463,7 @@
          f.remove();
          return true;
     }
-    
+
     function getHelp(){
         visitURL("http://coverbuilder.brunoherfst.com/faq/");
     }

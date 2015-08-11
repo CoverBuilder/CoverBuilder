@@ -1,6 +1,6 @@
 // CoverBuilder UI
 // Bruno Herfst 2014-2015
-// Version 2.0.3
+// Version 2.1
 
 (function() {
     //////////////
@@ -436,8 +436,8 @@
                      wrap: myApp.NumCon.NaN20(parseFloat(myWrap.text)),
                      inExCludeWrap: myApp.NumCon.NaN20(parseFloat(wrapDropdown.selection)),
                      margin: MarginObj,
-                     measureUnit: myApp.NumCon.NaN20(parseFloat(mminch.selection))
-            };
+                     measureUnit: myApp.NumCon.NaN20(parseFloat(mminch.selection)),
+                     resolved: false };
         }
 
         function loadUIdata(thisC){
