@@ -11,8 +11,9 @@
 
 	<files>
 		<file source="CoverBuilder_icon_22x24.png" destination="$ExtensionSpecificEMStore" />
-		<file source="CoverBuilder" platform="mac" destination="$indesign/Scripts/startup scripts" products="InDesign" file-type="ordinary" shared = "true"/>
-		<file source="CoverBuilder" platform="win" destination="$indesign\Scripts\startup scripts" products="InDesign" file-type="ordinary" shared = "true"/>
+		<file source="CoverBuilder" platform="mac" destination="$indesign/Scripts/startup scripts" products="InDesign"   file-type="ordinary" shared = "true"/>
+		<file source="CoverBuilder" platform="win" destination="$indesign\Scripts\startup scripts" products="InDesign32" file-type="ordinary" shared = "true"/>
+		<file source="CoverBuilder" platform="win" destination="$indesign\Scripts\startup scripts" products="InDesign64" file-type="ordinary" shared = "true"/>
 	</files>
 
 	<description>
