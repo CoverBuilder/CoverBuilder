@@ -261,8 +261,8 @@
 		try{
 			// Objects are bigger as long as they have the requested keyNames
 			if ( induceProps.length != sampleProps.length ) {
-				alert(myApp.JSON.stringify(induceProps));
-				alert(myApp.JSON.stringify(sampleProps));
+				//alert(myApp.JSON.stringify(induceProps));
+				//alert(myApp.JSON.stringify(sampleProps));
 				return false;
 			}
 			for (key in induceObj) {
