@@ -21,7 +21,7 @@
     //////////////
     function getBookTitleUI(){
         var thisTitle = null;
-        var bookTitleUI = app.dialogs.add({name:String(myApp.Localise.Meta['WhatIsTheTitleOfThisBook']),canCancel:true}); 
+        var bookTitleUI = app.dialogs.add({name:String(myApp.Localise.Meta['WhatIsTheTitleOfThisBook']),canCancel:true});
         with(bookTitleUI){
             with(dialogColumns.add()){
                 var titleEditField = textEditboxes.add({editContents:"", minWidth:200});
@@ -40,8 +40,8 @@
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
         if(C != null){
             var myType = "_CVR_";
-            var myW    = C.width;
-            var myH    = "x" + C.height;
+            var myH    = C.height;
+            var myW    = "x" + C.width;
             var myS    = "x" + Math.floor(C.spine);
         } else { // Not a cover
             var myType = "_TXT_";
@@ -64,7 +64,7 @@
         booktitle = booktitle.replace(/[^a-zA-Z0-9]/g, "");
 
         // Create temp-file with the right name
-        var fileName = booktitle + myType + myW + myH + myS + "_MU00.indd";
+        var fileName = booktitle + myType + myH + myW + myS + "_MU00.indd";
         var tempfile = File(myApp.PathTo.settingsFolder + fileName);
         myCover.save(tempfile);
 
