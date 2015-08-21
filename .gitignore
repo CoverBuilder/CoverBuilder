@@ -8,3 +8,5 @@ Installer/CoverBuilder/INDD_LIB/Publisher_PenguinPuffin.indl
 Installer/CoverBuilder/Plugins/Grids.jsxinc
 
 Installer/CoverBuilder/Plugins/Barcode.jsxinc
+
+Installer/CoverBuilder/Plugins/Export.jsxinc
