@@ -101,7 +101,7 @@
 
                     var hingeOrScoreString = String(myApp.Localise.UI['Hinge']) + "/" + String(myApp.Localise.UI['Score']) + ":";
                     var hingeDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- "+hingeOrScoreString,"+ "+hingeOrScoreString]);
-                    hingeDropdown.selection = 0;
+                    hingeDropdown.selection = 1;
                     var myHinge = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
                     var wrapDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- " + String(myApp.Localise.UI['Wrap']) + ":",

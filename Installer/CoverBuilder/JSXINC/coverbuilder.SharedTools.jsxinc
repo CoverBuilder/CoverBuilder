@@ -20,8 +20,8 @@
         };
 
     var PresetObj = {"presets": [
-            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false},
-            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:0, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false}
+            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false},
+            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false}
         ]};
 
     //-----------------------------------------------------------------------------------
