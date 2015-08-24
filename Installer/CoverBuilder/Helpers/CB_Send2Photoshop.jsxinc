@@ -19,15 +19,16 @@
     // privates //
     //////////////
 
-    function coverBuilderPS(myApp,C,addSpine){
+    function coverBuilderPS(myApp, C, addSpine, booktitle){
         app.bringToFront();
         var builder = $.evalFile(new File(myApp.Module.PSbuild));
-        builder.startBuilding(myApp,C,addSpine);
+        builder.startBuilding(myApp,C,addSpine, booktitle);
     }
 
-    function CreateBridgeTalkMessage(myApp, C, addSpine) {
+    function CreateBridgeTalkMessage(myApp, C, addSpine, booktitle) {
+
         var script  = coverBuilderPS.toString() + "\r";
-            script += "coverBuilderPS("+myApp.JSON.stringify(myApp)+","+ myApp.JSON.stringify(C)+","+addSpine.toString()+");";
+            script += "coverBuilderPS("+myApp.JSON.stringify(myApp)+","+ myApp.JSON.stringify(C)+","+addSpine.toString()+","+"'"+booktitle.toString()+"'"+");";
 
         var bt = new BridgeTalk();
             bt.target = "photoshop";
@@ -40,6 +41,8 @@
 
     function send2photoshop(myApp){
         var myCover = myApp.Tools.getActiveCover(myApp, true);
+        var booktitle = myCover.metadataPreferences.documentTitle.toString().replace(/[^a-zA-Z0-9]/g, "");
+
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
         var addSpine = true; // It is nice we can send a spread or page to photoshop
 
@@ -80,7 +83,7 @@
             myApp.Tools.setRuler(myApp, myCover,myOldRulers);
         }
         // We have a valid Cover object
-        CreateBridgeTalkMessage(myApp,C,addSpine);
+        CreateBridgeTalkMessage(myApp, C, addSpine, booktitle);
     }
 
     ////////////
