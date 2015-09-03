@@ -4,11 +4,9 @@
 
     CB_Send2Photoshop.jsxinc        (A CoverBuilder Helper Script)
     An InDesign CS6 Javascript      (Tested in CS6)
-    Version 1.1.1
+    Version 1.1.2
 
     Bruno Herfst 2014
-
-    // TODO ask for PPI
 
 --------------------------------------------
 
@@ -18,7 +16,49 @@
     //////////////
     // privates //
     //////////////
-
+    
+    function send2photoshopUI(myApp, initPPI){
+        // returns PPI or 0 if the user presses cancel
+        // if initPPI is set to 0 this function will return the standard DPI
+        
+        function finalPPI(myPPI){
+            if(myPPI <= 0){
+                if(!isNaN(myApp.Settings.standardPPI)){
+                    myPPI = parseInt(myApp.Settings.standardPPI);
+                }
+                if(myPPI <= 0){
+                    myPPI = 300;
+                }
+            }
+            return myPPI;
+        }
+        
+        var myPPI = parseInt(initPPI);
+        var askPPI = myApp.Settings.askForPPI || false;
+        
+        if(!askPPI){
+            // No need to ask, let's return the setting
+            return finalPPI(0);
+        }
+        
+        var  myDialog  = app.dialogs.add({name:"Send to Photoshop", canCancel:true});
+        with(myDialog){
+            with(dialogColumns.add()){
+               with(dialogRows.add()){
+                   staticTexts.add({staticLabel: "PPI: "});
+                   var ppiinput = integerEditboxes.add({editContents:String(myPPI)});
+               }
+            }
+        }
+        
+        if(myDialog.show() == true){
+            return finalPPI(parseInt(ppiinput.editContents));
+        } else {
+            // user pressed cancel
+            return 0;
+        }
+    }
+    
     function coverBuilderPS(myApp, C, addSpine, booktitle){
         app.bringToFront();
         var builder = $.evalFile(new File(myApp.Module.PSbuild));
@@ -83,7 +123,14 @@
             myApp.Tools.setRuler(myApp, myCover,myOldRulers);
         }
         // We have a valid Cover object
-        CreateBridgeTalkMessage(myApp, C, addSpine, booktitle);
+        try{
+            C.ppi = send2photoshopUI(myApp, C.ppi);
+        } catch(_err){
+            alert(_err);
+        }
+        if(C.ppi > 0){
+            CreateBridgeTalkMessage(myApp,C,addSpine);
+        } // else user canceled
     }
 
     ////////////
