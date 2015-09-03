@@ -129,7 +129,7 @@
             alert(_err);
         }
         if(C.ppi > 0){
-            CreateBridgeTalkMessage(myApp,C,addSpine);
+            CreateBridgeTalkMessage(myApp, C, addSpine, booktitle);
         } // else user canceled
     }
 
