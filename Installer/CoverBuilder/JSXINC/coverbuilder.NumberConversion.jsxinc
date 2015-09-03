@@ -35,18 +35,21 @@
         switch (mUnits) {
             case 0:
             case "mm":
+            case String(myApp.Localise.UI['Mm']):
             case "MILLIMETERS":
             case 2053991795: //mm
                 return 0;
                 break;
             case 1:
             case "inch":
+            case String(myApp.Localise.UI['Inch']):
             case "INCHES":
             case 2053729891: //inch
                 return 1;
                 break;
             case 2:
             case "pt":
+            case String(myApp.Localise.UI['Pt']):
             case "POINTS":
             case 2054188905: //pt
                 return 2;

@@ -23,7 +23,7 @@
             {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false},
             {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false}
         ]};
-
+               
     //-----------------------------------------------------------------------------------
     //  C (COVER OBJECT) TOOLS
     //-----------------------------------------------------------------------------------
@@ -45,19 +45,19 @@
                         if(inddMU){
                             return 2053991795;
                         }
-                        return "mm";
+                        return String(myApp.Localise.UI['Mm']);
                         break;
                     case 1:
                         if(inddMU){
                             return 2053729891;
                         }
-                        return "inch";
+                        return String(myApp.Localise.UI['Inch']);
                         break;
                     case 2:
                         if(inddMU){
                             return 2054188905;
                         }
-                        return "pt";
+                        return String(myApp.Localise.UI['Pt']);
                         break;
                     default:
                         alert("getMeasurementUnits could not find unit from " + munit);
@@ -67,19 +67,19 @@
             case "string":
                 // We need to return a number
                 switch(C.toLowerCase()) {
-                    case "mm":
+                    case String(myApp.Localise.UI['Mm']):
                         if(inddMU){
                             return 2053991795;
                         }
                         return 0;
                         break;
-                    case "inch":
+                    case String(myApp.Localise.UI['Inch']):
                         if(inddMU){
                             return 2053729891;
                         }
                         return 1;
                         break;
-                    case "pt":
+                    case String(myApp.Localise.UI['Pt']):
                         if(inddMU){
                             return 2054188905;
                         }
@@ -94,7 +94,7 @@
                 alert("Something went wrong! \n Could not find unit from " + C);
                 return null;
         }
-    }
+    }   
 
     function resolveSizes(myApp, C){
         // This function takes the C object and resolves all the sizes

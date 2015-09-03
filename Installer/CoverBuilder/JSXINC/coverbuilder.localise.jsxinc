@@ -70,10 +70,10 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                    nl: "Opslaan Als...",
                    fr: "Enregistrer Sous..." },
 
-        SendToPhotoshop : { en: "Send to Photoshop",
-                            de: "Senden an Photoshop",
-                            nl: "Stuur naar Photoshop",
-                            fr: "Envoyer à Photoshop" },
+        SendToPhotoshop : { en: "Send to Photoshop...",
+                            de: "Senden an Photoshop...",
+                            nl: "Stuur naar Photoshop...",
+                            fr: "Envoyer à Photoshop..." },
 
         Export : { en: "Export...",
                    de: "Exportiere...",
