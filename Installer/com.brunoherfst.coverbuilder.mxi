@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
-<macromedia-extension name = "CoverBuilder" id = "com.brunoherfst.coverbuilder" requires-restart = "true" version = "2.9.8" icon = "CoverBuilder_icon_22x24.png">
+<macromedia-extension name="CoverBuilder" id="com.brunoherfst.coverbuilder" requires-restart="true" version="2.9.8" icon="CoverBuilder_icon_22x24.png">
 
-	<author name = "Bruno Herfst" />
-	<update url = "https://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
+	<author name="Bruno Herfst" />
+	<update url="https://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
 
 	<products>
-		<product name = "InDesign"   primary = "true" version = "7" />
-		<product name = "InDesign32" primary = "true" version = "7" />
-		<product name = "InDesign64" primary = "true" version = "7" />
+		<product name="InDesign"   version="7" />
+		<product name="InDesign32" version="7" />
+		<product name="InDesign64" version="7" />
 	</products>
 
 	<files>
 		<file source="CoverBuilder_icon_22x24.png" destination="$ExtensionSpecificEMStore" />
-		<file source="CoverBuilder/" platform="mac" destination="$indesign/Scripts/startup scripts/" file-type="ordinary" shared = "true"/>
+		<file source="CoverBuilder/" destination="$indesign/Scripts/startup scripts/" file-type="ordinary" shared="true" />
 	</files>
 
 	<description>
