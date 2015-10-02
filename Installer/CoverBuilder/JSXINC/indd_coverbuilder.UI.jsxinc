@@ -177,16 +177,16 @@
             myButtonGroup.alignment = "right";
 
             //register button
-            var helpBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], String(myApp.Localise.UI['Help']) );
+            var helpBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Help']) );
                 helpBut.onClick = function () {
                     myApp.STools.getHelp();
                 }
 
             //save load preset button
-            var presetBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], savePS );
+            var presetBut = myButtonGroup.add ("button", undefined, savePS );
             //OK CANCEL buttons
-            var cancelBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
-            var buildBut = myButtonGroup.add ("button", [0,0,unitWidthCombo,unitHeight], String(myApp.Localise.UI['Ok']), {name:"ok"} );
+            var cancelBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
+            var buildBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Ok']), {name:"ok"} );
 
         ///////////////////////////////////////////////////////////////////////////// END WINDOW
 
@@ -655,11 +655,12 @@
             this.outside_right.characters = 6;
 
             this.getSettings = function(){
+                alert(myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.top.text)),3           ));
                 return {
-                    top             : myApp.NumCon.NaN20(parseFloat(this.top.text)),
-                    outside_right   : myApp.NumCon.NaN20(parseFloat(this.outside_right.text)),
-                    inside_left     : myApp.NumCon.NaN20(parseFloat(this.inside_left.text)),
-                    bottom          : myApp.NumCon.NaN20(parseFloat(this.bottom.text)),
+                    top             : myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.top.text)),3           ),
+                    outside_right   : myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.outside_right.text)),3 ),
+                    inside_left     : myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.inside_left.text)),3   ),
+                    bottom          : myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.bottom.text)),3        ),
                     facing          : theseMargins.facing,
                     units           : parseInt(this.unit.selection),
                     linked          : this.link.value,
