@@ -13,7 +13,7 @@
 
 	<files>
 		<file source="CoverBuilder_icon_22x24.png" destination="$ExtensionSpecificEMStore" />
-		<file source="CoverBuilder/" destination="$indesign/Scripts/startup scripts/" file-type="ordinary" shared="true" />
+		<file source="CoverBuilder" destination="$indesign/Scripts/startup scripts/" file-type="ordinary" shared="true" />
 	</files>
 
 	<description>

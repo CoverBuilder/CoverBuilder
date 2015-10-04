@@ -1,4 +1,4 @@
-// CoverBuilder Slugs V2.0
+// CoverBuilder Slugs V2.1
 // Bruno Herfst 2014 - 2015
 
 (function() {
@@ -54,7 +54,7 @@
 
     function placeSizesInSlug(myApp, C, myCover){
         removeSlugMeasurements(myApp, myCover); // Make sure there are no old items
-        
+
         var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements");
         var regLayer = myApp.Tools.getAndSelectLayer(myCover, "Registration");
         var myLock = layerUnLockToggle(regLayer, true);
@@ -83,11 +83,18 @@
             try{
                 measureParagraphStyle.appliedFont = String(myApp.Settings.registration_font);
             } catch (e) {
-                alert("Registration Font \n"+e.description);
                 try{
-                    measureParagraphStyle.appliedFont = "Helvetica"; // try a standard one
+                    // Let the user pick a font
+                    var myAltFont = String(myApp.UI.getFontName(myApp).fontName);
+                    measureParagraphStyle.appliedFont = myAltFont;
+                    // we need to save this font in Settings, so this dialog will not come up next time
+                    myApp.Settings.registration_font = myAltFont;
+                    var fSettings = File(myApp.PathTo.settings);
+                    if(fSettings.exists){
+                        myApp.Settings = myApp.JSON.saveFile(myApp, fSettings, myApp.Settings);
+                    }
                 } catch (e) {
-                    //User already notified
+                    // Don't bug the user, font will be missing in Document
                 }
             }
             measureParagraphStyle.pointSize = "8pt";
@@ -196,7 +203,7 @@
         }
         return removedItems;
     }
-    
+
     function removeSlugMeasurements(myApp, myCover){
         try{
             removeFromMasterSpreads(myApp, myCover,["CB-WxH","CB-spine","CB-cover"],["forcePageHeightGroup","pageHeight","pageWidth"]);

@@ -1,6 +1,6 @@
 // CoverBuilder UI
 // Bruno Herfst 2014-2015
-// Version 2.1
+// Version 3
 
 (function() {
     //////////////
@@ -799,10 +799,54 @@
     }
     //--------------------------------------------------------------------------------------------------- END MARGIN WINDOW
 
+    function getFontName(myApp){
+        // This funtion is written by Marijan Tompa (thank you tomaxxi)
+        // https://indisnip.wordpress.com/2010/08/04/get-font-styles-from-font-family/
+        Array.prototype.unique = function (){
+            var r = new Array();
+            o:for(var i = 0, n = this.length; i < n; i++){
+                for(var x = 0, y = r.length; x < y; x++){
+                    if(r[x]==this[i]) continue o;}
+                r[r.length] = this[i];}
+            return r;
+        }
+        Array.prototype.findIn = function(search){
+            var r = Array();
+            for (var i=0; i<this.length; i++)
+                if (this[i].indexOf(search) != -1){
+                    r.push(this[i].substr(this[i].indexOf("\t") + 1, this[i].length));
+                }
+            return r;
+        }
+
+        var myFonts = app.fonts.everyItem();
+        var myFontsList = myFonts.fontFamily.unique();
+            myFontsList.unshift("- Select Font Family -");
+
+        var myWin = new Window('dialog', 'My Fonts');
+        myWin.orientation = 'row';
+        with(myWin){
+            myWin.sText = add('statictext', undefined, 'Select Font for Slug:');
+            myWin.myFontDrop = add('dropdownlist',undefined,undefined,{items:myFontsList});
+            myWin.myFontDrop.selection = 0;
+            myWin.btnOK = add('button', undefined, 'OK');
+            };
+        myWin.center();
+        var myWindow = myWin.show();
+
+        if(myWindow == true && myWin.myFontDrop.selection.index != 0){
+            var myFont = myWin.myFontDrop.selection;
+            var myFontStyles = myFonts.name.findIn(myFont);
+        }
+
+        return {fontName : myFont, fontStyles : myFontStyles};
+    }
+
     ////////////
     // expose //
     ////////////
       return {
-        CoverOrder : CoverOrder
+        CoverOrder  : CoverOrder,
+        getFontName : getFontName
     };
 })();
