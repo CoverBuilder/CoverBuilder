@@ -63,7 +63,7 @@
 
             var whiteSpace = globalGroup.add ("statictext", [0,0,(unitWidthLong*2)+unitWidthShort+(inbetween*2),unitHeight], "");
 
-            var mminch = globalGroup.add ("dropdownlist", [0,0,unitWidthShort,unitHeight], [String(myApp.Localise.UI['Mm']),String(myApp.Localise.UI['Inch'])]);
+            var mminch = globalGroup.add ("dropdownlist", [0,0,unitWidthShort,unitHeight], [String(myApp.Localise.UI['Mm']),String(myApp.Localise.UI['Inch']),String(myApp.Localise.UI['Pt'])]);
             mminch.selection = 0;
 
         /////////////////////////////////////////////////////////////////////////////

@@ -65,11 +65,10 @@
         }
         // !! This function expects the document rulers to be set in the right measure units
         for(var page in MarginObj){
-            MarginObj[page].top           = myDoc.pages.item(0).marginPreferences.top;
-            MarginObj[page].outside_right = myDoc.pages.item(0).marginPreferences.right;
-            MarginObj[page].inside_left   = myDoc.pages.item(0).marginPreferences.left;
-            MarginObj[page].bottom        = myDoc.pages.item(0).marginPreferences.bottom;
-            MarginObj[page].bottom        = myDoc.pages.item(0).marginPreferences.bottom;
+            MarginObj[page].top           = myApp.NumCon.doRound( myDoc.pages.item(0).marginPreferences.top    , 3);
+            MarginObj[page].outside_right = myApp.NumCon.doRound( myDoc.pages.item(0).marginPreferences.right  , 3);
+            MarginObj[page].inside_left   = myApp.NumCon.doRound( myDoc.pages.item(0).marginPreferences.left   , 3);
+            MarginObj[page].bottom        = myApp.NumCon.doRound( myDoc.pages.item(0).marginPreferences.bottom , 3);
             MarginObj[page].units         = parseInt(cUnit);
         }
         return MarginObj;
