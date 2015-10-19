@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
-<macromedia-extension name="CoverBuilder" id="com.brunoherfst.coverbuilder" requires-restart="true" version="2.9.8" icon="CoverBuilder_icon_22x24.png">
+<macromedia-extension name="CoverBuilder" id="com.brunoherfst.coverbuilder" requires-restart="true" version="2.9.9" icon="CoverBuilder_icon_22x24.png">
 
 	<author name="Bruno Herfst" />
 	<update url="https://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />

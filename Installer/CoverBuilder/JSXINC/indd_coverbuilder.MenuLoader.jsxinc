@@ -1,23 +1,21 @@
 // CoverBuilder Helpers
-// Bruno Herfst 2014
-// Version 2.0.2
+// Bruno Herfst 2014 - 2015
+// Version 3.1
 
 (function() {
     //////////////
     // privates //
     //////////////
-    // Install and/or update the menu/submenu and connect
-    // the corresponding menu actions if script files are available
-    // http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
-    function loadHelperMenu (myApp, Menu, MENU_NAME) {
 
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // NEW COVER INSTALLER
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // START NEW COVER INSTALLER
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -    
+    function addNewCoverMenu(myApp){
         try{
+            var ID_APP_MENU = app.menus.item( '$ID/Main' );
             var cbHandlers = {
                 'onInvoke' : function(){
-                    // prevent undo // Our script assumes CS5+
+                    // prevent undo // Our script is CS5+
                     try{
                         app.doScript(myApp.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
                     } catch(error){
@@ -26,130 +24,204 @@
                 }};
 
             var cbMenuInstaller = cbMenuInstaller||
-            (function(mnuHandlers) {
+            (function(CB_MENU_Handlers) {
 
-                var mnuAction = app.scriptMenuActions.add("Cover...");
+                var CB_MENU_Action = app.scriptMenuActions.add("Cover...");
                 var ev;
-                for( ev in mnuHandlers )
+                for( ev in CB_MENU_Handlers )
                     {
-                    mnuAction.eventListeners.add(ev,mnuHandlers[ev]);
+                    CB_MENU_Action.eventListeners.add(ev,CB_MENU_Handlers[ev]);
                     }
 
-                var fileMenu = app.menus.item("$ID/Main").submenus.item("$ID/&"+String(myApp.Localise.Menu['File'])).submenus.item("$ID/&"+String(myApp.Localise.Menu['New']));
+                var fileMenu = ID_APP_MENU.submenus.item("$ID/&"+String(myApp.Localise.Menu['File'])).submenus.item("$ID/&"+String(myApp.Localise.Menu['New']));
                 var refItem = fileMenu.menuItems.item("$ID/"+String(myApp.Localise.Menu['Document']));
 
-                fileMenu.menuItems.add(mnuAction,LocationOptions.after,refItem);
+                fileMenu.menuItems.add(CB_MENU_Action,LocationOptions.after,refItem);
 
                 return true;
             })(cbHandlers);
         } catch (e) {
-            // Don't tell the germans
+            // Don't tell anyone
         }
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // END NEW COVER INSTALLER
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    }
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // END NEW COVER INSTALLER
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
+    function removeSubMenu(myApp, MY_MENU){
+        if(!MY_MENU.isValid){
+            alert("Submenu " + MY_MENU.name + " does not resolve to object.");
+            return;
+        }
+        
+        // This menu cleans out all menu items
+        // First deal with sub menus
+        var subMenuCount = MY_MENU.submenus.count();
+        for (var i = subMenuCount - 1; i >= 0; i--){
+            // Deal with sub-sub menus recursively
+            var subMenu = MY_MENU.submenus[i];
+            var subSubMenuCount = subMenu.submenus.count();
+            if(subSubMenuCount > 0){
+                try{
+                    removeSubMenu(myApp, subMenu);
+                } catch(e){
+                    alert("Could not remove submenu " + MY_MENU.name +"/n" + e.description);
+                }
+            }
+        }
 
+        var allItemsLen = MY_MENU.menuElements.count();
+        for (var j = allItemsLen - 1; j >= 0; j--){
+            try{
+                app.scriptMenuActions.item(MY_MENU.menuElements[j].name).remove();
+            } catch(e) { }
+            try{
+                MY_MENU.menuElements[j].remove();
+            } catch(e) { }
+        }
+
+        try{
+            MY_MENU.submenus.everyItem().remove();
+        } catch(e) { }
+        try{
+            MY_MENU.menuSeparators.everyItem().remove();
+        } catch(e) { }
+        try{
+            MY_MENU.menuElements.everyItem().remove();
+        } catch(e) { }
+        try{
+            MY_MENU.menuItems.everyItem().remove();
+        } catch(e) { }
+        try{
+            MY_MENU.eventListeners.everyItem().remove();
+        } catch(e) { }
+        try{
+            MY_MENU.events.everyItem().remove();
+        } catch(e) { }
+        try{
+            MY_MENU.everyItem().remove();
+        } catch(e) { }
+        try{
+            MY_MENU.remove();
+        } catch(e) { }
+    }
+    
+    function addCBMenu(myApp, Menu, MENU_NAME){
+        // Install and/or update the menu/submenu and connect the corresponding menu actions
+        // http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
+        // ---
         // Settings and constants
         // ---
-        var LO_END = LocationOptions.atEnd,
-            INDESIGN_ROOT_MENU = app.menus.item( '$ID/Main' ),
-            FEATURE_LOCATION_PATH = (function() {
-                var f;
-                try{ f=app.activeScript; }
-                catch(_){ f=File(_.fileName); }
-                return f.parent.parent + '/';
-            })();
-
-        // (Re)set the actions
-        // Note: checks also whether script files are available
-        // ---
-        var t, f, i = Menu.length;
-        while( i-- ) {
-            t = Menu[i];
-            if( t.separator ) continue;
-            if(t.fileName.constructor == Function) {
-                // The script file is a function => create the corresponding action
+        var ID_APP_MENU = app.menus.item( '$ID/Main' );
+        var AT_END = LocationOptions.atEnd;
+        try {
+            if(Menu.length > 0){
+                CB_MENU = ID_APP_MENU.submenus.add(
+                    MENU_NAME,
+                    LocationOptions.before,
+                    ID_APP_MENU.submenus.lastItem()
+                );
+                // (Re)set the actions
+                // Note: checks also whether script files are available
                 // ---
-                function makeFun(fn, myApp) {
-                    return function () {
-                        return fn(myApp);
+                var menuItem, i = Menu.length;
+                while( i-- ) {
+                    menuItem = Menu[i];
+                    if( menuItem.separator ) continue;
+
+                    if(menuItem.fun.constructor == Function) {
+                        // The script file is a function => create the corresponding action
+                        // ---
+                        function makeFun(myApp, fun) {
+                            return function () {
+                                return fun(myApp);
+                            }
+                        }
+                        var fun = makeFun(myApp, menuItem.fun);
+
+                        (menuItem.action = app.scriptMenuActions.add( menuItem.caption )).addEventListener('onInvoke', fun);
+
                     }
                 }
+                
+                // Build menu
+                // ---
+                // Now, let's fill CB_MENU with respect to Menu' order
+                // (Possible submenus are specified in .subName and created on the fly)
+                // ---
+                var s,
+                    n = Menu.length,
+                    subs = {},
+                    sub = null;
+                for( i=0 ; i < n ; ++i ) {
+                    menuItem = Menu[i];
 
-                fun = makeFun(t.fileName, myApp);
+                    // Target the desired submenu
+                    // ---
+                    sub = (s=menuItem.subName) ? ( subs[s] || (subs[s]=CB_MENU.submenus.add( s, AT_END )) ) : CB_MENU;
 
-                (t.action = app.scriptMenuActions.add( t.caption )).
-                    addEventListener('onInvoke', fun);
+                    // Connect the related action OR create a separator
+                    // ---
+                    if( menuItem.separator )
+                        sub.menuSeparators.add( AT_END );
+                    else
+                        sub.menuItems.add( menuItem.action, AT_END );
                 }
-            else if( (f=File(FEATURE_LOCATION_PATH + t.fileName)).exists ) {
-                // The script file exists => create the corresponding action
-                // ---
-                (t.action = app.scriptMenuActions.add( t.caption )).addEventListener('onInvoke', f);
-            } else {
-                // The script file does not exist => remove that feature
-                // ---
-                Menu.splice(i,1);
             }
+        } catch (e) {
+            alert(e);
         }
+    }
+    
+    function removeCBMenu(myApp, MENU_NAME){
+        try{
+            var ID_APP_MENU = app.menus.item( '$ID/Main' );
+            if(!ID_APP_MENU.isValid){
+                alert("InDesign main menu $ID/Main does not resolve into object.");
+            }
+            var ALLMAINMENUS = ID_APP_MENU.submenus.count();
+            for (var AMM = ALLMAINMENUS - 1; AMM >= 0; AMM--){
+                var old_Menu = ID_APP_MENU.submenus[AMM].name;
+                //alert(old_Menu);
+                if (old_Menu.indexOf("CoverBuilder") !=-1) {
+                    removeSubMenu(myApp, ID_APP_MENU.submenus[AMM]);
+                }
+            }
+             
+            var CB_MENU = ID_APP_MENU.submenus.itemByName( MENU_NAME );
 
+            if(CB_MENU.isValid){
+                removeSubMenu(myApp, CB_MENU);
+                
+                for(var key in CB_MENU.properties) {
+                    try{
+                        delete CB_MENU.properties[key];
+                    } catch(e) {  alert("Cant delete property: " + CB_MENU.properties[key] + "\n" + e)  }
+                }
+            }
+        } catch (e) {
+            alert("Could not clear CoverBuilder menu\n" + e);
+        }
+    }
+
+    function loadMenus (myApp, Menu, MENU_NAME) {
         // ---
-        // Create/reset the custom menu container *if necessary*
         // Note:  menus/submenus are application-persistent
         // ---
-        var mnu = INDESIGN_ROOT_MENU.submenus.itemByName( MENU_NAME );
-        if( !mnu.isValid )
-            {
-            // Our custom menu hasn't been created yet
-            // ---
-            if( !Menu.length ) return;
-            mnu = INDESIGN_ROOT_MENU.submenus.add(
-                MENU_NAME,
-                LocationOptions.after,
-                INDESIGN_ROOT_MENU.submenus.item( '$ID/&Window' )
-                );
-            }
-        else
-            {
-            // Our custom menu already exists, but we must clear
-            // any sub element in order to rebuild a fresh structure
-            // ---
-            mnu.menuElements.everyItem().remove();
-
-            // If Menu is empty, remove the menu itself
-            // ---
-            if( !Menu.length ){ mnu.remove(); return; }
-            }
-
-        // ---
-        // Now, let's fill mnu with respect to Menu' order
-        // (Possible submenus are specified in .subName and created on the fly)
-        // ---
-        var s,
-            n = Menu.length,
-            subs = {},
-            sub = null;
-        for( i=0 ; i < n ; ++i )
-            {
-            t = Menu[i];
-
-            // Target the desired submenu
-            // ---
-            sub = (s=t.subName) ?
-                ( subs[s] || (subs[s]=mnu.submenus.add( s, LO_END )) ) :
-                mnu;
-
-            // Connect the related action OR create a separator
-            // ---
-            if( t.separator )
-                sub.menuSeparators.add( LO_END);
-            else
-                sub.menuItems.add( t.action, LO_END );
-            }
+        removeCBMenu(myApp, MENU_NAME);
+        
+        addNewCoverMenu(myApp);
+        
+        if(myApp.Settings.add_CoverBuilder_Menu){
+            addCBMenu(myApp, Menu, MENU_NAME);
+        }
     }
+
     ////////////
     // expose //
     ////////////
       return {
-          loadHelperMenu : loadHelperMenu
+          loadMenus    : loadMenus,
+          addCBMenu    : addCBMenu,
+          removeCBMenu : removeCBMenu
     };
 })();

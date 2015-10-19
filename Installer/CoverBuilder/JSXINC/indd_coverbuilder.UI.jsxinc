@@ -9,6 +9,7 @@
     function CoverOrder(myApp, CoverObject){
         // The Cover Object this function will return
         var C = null;
+        var CURR_CBMU = 0; // Current Measurement Unit in CBMU
 
         var presetChange = true;
         var savePS    = String(myApp.Localise.UI['SavePreset']);
@@ -64,7 +65,7 @@
             var whiteSpace = globalGroup.add ("statictext", [0,0,(unitWidthLong*2)+unitWidthShort+(inbetween*2),unitHeight], "");
 
             var mminch = globalGroup.add ("dropdownlist", [0,0,unitWidthShort,unitHeight], [String(myApp.Localise.UI['Mm']),String(myApp.Localise.UI['Inch']),String(myApp.Localise.UI['Pt'])]);
-            mminch.selection = 0;
+            mminch.selection = CURR_CBMU;
 
         /////////////////////////////////////////////////////////////////////////////
         var minimalGroup = myWindow.add ("group");
@@ -284,9 +285,11 @@
                 presetBut.text = savePS;
                 //ask user if he wants to convert numbers
                 if(confirm(String(myApp.Localise.UIalert['Convert_numbers']))===true){
-                    convert2(mminch.selection.text);
+                    convert2(myApp, myApp.NumCon.cUnit(myApp, mminch.selection.text));
                 }
             }
+            // Keep track of current units
+            CURR_CBMU = myApp.NumCon.cUnit(myApp, mminch.selection.text);
         }
         myWidth.onChange = function () {
             presets.selection = 0;
@@ -479,6 +482,8 @@
                     foldDropdown.visible = false;
                 }
             }
+            
+            CURR_CBMU = thisC.measureUnit;
         }
 
         function formatPresetName(Preset){
@@ -539,31 +544,15 @@
             }
         }
 
-        function convert2(unit){
-            switch(unit){
-                case "mm":
-                    myWidth.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myWidth.text),2);
-                    myHeight.text   = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myHeight.text),2);
-                    mySpine.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(mySpine.text),2);
-                    myBleed.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myBleed.text),2);
-                    myFlapQB.text   = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myFlapQB.text),2);
-                    myHinge.text    = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myHinge.text),2);
-                    myFold.text     = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myFold.text),2);
-                    myWrap.text     = myApp.NumCon.doRound(myApp.NumCon.inch2mm(myWrap.text),2);
-                    break;
-                case "inch":
-                    myWidth.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myWidth.text),3);
-                    myHeight.text   = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myHeight.text),3);
-                    mySpine.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(mySpine.text),3);
-                    myBleed.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myBleed.text),3);
-                    myFlapQB.text   = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myFlapQB.text),3);
-                    myHinge.text    = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myHinge.text),3);
-                    myFold.text     = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myFold.text),3);
-                    myWrap.text     = myApp.NumCon.doRound(myApp.NumCon.mm2inch(myWrap.text),3);
-                    break;
-                default:
-                    alert(String(myApp.Localise.UIalert['Unable_to_convert_values']));
-            }
+        function convert2(myApp, unit){
+            myWidth.text    = myApp.NumCon.convert(myApp, parseFloat(myWidth.text  ), CURR_CBMU, unit, 3);
+            myHeight.text   = myApp.NumCon.convert(myApp, parseFloat(myHeight.text ), CURR_CBMU, unit, 3);
+            mySpine.text    = myApp.NumCon.convert(myApp, parseFloat(mySpine.text  ), CURR_CBMU, unit, 3);
+            myBleed.text    = myApp.NumCon.convert(myApp, parseFloat(myBleed.text  ), CURR_CBMU, unit, 3);
+            myFlapQB.text   = myApp.NumCon.convert(myApp, parseFloat(myFlapQB.text ), CURR_CBMU, unit, 3);
+            myHinge.text    = myApp.NumCon.convert(myApp, parseFloat(myHinge.text  ), CURR_CBMU, unit, 3);
+            myFold.text     = myApp.NumCon.convert(myApp, parseFloat(myFold.text   ), CURR_CBMU, unit, 3);
+            myWrap.text     = myApp.NumCon.convert(myApp, parseFloat(myWrap.text   ), CURR_CBMU, unit, 3);
         }
 
         if(LoadCoverObject){
