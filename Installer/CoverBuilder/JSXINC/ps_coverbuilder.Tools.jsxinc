@@ -1,0 +1,263 @@
+// Tools for Photoshop
+// Photoshop helpers for CoverBuilder
+// Bruno Herfst 2016
+// Version 1.0
+
+(function() {
+    //////////////
+    // privates //
+    //////////////
+
+    //-----------------------------------------------------------------------------------
+    // APPLICATION TOOLS
+    //-----------------------------------------------------------------------------------
+
+    //-----------------------------------------------------------------------------------
+    // DOCUMENT TOOLS
+    //-----------------------------------------------------------------------------------
+    function makeGuide(pixelOffSet, orientation) {
+        /*
+        makeGuide function originally found at:
+        http://blogs.adobe.com/crawlspace/2006/05/installing_and_1.html
+        */
+        progressor.progress(currentStep += 1, totalStep);
+        var id8 = charIDToTypeID("Mk  ");
+        var desc4 = new ActionDescriptor();
+        var id9 = charIDToTypeID("Nw  ");
+        var desc5 = new ActionDescriptor();
+        var id10 = charIDToTypeID("Pstn");
+        var id11 = charIDToTypeID("#Rlt");
+        desc5.putUnitDouble(id10, id11, pixelOffSet); // integer
+        var id12 = charIDToTypeID("Ornt");
+        var id13 = charIDToTypeID("Ornt");
+        var id14 = charIDToTypeID(orientation); // "Vrtc", "Hrzn"
+        desc5.putEnumerated(id12, id13, id14);
+        var id15 = charIDToTypeID("Gd  ");
+        desc4.putObject(id9, id15, desc5);
+        executeAction(id8, desc4, DialogModes.NO);
+    }
+
+    function addCtoXMP(myApp, myCover, C){
+        try {
+            if(!app.documents.length) return;
+            if (ExternalObject.AdobeXMPScript == undefined) ExternalObject.AdobeXMPScript = new ExternalObject("lib:AdobeXMPScript");
+            var xmp = new XMPMeta( myCover.xmpMetadata.rawData);
+            var myNamespace = "http://brunoherfst.com/";
+            var myPrefix = "CoverBuilder:";
+            XMPMeta.registerNamespace(myNamespace, myPrefix);
+
+            if(!myApp.JSON.stringify){ //make sure JSON is loaded
+                myApp.JSON     = $.evalFile(new File(myApp.Module.JSON));
+            }
+            C.JSONstring = myApp.JSON.stringify(C);
+
+            xmp.setProperty(myNamespace, "Settings", String(C.JSONstring));
+            myCover.xmpMetadata.rawData = xmp.serialize();
+            return true;
+        } catch(e) {
+            alert("Failed to add settings to XMP\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  LAYER TOOLS
+    //-----------------------------------------------------------------------------------
+    function activeLayerMergeDown() {
+        // merge down
+        var id972 = charIDToTypeID("Mrg2");
+        executeAction(id972, undefined, DialogModes.NO);
+    }
+
+    function activeLayerDropShadow() {
+        //The charIDToTypeIDs need four chars( pad with spaces if needed)
+        var idsetd = charIDToTypeID("setd");
+        var desc21 = new ActionDescriptor();
+        var idnull = charIDToTypeID("null");
+        var ref11  = new ActionReference();
+        var idPrpr = charIDToTypeID("Prpr");
+        var idLefx = charIDToTypeID("Lefx");
+        ref11.putProperty(idPrpr, idLefx);
+        var idLyr = charIDToTypeID("Lyr ");
+        var idOrdn = charIDToTypeID("Ordn");
+        var idTrgt = charIDToTypeID("Trgt");
+        ref11.putEnumerated(idLyr, idOrdn, idTrgt);
+        desc21.putReference(idnull, ref11);
+        var idT = charIDToTypeID("T   ");
+        var desc22 = new ActionDescriptor();
+        var idgagl = charIDToTypeID("gagl");
+        var idAng = charIDToTypeID("#Ang");
+        desc22.putUnitDouble(idgagl, idAng, 90.000000);
+        var idScl = charIDToTypeID("Scl ");
+        var idPrc = charIDToTypeID("#Prc");
+        desc22.putUnitDouble(idScl, idPrc, 333.333333);
+        var idDrSh = charIDToTypeID("DrSh");
+        var desc23 = new ActionDescriptor();
+        var idenab = charIDToTypeID("enab");
+        desc23.putBoolean(idenab, true);
+        var idMd = charIDToTypeID("Md  ");
+        var idBlnM = charIDToTypeID("BlnM");
+        var idMltp = charIDToTypeID("Mltp");
+        desc23.putEnumerated(idMd, idBlnM, idMltp);
+        var idClr = charIDToTypeID("Clr ");
+        var desc24 = new ActionDescriptor();
+        var idRd = charIDToTypeID("Rd  ");
+        desc24.putDouble(idRd, 0.000000);
+        var idGrn = charIDToTypeID("Grn ");
+        desc24.putDouble(idGrn, 0.000000);
+        var idBl = charIDToTypeID("Bl  ");
+        desc24.putDouble(idBl, 0.000000);
+        var idRGBC = charIDToTypeID("RGBC");
+        desc23.putObject(idClr, idRGBC, desc24);
+        var idOpct = charIDToTypeID("Opct");
+        var idPrc = charIDToTypeID("#Prc");
+        desc23.putUnitDouble(idOpct, idPrc, 21.000000);
+        var iduglg = charIDToTypeID("uglg");
+        desc23.putBoolean(iduglg, true);
+        var idlagl = charIDToTypeID("lagl");
+        var idAng = charIDToTypeID("#Ang");
+        desc23.putUnitDouble(idlagl, idAng, 120.000000);
+        var idDstn = charIDToTypeID("Dstn");
+        var idPxl = charIDToTypeID("#Pxl");
+        desc23.putUnitDouble(idDstn, idPxl, 0.000000);
+        var idCkmt = charIDToTypeID("Ckmt");
+        var idPxl = charIDToTypeID("#Pxl");
+        desc23.putUnitDouble(idCkmt, idPxl, 9.000000);
+        var idblur = charIDToTypeID("blur");
+        var idPxl = charIDToTypeID("#Pxl");
+        desc23.putUnitDouble(idblur, idPxl, 250.000000);
+        var idNose = charIDToTypeID("Nose");
+        var idPrc = charIDToTypeID("#Prc");
+        desc23.putUnitDouble(idNose, idPrc, 0.000000);
+        var idAntA = charIDToTypeID("AntA");
+        desc23.putBoolean(idAntA, false);
+        var idTrnS = charIDToTypeID("TrnS");
+        var desc25 = new ActionDescriptor();
+        var idNm = charIDToTypeID("Nm  ");
+        desc25.putString(idNm, "Linear");
+        var idShpC = charIDToTypeID("ShpC");
+        desc23.putObject(idTrnS, idShpC, desc25);
+        var idlayerConceals = stringIDToTypeID("layerConceals");
+        desc23.putBoolean(idlayerConceals, true);
+        var idDrSh = charIDToTypeID("DrSh");
+        desc22.putObject(idDrSh, idDrSh, desc23);
+        var idLefx = charIDToTypeID("Lefx");
+        desc21.putObject(idT, idLefx, desc22);
+        executeAction(idsetd, desc21, DialogModes.NO);
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  DRAW TOOLS
+    //-----------------------------------------------------------------------------------
+    function drawLine( startXY, endXY, width ) {
+        // startXY : two element array of numbers for x,y start of line,
+        // endXY   : two element array of numbers for x,y endof line,
+        // width   : line width in pixels
+        // color   : uses foreground color
+
+        /* // SAMPLE USAGE
+
+        var startPoint = [118,434];
+        var endPoint = [335,434];
+        var lineWidth = 2;
+        drawLine( startPoint, endPoint, lineWidth );
+
+        */
+
+        var desc        = new ActionDescriptor();
+        var lineDesc    = new ActionDescriptor();
+        var startDesc   = new ActionDescriptor();
+        var endDesc     = new ActionDescriptor();
+
+        startDesc.putUnitDouble( charIDToTypeID('Hrzn'), charIDToTypeID('#Pxl'), startXY[0] );
+        startDesc.putUnitDouble( charIDToTypeID('Vrtc'), charIDToTypeID('#Pxl'), startXY[1] );
+        lineDesc.putObject(      charIDToTypeID('Strt'), charIDToTypeID('Pnt '), startDesc );
+        endDesc.putUnitDouble(   charIDToTypeID('Hrzn'), charIDToTypeID('#Pxl'), endXY[0] );
+        endDesc.putUnitDouble(   charIDToTypeID('Vrtc'), charIDToTypeID('#Pxl'), endXY[1] );
+        lineDesc.putObject(      charIDToTypeID('End '), charIDToTypeID('Pnt '), endDesc );
+        lineDesc.putUnitDouble(  charIDToTypeID('Wdth'), charIDToTypeID('#Pxl'), width );
+        desc.putObject(          charIDToTypeID('Shp '), charIDToTypeID('Ln  '), lineDesc );
+        desc.putBoolean(         charIDToTypeID('AntA'), true );
+        executeAction(           charIDToTypeID('Draw'), desc, DialogModes.NO );
+    };
+
+    //-----------------------------------------------------------------------------------
+    //  SELECTION TOOLS
+    //-----------------------------------------------------------------------------------
+    function select(myApp, topLeftX, topLeftY, topRightX, topRightY, bottomRightX, bottomRightY, bottomLeftX, bottomLeftY, unit, ppi) {
+        // Make a selection
+        var topLeftX     = myApp.NumCon.convertToPixels(myApp, topLeftX,     unit, ppi);
+        var topLeftY     = myApp.NumCon.convertToPixels(myApp, topLeftY,     unit, ppi);
+        var topRightX    = myApp.NumCon.convertToPixels(myApp, topRightX,    unit, ppi);
+        var topRightY    = myApp.NumCon.convertToPixels(myApp, topRightY,    unit, ppi);
+        var bottomRightX = myApp.NumCon.convertToPixels(myApp, bottomRightX, unit, ppi);
+        var bottomRightY = myApp.NumCon.convertToPixels(myApp, bottomRightY, unit, ppi);
+        var bottomLeftX  = myApp.NumCon.convertToPixels(myApp, bottomLeftX,  unit, ppi);
+        var bottomLeftY  = myApp.NumCon.convertToPixels(myApp, bottomLeftY,  unit, ppi);
+
+        var shapeRef = [
+            // Top Left X,Y
+            [topLeftX, topLeftY],
+            // Top Right X,Y
+            [topRightX, topRightY],
+            // Bottom Right X,Y
+            [bottomRightX, bottomRightY],
+            // Bottom Left X,Y
+            [bottomLeftX, bottomLeftY]
+        ];
+        myCover.selection.select(shapeRef);
+    }
+
+    //Delete selection then deselect
+    function deleteSelection(ShadowBool) {
+        progressor.progress(currentStep += 1, totalStep);
+        try{
+            if (ShadowBool) {
+                myCover.selection.copy();
+                myCover.selection.clear();
+                myCover.paste(true);
+                //myCover.layers[0].name = myCover.layers[1].name; //set your layer’s name the same
+                myCover.activeLayer = myCover.layers[0];
+                activeLayerDropShadow();
+
+                //select layer before merging //does not work?
+                //myCover.activeLayer = myCover.layers[0];
+                //myCover.activeLayer.select();
+
+                myCover.activeLayer = myCover.layers[0];
+                myCover.activeLayer.fillOpacity = 0;
+                myCover.activeLayer.blendMode = BlendMode.MULTIPLY;
+                myCover.activeLayer.merge();
+            } else {
+                myCover.selection.clear();
+            }
+        } catch(e){
+            // Keep going
+        }
+        myCover.selection.deselect();
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  COLOUR TOOLS
+    //-----------------------------------------------------------------------------------
+
+
+    ////////////
+    // expose //
+    ////////////
+    // Return an object exposed to the public
+    return {
+        // APPLICATION TOOLS
+        // DOCUMENT TOOLS
+        makeGuide             : makeGuide,
+        addCtoXMP             : addCtoXMP,
+        // LAYER TOOLS
+        activeLayerMergeDown  : activeLayerMergeDown,
+        activeLayerDropShadow : activeLayerDropShadow,
+        // DRAW TOOLS
+        drawLine              : drawLine,
+        // SELECTION TOOLS
+        select                : select,
+        deleteSelection       : deleteSelection
+        // COLOUR TOOLS
+    };
+})();

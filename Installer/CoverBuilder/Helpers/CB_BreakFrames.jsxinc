@@ -23,8 +23,8 @@
             if(thisCover(myApp, myCover)) {
                 alert("Done!");
             }
-        } catch(err) {
-            alert(err);
+        } catch(e) {
+            alert("CoverBuilder Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
     }
     
@@ -47,19 +47,26 @@
     
         var mySpreadPages = mySpread.pages;
         var pagesLen      = mySpreadPages.length;
+        
         var myPages       = new Array();
-
+        // A special array for pages that are on the outside. (I'd like these frames always on top of the frame for the spine.)
+		var myLastPages = new Array();
+		
         for (var page = pagesLen-1; page>=0; page--){
             // Get page bounds including bleed
             if(page == 0){ // first
                 var myFrameBounds    = myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 3);
-            } else if (page == pagesLen-1){
+                myLastPages.push({page: mySpreadPages[page], bounds:myFrameBounds});
+            } else if (page == pagesLen-1){ // last
                 var myFrameBounds    = myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 1);
+                myLastPages.push({page: mySpreadPages[page], bounds:myFrameBounds});
             } else {
                 var myFrameBounds    = myApp.Tools.getPageBleedBounds(myApp, myCover, mySpreadPages[page], 2);
+                myPages.push({page: mySpreadPages[page], bounds:myFrameBounds});
             }
-            myPages.push({page: mySpreadPages[page], bounds:myFrameBounds});
         }
+        
+        myPages.push.apply(myPages, myLastPages);
 
         if(myPages.length > 1) {
             breakFramesTo(myApp, myPages, mySpreadRectangles);
@@ -83,8 +90,16 @@
             var pagesLen = myPages.length;
             for (var j = pagesLen-1; j >= 0; j--){
                 var myDupItem = spreadItem.duplicate();
-                var rect = myPages[j].page.rectangles.add(myLayer,{geometricBounds:myPages[j].bounds, fillColor:"None", strokeColor:"None"});
-                    rect.sendToBack();
+                
+                var rect = myApp.Tools.addRectangle(myApp, myPages[j].page, myLayer, myPages[j].bounds, {fill:"None",stroke:"None"});
+                
+                if(rect == undefined){
+                	alert("Error 7543277636");
+                	return false;
+                }
+                
+                rect.sendToBack();
+    
                 try {
                     rect.intersectPath(myDupItem);
                 } catch(e) {

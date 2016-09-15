@@ -1,0 +1,361 @@
+
+/*
+
+--------------------------------------------
+
+    CB_PreferencesUI.jsxinc
+    A CoverBuilder Helper Script
+    Version 1.0
+
+    Bruno Herfst 2015
+
+--------------------------------------------
+
+*/
+
+/* TO DO LIST
+
+  – Add font style dropdown
+  - Localise
+
+*/
+
+
+(function() {
+    //////////////
+    // privates //
+    //////////////
+    var columnWidth = 450;
+
+    function load_Pref_UI(myApp) {
+      var originalSettings = myApp.Settings;
+
+      var settings_changed = false;
+      var plugin_changed   = false;
+
+      var setWin = new Window ("dialog", "CoverBuilder Settings");
+            setWin.orientation = "column";
+            setWin.alignment = "left";
+            setWin.justify = "left";
+            setWin.alignChildren = "top";
+            setWin.margins = [10,10,10,12];
+            setWin.spacing = 0;
+
+      var mainGroup = setWin.add ("group");
+          mainGroup.orientation =  "row";
+          mainGroup.alignment = "top";
+          mainGroup.alignChildren = "top";
+
+      var leftColumn = mainGroup.add ("group");
+          leftColumn.orientation =  "column";
+          leftColumn.alignChildren = "left";
+          leftColumn.alignment = "left";
+          
+      var rightColumn = mainGroup.add ("group");
+          rightColumn.orientation =  "column";
+
+      var butColumn = setWin.add ("group");
+          butColumn.orientation =  "column";
+          butColumn.alignment = "right";
+
+      //////////////////////
+      // Start General panel
+      var genPanel = leftColumn.add("panel", undefined, "General");
+          genPanel.preferredSize.width = columnWidth;
+          genPanel.margins = 20;
+          genPanel.alignChildren = "left";
+          genPanel.orientation = 'column';
+
+      var showCBmenuCheckbox = genPanel.add ("checkbox", undefined, "Show CoverBuilder Menu");
+          showCBmenuCheckbox.value = myApp.Settings.add_CoverBuilder_Menu;
+
+      var pageSlugCheckbox = genPanel.add ("checkbox", undefined, "Add page sizes to slug area");
+          pageSlugCheckbox.value = myApp.Settings.pageSizes_in_Slug;
+      var spreadSlugCheckbox = genPanel.add ("checkbox", undefined, "Add total trim to slug area");
+          spreadSlugCheckbox.value = myApp.Settings.totalTrim_in_Slug;
+      
+      var myFontsList = myApp.UI.getAvailableFontFamilies(myApp);
+          myFontsList.unshift("- " + myApp.Settings.registration_font + " -");
+
+      var fontGroup = genPanel.add('group');
+          fontGroup.orientation =  "row";
+          
+          fontGroup.add('statictext', undefined, 'Registration font: ');
+          
+      var fontDrop = fontGroup.add('dropdownlist',undefined,undefined,{items:myFontsList});
+          fontDrop.selection = 0; 
+
+      // End General Panel
+      ////////////////////
+
+      ///////////////////////
+      // Start New Cover panel
+      var newCoverPanel = leftColumn.add("panel", undefined, "New Cover");
+          newCoverPanel.preferredSize.width = columnWidth;
+          newCoverPanel.margins = 20;
+          newCoverPanel.alignChildren = "left";
+          newCoverPanel.orientation = 'column';
+      
+      var autoLoadFrontDocCheckbox = newCoverPanel.add ("checkbox", undefined, "Autoload foremost document");
+          autoLoadFrontDocCheckbox.value = myApp.Settings.autoload_front_document;
+
+      var autoLoadLastUsedCheckbox = newCoverPanel.add ("checkbox", undefined, "Autoload last used settings");
+          autoLoadLastUsedCheckbox.value = myApp.Settings.autoload_last_used_settings;
+      // End New Cover Panel
+      /////////////////////
+
+      ////////////////////////
+      // Start Photoshop panel
+      var psPanel = leftColumn.add("panel", undefined, "Send to Photoshop");
+          psPanel.preferredSize.width = columnWidth;
+          psPanel.margins = 20;
+          psPanel.alignChildren = "left";
+          psPanel.orientation = 'column';
+
+      var ppiGroup = psPanel.add('group');
+          ppiGroup.orientation =  "row";
+      var ppiText = ppiGroup.add('edittext');
+          ppiText.characters = 5;
+          ppiText.text = myApp.Settings.standardPPI;
+          ppiGroup.add('statictext', undefined, 'PPI');
+
+      var resFlagCheckbox = psPanel.add ("checkbox", undefined, "Ask for PPI before sending");
+          resFlagCheckbox.value = myApp.Settings.ask_for_PPI_on_send;
+
+      // ADD SHOW THIS AT SEND
+      ////////////////////////
+
+      // Add colour of preview layers here
+      /*
+      var dropshadowCheckbox = psPanel.add ("checkbox", undefined, "Add drop shadow to preview layers");
+          dropshadowCheckbox.value = myApp.Settings.add_drop_shadow;
+      var drawGuidesCheckbox = psPanel.add ("checkbox", undefined, "Add margin guides");
+          drawGuidesCheckbox.value = myApp.Settings.add_margin_guides;
+      */
+
+      // End Photoshop Group
+      //////////////////////
+
+      //////////////////////
+      // Start Plugin panel
+      // Needs to be refacored
+      // Issue 634912365239565348923
+
+      var plugCount = myApp.Settings.pluginfo.length;;
+
+      var scrollPanel = rightColumn.add("panel", undefined, "Plugins"); // ScrollPluginPanel
+          scrollPanel.alignChildren = "top"; 
+          scrollPanel.orientation   = 'row';
+
+      var itemHeight  = 75;
+      var itemPadding = 10;
+      var scrollbarHeight = (itemHeight * 4) + (itemPadding * 3);
+
+      var pluginGroup = scrollPanel.add("group");
+          pluginGroup.alignChildren = "left"; 
+          pluginGroup.orientation   = 'column';
+
+      var pluginPanels = new Array();
+
+      var sbar = scrollPanel.add ("scrollbar", [0,0,20,scrollbarHeight]);
+          sbar.minvalue = 0;
+          sbar.maxvalue = plugCount-4;
+          sbar.value = 0;
+          sbar.jumpdelta = 1;
+          sbar.stepdelta = 1;
+
+          sbar.onChanging = function () {
+            showPluginsInUI(this.value, this.value+4);
+          };
+
+      function updatePluginData(pluginData, plugIndex){
+        settings_changed = true;
+        plugin_changed   = true;
+        myApp.Settings.pluginfo[plugIndex] = pluginData;
+      }
+
+      function showPluginsInUI(a, z){
+        var child = pluginGroup.children.length;
+        while ( child--) {
+            //alert(child); // 2 1 0
+            pluginGroup.remove(pluginGroup.children[child]);
+        }
+        // setWin.layout.layout( true ); 
+
+        // TO DO MAKE SURE PLUG INDEX IS SRT CORRECTLY
+        
+        for ( var i=a; i < z; i++ ) {
+
+          function pluginData(pluginData, plugIndex) {
+            var BT_activated = ["Deactivate Plugin", "Activate Plugin"]; // button text
+            var PD = pluginData;
+            var PI = plugIndex;
+
+            var pluginPanel    = pluginGroup.add("panel", undefined, PD.plugin_name);
+                pluginPanel.preferredSize.height = itemHeight;
+                pluginPanel.margins       = 20;
+                pluginPanel.alignChildren = "left";
+                pluginPanel.orientation   = 'row';
+
+            var activeBut      = pluginPanel.add ("button", undefined, "Getting State..." );
+                activeBut.characters = 18;
+
+            var launchCheckbox        = pluginPanel.add ("checkbox", undefined, "Auto-launch after each build");
+                launchCheckbox.value  = PD.launch_on_load;
+
+            launchCheckbox.onClick = function (){
+              PD.launch_on_load = launchCheckbox.value;
+              updatePluginData(PD, PI);
+            }
+
+            activeBut.onClick = function () {
+              if(activeBut.text == BT_activated[1]){
+                PD.activated = true;
+                // Show UI
+                launchCheckbox.visible = true;
+                activeBut.text = BT_activated[0];
+              } else {
+                PD.activated = false;
+                // Hide UI
+                launchCheckbox.visible = false;
+                activeBut.text = BT_activated[1];
+              }
+              updatePluginData(PD, PI);
+            }
+
+            if(PD.activated == true){
+              activeBut.text = BT_activated[0];
+              launchCheckbox.visible = true;
+            } else if (PD.activated == false) {
+              activeBut.text = BT_activated[1];
+              launchCheckbox.visible = false;
+            }
+
+            var getPluginData = function(){
+              return PD;
+            }
+
+            var getplugIndex = function(){
+              return PI;
+            }
+
+            public_interface = {
+              getPluginData : getPluginData,
+              getplugIndex  : getplugIndex
+            };
+
+            return public_interface;
+          }
+
+          pluginPanels[i] = new pluginData(myApp.Settings.pluginfo[i], i);
+
+        }
+        setWin.layout.layout( true ); 
+      }
+
+      // End Plugin Panel
+      ///////////////////
+
+      /////////////////////
+      // Start button group
+      var buttonGroup = butColumn.add ("group");
+          buttonGroup.margins = 20;
+          buttonGroup.orientation =  "row";
+          buttonGroup.alignment = "right";
+
+          //OK CANCEL buttons
+          var cancelBut = buttonGroup.add ("button", undefined, String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
+          var buildBut = buttonGroup.add  ("button", undefined, String(myApp.Localise.UI['Save']), {name:"ok"} );
+
+      // End Button Group
+      ///////////////////
+
+      // Load plugin data
+      showPluginsInUI(0, Math.min(4,plugCount) );
+      
+      ///////////////////
+      // START PROCESS UI
+      if(setWin.show() == true){
+        var menuRefreshed = false;
+        // General panel
+        var add_CoverBuilder_Menu  = showCBmenuCheckbox.value;
+        var pageSizes_in_Slug      = pageSlugCheckbox.value;
+        var totalTrim_in_Slug      = spreadSlugCheckbox.value;
+
+        if( add_CoverBuilder_Menu != myApp.Settings.add_CoverBuilder_Menu){
+          myApp.Settings.add_CoverBuilder_Menu = add_CoverBuilder_Menu;
+          settings_changed = true;
+          
+          if(add_CoverBuilder_Menu){
+            menuRefreshed = true;
+            myApp.IDmenu.load_CB_Menu(myApp);
+          } else {
+            myApp.IDmenu.unload_CB_Menu(myApp);
+          }
+        }
+
+        if( pageSizes_in_Slug != myApp.Settings.pageSizes_in_Slug){
+          settings_changed = true;
+          myApp.Settings.pageSizes_in_Slug = pageSizes_in_Slug;
+        }
+        if( totalTrim_in_Slug != myApp.Settings.totalTrim_in_Slug){
+          settings_changed = true;
+          myApp.Settings.totalTrim_in_Slug = totalTrim_in_Slug;
+        }
+        
+        if(fontDrop.selection.index != 0){
+            myApp.Settings.registration_font = String(fontDrop.selection);
+            settings_changed = true;
+        }
+
+        // New Cover panel
+        var autoload_front_document     = autoLoadFrontDocCheckbox.value;
+        var autoload_last_used_settings = autoLoadLastUsedCheckbox.value;
+        if(autoload_front_document != myApp.Settings.autoload_front_document){
+          myApp.Settings.autoload_front_document = autoload_front_document;
+          settings_changed = true;
+        }
+        if(autoload_last_used_settings != myApp.Settings.autoload_last_used_settings){
+          myApp.Settings.autoload_last_used_settings = autoload_last_used_settings;
+          settings_changed = true;
+        }
+
+        // Photoshop panel
+        var standardPPI = parseInt(ppiText.text);
+        if(standardPPI != myApp.Settings.standardPPI){
+          myApp.Settings.standardPPI = standardPPI;
+          settings_changed = true;
+        }
+
+        var ask_for_PPI_on_send = resFlagCheckbox.value;
+        if(ask_for_PPI_on_send != myApp.Settings.ask_for_PPI_on_send){
+          myApp.Settings.ask_for_PPI_on_send = ask_for_PPI_on_send;
+          settings_changed = true;
+        }
+
+        // Plugin panel
+        if(plugin_changed && myApp.Settings.add_CoverBuilder_Menu && !menuRefreshed){
+          myApp.IDmenu.load_CB_Menu(myApp);
+        }
+        
+        // Update settings
+        if( settings_changed ){
+          // Save the settings without changing plugin data
+          myApp.STools.saveUserSettings(myApp);
+        }
+        // END PROCESS UI
+        /////////////////
+      } else {
+        // User pressed cancel. Make sure there are no changes to the settings 
+        myApp.Settings = originalSettings;
+      }
+    }
+
+    ////////////
+    // expose //
+    ////////////
+    return {
+        load_Pref_UI : load_Pref_UI
+    };
+
+})();

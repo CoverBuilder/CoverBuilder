@@ -5,44 +5,80 @@
     //////////////
     // privates //
     //////////////
-    function libSelectorUI(filePath){
-        var strWinTitle = String("Library opener");
-        var strWorkFolder = String("Working folder:");
-        var strSelectLib = String("Select library:");
-        var strNoFiles = String("-- No libraries found --"); // shows if no libraries found
-        var myFiles = filePath.getFiles("*.indl");
-        var myFilesNo = myFiles.length;
-        var myLibFiles = Array();
+
+    function getLibUI( myApp, myFolderPath, myDialogName, open, canAddOrRemove ){
+        // This function opens a UI to select a library that is inside
+        // a given folder. It replies with a file object of the chosen lib
+        // or null; Note that it will not open the file!
+
+        // It also adds functionality to add or remove a lib if the folder paths is not the plugins LIB path
+        // Note: Subfolders are not protected
+        var open = open || false;
+        var canAddOrRemove = canAddOrRemove || false;
+
+        var UItext = {remove:"Delete", add: "Add New"};
+
+        var myFiles    = Folder(myFolderPath).getFiles("*.indl");
+        var myFilesNo  = myFiles.length;
+        var myLibFiles = new Array();
 
         if(!myFilesNo){
-             myLibFiles[0] = strNoFiles;
+             myLibFiles[0] = String(myApp.Localise.Menu['NoFilesFound']);
         }else{
              for(var i=0; i < myFilesNo; i++){
                   myLibFiles.push(myFiles[i].displayName.substr(0,myFiles[i].displayName.lastIndexOf(".")));
              }
         }
-        ///////////////////////// UI /////////////////////////
-        var myDialog = app.dialogs.add({name:strWinTitle, canCancel:true});
-             with(myDialog){
-                  with(dialogColumns.add()){
-                       with(dialogRows.add()){
-                            with(borderPanels.add()){
-                                 with(dialogColumns.add()){
-                                      staticTexts.add({staticLabel:strSelectLib});
-                                 }
-                                 with(dialogColumns.add()){
-                                      var myLib = dropdowns.add({stringList:myLibFiles, selectedIndex:0});
-                                 }
-                            }
-                       }
-                  }
-             }
-        if(myDialog.show() == true){
-             if(myFilesNo){
-                  app.open(File(myFiles[myLib.selectedIndex]),false);
-             }
+
+        var myDialog = new Window ("dialog", myDialogName);
+            myDialog.orientation = "row";
+            myDialog.alignChildren = "top";
+
+        var myLibGroup = myDialog.add ("panel");
+            myLibGroup.orientation = "column";
+            myLibGroup.alignChildren = "left";
+            myLibGroup.margins = 15;
+
+        var myLibDrop = myLibGroup.add ("dropdownlist", undefined, myLibFiles);
+            myLibDrop.selection = 0;
+
+        if(canAddOrRemove){
+            var myLibButGroup = myLibGroup.add ("group");
+            myLibButGroup.orientation = "row";
+            myLibButGroup.margins.top = 10;
+
+            var myAddRemoveButton = myLibButGroup.add ("button", undefined, UItext.add);
+            var myAddRemoveButton = myLibButGroup.add ("button", undefined, UItext.remove);
+            if(myFilesNo <= 0){
+                myAddRemoveButton.enabled = false;
+            }
         }
-        myDialog.destroy();
+
+        var myButtonGroup = myDialog.add ("group");
+            myButtonGroup.alignChildren = "left";
+            myButtonGroup.orientation = "column";
+        var ok = myButtonGroup.add ("button", undefined, "OK");
+        var cancel = myButtonGroup.add ("button", undefined, "Cancel");
+
+        if(myDialog.show() == 1){
+            if(myFilesNo > 0){
+                if(open){
+                    return myApp.LibTool.openLib( myFiles[myLibDrop.selection.index] );
+                } else {
+                    return myFiles[myLibDrop.selection.index];
+                }
+            }
+        }
+        return null;
+    }
+
+    function createLib(myLibPath){
+        var thisLib = new File(myLibPath);
+        if (thisLib.exists) {
+            return app.open(thisLib,false);
+        } else {    
+            return app.libraries.add(thisLib,false);
+        }
     }
 
     function openLib(myLibPath){
@@ -59,6 +95,21 @@
             myLib = null;
         }
         return myLib;
+    }
+
+    function addToLib(lib, elements, name, description, label) {
+        if(!lib.isValid){
+            alert("CoverBuilder.LibTools addToLib:/n That was not a valid library.");
+            exit();
+        }
+        try {
+            if(elements.constructor !== Array){ // So we can send single items too
+                elements = [elements];
+            }
+            lib.store(elements, {name: String(name), description: String(description), label: String(label)} );
+        }catch (e) {
+            alert("CoverBuilder Add to Lib Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+        }
     }
 
     function LibObjectWith(myLib,assetName) {
@@ -108,7 +159,7 @@
                 return;
             }
             if(isNaN(thisMeasureUnits)){ // Make sure that we are good to go.
-            	alert("Could not convert libObject " + this.name + "\nNo measure defined in description.");
+                alert("Could not convert libObject " + this.name + "\nNo measure defined in description.");
                 return;
             }
             this.width       = myApp.NumCon.convert(myApp, this.width,   this.measureUnit, myMeasureUnits);
@@ -127,23 +178,12 @@
         return xyPos;
     }
 
-    function getPageByLabel(pages, label){
-        for (i=0;pages.length>i;i++){
-            var myPage = pages.item(i);
-            var myLabel = myPage.label;
-            if(label == myLabel){
-                return myPage;
-            }
-        }
-        return null;
-    }
-
     function placeItem(myApp,myPage,AssetObj,C){
             //Make sure facing pages is off
             function getPageInfo(myPage){
                 this.l = myPage.label;
                 this.b = myPage.bounds; // [y1, x1, y2, x2]
-                this.w  = myPage.bounds[3]-myPage.bounds[1];
+                this.w = myPage.bounds[3]-myPage.bounds[1];
                 this.h = myPage.bounds[2]-myPage.bounds[0];
                 return this;
             }
@@ -193,7 +233,7 @@
             pos = addOffset(pos, [AssetObj.offsetX,AssetObj.offsetY]);
 
             if(typeof C != "object"){
-                var myCover = myApp.Tools.getActiveCover(myApp);
+                var myCover = myApp.Tools.getActiveCover(myApp, false);
                 C = myApp.XMP.retrieveCoverObject(myApp, myCover);
             }
             //if places on the back or front cover add hinge to offset
@@ -206,7 +246,7 @@
                 }
             } catch(e) {
                 // This should never happen but if it does let me know.
-                alert("Indd_LibTools:placeItem() was not given a valid CoverObject.");
+                alert("Indd_LibTools:placeItem() was not given a valid CoverObject.\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
             }
 
             thisAsset[0].move(myPage);
@@ -250,7 +290,7 @@
                         }
                     }
                 } catch(e){
-                    alert("CoverBuilder LibTools: PlaceSpineLogo\n" + e.description);
+                    alert("CoverBuilder LibTools: PlaceSpineLogo\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
                 }
             }
 
@@ -258,21 +298,23 @@
                 if(C.spine < mySpineLogo.width + clearSpace * 2){
                     mySpineLogo.toWidth(C.spine - clearSpace * 2 );
                 }
-                var pageRef = myApp.LibTool.getPageByLabel(myCover.spreads[0].pages, "Spine");
+                var pageRef = myApp.Tools.getPageByLabel(myCover.spreads[0].pages, "Spine");
                 myApp.LibTool.placeItem(myApp, pageRef, mySpineLogo, C);
             } else {
-                alert("Spine is too small for logo");
+                alert("Spine is too small for logo.");
             }
         }
     ////////////
     // expose //
     ////////////
       return {
+          getLibUI        : getLibUI,
+          createLib       : createLib,
           openLib         : openLib,
+          addToLib        : addToLib,
           LibObjectWith   : LibObjectWith,
           addOffset       : addOffset,
           placeItem       : placeItem,
-          getPageByLabel  : getPageByLabel,
           placeSpineLogo  : placeSpineLogo
     };
 

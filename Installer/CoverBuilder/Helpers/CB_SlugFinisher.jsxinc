@@ -2,11 +2,11 @@
 
 --------------------------------------------
 
-    CB_SlugFinisher.jsx                (A CoverBuilder Helper Script)
+    CB_SlugFinisher.jsx             (A CoverBuilder Helper Script)
     An InDesign CS5 Javascript      (Tested in CS6)
-    Version 1.2
+    Version 1.5
 
-    Bruno Herfst 2013-2014
+    Bruno Herfst 2013-2016
 
 --------------------------------------------
 
@@ -16,115 +16,225 @@
     //////////////
     // privates //
     //////////////
-    
-    var myCMYKSwatches = [{
-        name: "Cyan"
-    }, {
-        name: "Magenta"
-    }, {
-        name: "Yellow"
-    }, {
-        name: "Black"
-    }];
-    
-    var myFinishes = [{
-        name: "Lamination (Gloss)"
-    }, {
-        name: "Lamination (Gloss Textured)"
-    },{
-        name: "Lamination (Matte)"
-    },{
-        name: "Lamination (Matte Textured)"
-    }, {
-        name: "Lamination (Silk)"
-    }, {
-        name: "Lamination (Satin)"
-    }, {
-        name: "Varnish (Gloss)"
-    }, {
-        name: "Varnish (Matte)"
-    }];
 
     function go(myApp) {
-        var myCover  = myApp.Tools.getActiveCover(myApp);
-        var CVR1PN   = myApp.Tools.getCVR1pageNo(myApp);
-        var myPage   = app.activeWindow.activeSpread.pages[CVR1PN-1];
-        if(myPage.isValid){
-            var swatchOBJ = finischUI(getSpotSwatches(myCover));
-            if(swatchOBJ != undefined){
-                var myTextFrame = myApp.Tools.getItemByLabel(myPage,"finish");
-                if(myTextFrame == null){
-                    myTextFrame = createFrame(app.activeWindow.activeSpread);
+
+        try{ // Let the user know if something unexpected happens
+            //  and don't kill the function on an error
+            var doc    = myApp.Tools.getActiveCover(myApp, true);
+            var C      = myApp.XMP.retrieveCoverObject(myApp, doc);
+            var CVR1PN = 1;
+
+            if(C.width > 0){
+                // alert("Could not load CoverBuilder object from document.");
+                CVR1PN = myApp.Tools.getCVR1pageNo(C);
+
+                var check = myApp.Tools.checkCagainstDoc(myApp, doc, C, true);
+
+                if( !check.message.ok ){
+                    alert("Beware!\n" + check.message.text);
                 }
-                setText(myApp,myCover,myTextFrame, swatchOBJ);
-                if(swatchOBJ.pageSizes){
-                    var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-                    if(C != null){
-                        myApp.Slugs.placeSizesInSlug(myApp, C, myCover);
-                    }
-                } else {
-                    myApp.Slugs.removeSlugMeasurements(myApp,myCover);
+                // Update data if changed
+                if(check.C_changed){
+                    C = check.C;
                 }
-            } // else user canceled
-        } else {
-            alert("Could not find front cover.");
-        }
-    }
+            }
+            
+            var myPage = app.activeWindow.activeSpread.pages[CVR1PN-1];
+            
+            if(!myPage.isValid){
+                myPage = app.activeWindow.activeSpread.pages[app.activeWindow.activeSpread.pages.length-1];
+            }
 
-    function createFrame(thisSpread){
-        var myCover = myApp.Tools.getActiveCover(myApp);
+			var swatchOBJ = finischUI(myApp, doc, C, getSpotSwatches(myApp, doc));
+			
+            if (swatchOBJ == undefined) return; // User canceled
 
-        if(!myCover){
-            exit();
-        }
-        //check if cover is build with CoverBuilder
-        var myOldSpine = parseFloat(myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]"));
-        if(myOldSpine <= 0) {
-            alert("Can’t find a spine!");
-        }
-        var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+		    if (!myApp.Slugs.slugSizeBigEnough(myApp, doc, true)) {
+                alert("Can't place sizes in slug\nSlug size not wide enough...");
+                return;
+            }
+            // Slugs have changed make sure we reset measurements
+        	myApp.Slugs.placeSizesInSlug(myApp, doc, C);
+        					
+            // Save data in doc so we can retrieve it later
+			myApp.Tools.saveJSONLabel(myApp, doc, "swatchOBJ", swatchOBJ);
+			
+            // Get select and unlock layer
+			var regLayer = myApp.Tools.getAndSelectLayer(doc, "Registration");
+			var myLock = myApp.Tools.layerLocked(regLayer, false);
+            var myTextFrames = myApp.Tools.getItemByLabel(myPage,"finish");
+			
+            if(myTextFrames.length < 1){
+				var myTextFrame = createFinishFrame(myApp, doc, C, app.activeWindow.activeSpread);
+			} else {
+			    var myTextFrame = myTextFrames[0];
+			}
+			
+            // This makes sure InDesign redraws the screen properly
+			var myOriginalRedraw = myApp.Tools.setRedraw(myApp);
+			setText(myApp, doc, myTextFrame, swatchOBJ);
+			
+            // Save updated C data
+			var C_changed = false;
 
+			if( C.measureUnit  != swatchOBJ.measureUnit ){
+                myApp.STools.convertUnits(myApp, C, swatchOBJ.measureUnit);
+				C_changed = true;
+			}
+			if( C.slugPageSize  != swatchOBJ.slugPageSize ){
+				C.slugPageSize   = swatchOBJ.slugPageSize;
+				C_changed  = true;
+			}
+			if( C.slugTrimSize  != swatchOBJ.slugTrimSize ){
+				C.slugTrimSize   = swatchOBJ.slugTrimSize;
+				C_changed  = true;
+			}
+            if( C.registration_font  != swatchOBJ.registration_font ){
+                C.registration_font   = swatchOBJ.registration_font;
+                C_changed  = true;
+            }
+			
+            if( C_changed ){
+				// Update XMP
+				myApp.XMP.safeCoverObject(myApp, doc, C);
+				// Update slugs
+				myApp.Slugs.placeSizesInSlug(myApp, doc, C);
+			}
+			
+			// Reset redraw preference
+			myApp.Tools.setRedraw(myApp, myOriginalRedraw);
+			// Reset original registration layer lock
+			myApp.Tools.layerLocked(regLayer, myLock);
+        } catch(e) {
+            alert("Slug Finisher found a problem:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+        }
+    };
+
+    function createFinishFrame(myApp, doc, C, thisSpread){
         var len = thisSpread.pages.length-1;
 
-        if(C.flap  > 0.5){
+        if( C.flap > myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit) ){
             var myPage = thisSpread.pages[len-1];
         } else {
             var myPage = thisSpread.pages[len];
         }
+
         var pageBounds = myPage.bounds;
         var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
         var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
-        var myFrameBounds = new Array (myPageHeight+myCover.documentPreferences.documentBleedBottomOffset,0,myPageHeight+myCover.documentPreferences.slugBottomOffset,myPageWidth);
-        var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, myCover, "measurements");
-        return myApp.Slugs.addTextFrame(myPage, myFrameBounds, " ", myParagraphStyle, 0,"finish");
-    }
+        var myFrameBounds = new Array (myPageHeight+doc.documentPreferences.documentBleedBottomOffset,0,myPageHeight+doc.documentPreferences.slugBottomOffset,myPageWidth);
+        var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, doc, "measurements");
+ 
+        return myApp.Tools.addTextFrame(myApp, myPage, myFrameBounds, " ", myParagraphStyle, 0, "finish");
+    };
 
-    function getSpotSwatches(myCover) {
-        mySwatches = myCover.swatches;
-        var i = mySwatches.length - 1;
+    function getSpotSwatches(myApp, doc) {
+        var allSwatches = doc.swatches;
+        var i = allSwatches.length;
+        
         var spotSwatches = [];
         while (i--) {
-            if (mySwatches[i + 1].model == ColorModel.SPOT) {
-                spotSwatches.push(mySwatches[i + 1]);
+            if( allSwatches[i].hasOwnProperty("model") ) {
+                if (allSwatches[i].model == ColorModel.SPOT) {
+                    spotSwatches.push( {name: allSwatches[i].name, checkedState: false} );
+                }
             }
         }
-        return spotSwatches;
-    }
 
-    function finischUI(mySpotSwatches) {
-        var i = mySpotSwatches.length;
+        return spotSwatches;
+    };
+    
+    function finischUI(myApp, doc, C, mySpotSwatches) {
         var mySpotCheckboxes = new Array();
         var myCMYKCheckboxes = new Array();
-        var myFinishRadio = null;
-        var myNoteCheckbox = null;
-        var myNoteTextField = null;
+        var myFinishRadio    = null;
+        var myNoteCheckbox   = null;
+        var myNoteTextField  = null;
+
+        var registration_font = myApp.Settings.registration_font;
+
+        var myNote = {text: "", checkedState: false};
+
+        var myCMYKSwatches = [{
+            name: "Cyan",
+            checkedState: true
+        }, {
+            name: "Magenta",
+            checkedState: true
+        }, {
+            name: "Yellow",
+            checkedState: true
+        }, {
+            name: "Black",
+            checkedState: true
+    	}];
+    	
+    	var myFinishes = [{
+			name: "Lamination (Gloss)",
+			checkedState: false
+		}, {
+			name: "Lamination (Gloss Textured)",
+			checkedState: false
+		},{
+			name: "Lamination (Matte)",
+			checkedState: false
+		},{
+			name: "Lamination (Matte Textured)",
+			checkedState: false
+		}, {
+			name: "Lamination (Silk)",
+			checkedState: false
+		}, {
+			name: "Lamination (Satin)",
+			checkedState: false
+		}, {
+			name: "Varnish (Gloss)",
+			checkedState: false
+		}, {
+			name: "Varnish (Matte)",
+			checkedState: false
+		}];
+
+        // Load data from doc so we can set UI appropriately
+        var swatchOBJ = myApp.Tools.retrieveJSONLabel(myApp, doc, "swatchOBJ");
+        
+        if(swatchOBJ != null){
+            if( swatchOBJ.hasOwnProperty('process') ){
+                myCMYKSwatches = swatchOBJ.process;
+            }
+            if( swatchOBJ.hasOwnProperty('finish') ){
+            	myFinishes = swatchOBJ.finish;
+            }
+            if( swatchOBJ.hasOwnProperty('spot') ){
+                // Select old swatches
+                for (var i = 0; i < swatchOBJ.spot.length; i++) {
+                    for (var j = 0; j < mySpotSwatches.length; j++) {
+                        if(mySpotSwatches[j].name == swatchOBJ.spot[i].name){
+                            mySpotSwatches[j].checkedState = swatchOBJ.spot[i].checkedState;
+                        }
+                    }
+                }
+            }
+            if( swatchOBJ.hasOwnProperty('note') ){
+                myNote.text = swatchOBJ.note.text;
+                myNote.checkedState = swatchOBJ.note.checkedState;
+            }
+            if( swatchOBJ.hasOwnProperty('registration_font') ){
+                registration_font = swatchOBJ.registration_font;
+            }
+        };
+
+        var myFontsList = myApp.UI.getAvailableFontFamilies(myApp);
+            myFontsList.unshift("- " + registration_font + " -");
 
         var myDialog = app.dialogs.add({
             name: "Slug Tool",
             canCancel: true
         });
+
         with(myDialog) {
-            with(dialogColumns.add()) {           
+            with(dialogColumns.add()) {
                 with(dialogRows.add()) {
                     // P R O C E S S
                     with(borderPanels.add()) {
@@ -132,12 +242,12 @@
                             staticLabel: "PROCESS:"
                         });
                         with(dialogColumns.add()) {
-                            for (myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
+                            for (var myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
                                 var myCheckbox;
                                 myCMYKCheckboxes.push(myCheckbox);
                                 myCMYKCheckboxes[myCounter] = checkboxControls.add({
-                                    staticLabel: myCMYKSwatches[myCounter].name,
-                                    checkedState: true
+                                    staticLabel:  myCMYKSwatches[myCounter].name,
+                                    checkedState: myCMYKSwatches[myCounter].checkedState
                                 });
                             }
                         }
@@ -148,12 +258,12 @@
                             staticLabel: "SPOT:"
                         });
                         with(dialogColumns.add()) {
-                            for (myCounter = 0; myCounter < i; myCounter++) {
+                            for (var myCounter = 0; myCounter < mySpotSwatches.length; myCounter++) {
                                 var myCheckbox;
                                 mySpotCheckboxes.push(myCheckbox);
                                 mySpotCheckboxes[myCounter] = checkboxControls.add({
-                                    staticLabel: mySpotSwatches[myCounter].name,
-                                    checkedState: true
+                                    staticLabel:  mySpotSwatches[myCounter].name,
+                                    checkedState: mySpotSwatches[myCounter].checkedState
                                 });
                             }
                         }
@@ -165,10 +275,14 @@
                         });
                         with(dialogColumns.add()) {
                             with(myFinishRadio = radiobuttonGroups.add()) {
-                                for (myCounter = 0; myCounter < myFinishes.length; myCounter++) {
-                                    radiobuttonControls.add({
-                                        staticLabel: myFinishes[myCounter].name,
+                                radiobuttonControls.add({
+                                        staticLabel:  "None",
                                         checkedState: false
+                                    });
+                                for (var myCounter = 0; myCounter < myFinishes.length; myCounter++) {
+                                    radiobuttonControls.add({
+                                        staticLabel:  myFinishes[myCounter].name,
+                                        checkedState: myFinishes[myCounter].checkedState
                                     });
                                 }
                             }
@@ -178,150 +292,181 @@
                     with(borderPanels.add()) {
                         myNoteCheckbox = checkboxControls.add({
                                     staticLabel: "OTHER:",
-                                    checkedState: false
+                                    checkedState: myNote.checkedState
                                 });
                         with(dialogColumns.add()) {
                             myNoteTextField = textEditboxes.add();
                             myNoteTextField.minWidth = 150;
+                            myNoteTextField.editContents = myNote.text;
                         }
                     }
                 }
-                // P A G E S I Z E S
-                with(borderPanels.add()) {
+                with(dialogRows.add()) {
+                    staticTexts.add({staticLabel: ""});
+                }
+                with(dialogRows.add()) {
+                    // P A G E S I Z E S
+
                     myPageSizeSlugCheckbox = checkboxControls.add({
-                                staticLabel: "Page measurements in slug",
-                                checkedState: true
+                                staticLabel: "Page measurements",
+                                checkedState: C.slugPageSize
                             });
+                    mySpreadSizeSlugCheckbox = checkboxControls.add({
+                                staticLabel: "Total trim",
+                                checkedState: C.slugTrimSize
+                            });
+                    staticTexts.add({staticLabel: ":   "});
+                    var measureDropDown = dropdowns.add({stringList: myApp.STools.localisedValidMeasurementUnits(myApp), selectedIndex:C.measureUnit});
+
+                    // T Y P E F A C E
+                    staticTexts.add({staticLabel: "  :   Registration Font "});
+                    var fontDropDown = dropdowns.add({stringList: myFontsList, selectedIndex:0});
                 }
             }
-        }
+        };
         //Display the dialog box.
         if (myDialog.show() == true) {
+            
             //Get process
-            var i = myCMYKCheckboxes.length;
-            var processSwatches = [];
-            while (i--) {
-                if (myCMYKCheckboxes[i].checkedState == true) {
-                    processSwatches.push(myCMYKSwatches[i].name);
-                }
+            for (var i = 0; i < myCMYKCheckboxes.length; i++) {
+                myCMYKSwatches[i].checkedState = myCMYKCheckboxes[i].checkedState;
             }
+
             //Get Spot
             var i = mySpotCheckboxes.length;
-            var spotSwatches = [];
-            while (i--) {
-                if (mySpotCheckboxes[i].checkedState == true) {
-                    spotSwatches.push(mySpotSwatches[i].name);
-                }
+            for (var i = 0; i < mySpotCheckboxes.length; i++) {
+                mySpotSwatches[i].checkedState = mySpotCheckboxes[i].checkedState;
             }
+            
             //Get Finish
-            var myFinishSelect = new Array();
-            if (myFinishRadio.selectedButton >= 0) {
-                myFinishSelect.push(myFinishes[myFinishRadio.selectedButton].name);
+            // First set all to false as this is a radio
+            for (var i = 0; i < myFinishes.length; i++) {
+				myFinishes[i].checkedState = false;
+			} // Now we can set the selected to true
+            if (myFinishRadio.selectedButton > 0) {
+                // Index 0 == 'None' and is not in the myFinishes array
+            	myFinishes[myFinishRadio.selectedButton-1].checkedState = true;
             }
-            //Get Finish
-            var myNoteText = new Array();
-            if (myNoteCheckbox.checkedState == true) {
-                myNoteText.push(myNoteTextField.editContents);
-            }
-            return {
-                process:   processSwatches,
-                spot:      spotSwatches,
-                finish:    myFinishSelect,
-                note:      myNoteText,
-                pageSizes: myPageSizeSlugCheckbox.checkedState
-            }
-        }
-    }
 
-    function setText(myApp,myCover,tf, swatchOBJ) {
+            //Get  Note
+            myNote.text = myNoteTextField.editContents;
+            myNote.checkedState = myNoteCheckbox.checkedState;
+
+            //Get font
+            if(fontDropDown.selectedIndex != 0){
+                registration_font = String(myFontsList[fontDropDown.selectedIndex]);
+            }
+
+            return {
+                measureUnit:       measureDropDown.selectedIndex,
+                process:           myCMYKSwatches,
+                spot:              mySpotSwatches,
+                finish:            myFinishes,
+                note:              myNote,
+                slugPageSize:      myPageSizeSlugCheckbox.checkedState,
+                slugTrimSize:      mySpreadSizeSlugCheckbox.checkedState,
+                registration_font: registration_font
+            }
+        };
+    };
+
+    function setText(myApp, doc, tf, swatchOBJ) {
         var tempString = "";
         var first = true;
         tf.contents = "";
 
         if (swatchOBJ.process.length > 0) {
-            myApp.Tools.addColor(myCover, "CB_Cyan", ColorModel.PROCESS, [100, 0, 0, 0]);
-            myApp.Tools.addColor(myCover, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
-            myApp.Tools.addColor(myCover, "CB_Yellow", ColorModel.PROCESS, [0, 0, 100, 0]);
-            myApp.Tools.addColor(myCover, "CB_Black", ColorModel.PROCESS, [0, 0, 0, 100]);
+            myApp.Tools.addColor(doc, "CB_Cyan",    ColorModel.PROCESS, [100, 0, 0, 0]);
+            myApp.Tools.addColor(doc, "CB_Magenta", ColorModel.PROCESS, [0, 100, 0, 0]);
+            myApp.Tools.addColor(doc, "CB_Yellow",  ColorModel.PROCESS, [0, 0, 100, 0]);
+            myApp.Tools.addColor(doc, "CB_Black",   ColorModel.PROCESS, [0, 0, 0, 100]);
 
             var i = swatchOBJ.process.length;
             while (i--) {
-                if (!first) {
+                if(swatchOBJ.process[i].checkedState){
+                    if (!first) {
+                        insertPoint = tf.insertionPoints[-1].index;
+                        tf.contents += " + ";
+                        addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                                    tf.insertionPoints[-1]);
+                        addonText.fillColor = "Registration";
+                        //addonText.fontStyle = "Regular";
+                    };
                     insertPoint = tf.insertionPoints[-1].index;
-                    tf.contents += " + ";
+                    tf.contents += swatchOBJ.process[i].name;
                     addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                        tf.insertionPoints[-1]);
-                    addonText.fillColor = "Registration";
-                    addonText.fontStyle = "Regular";
+                                tf.insertionPoints[-1]);
+                    addonText.fillColor = "CB_" + swatchOBJ.process[i].name;
+                    //addonText.fontStyle = "Bold";
+                    first = false;
                 }
-                insertPoint = tf.insertionPoints[-1].index;
-                tf.contents += swatchOBJ.process[i];
-                addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                    tf.insertionPoints[-1]);
-                addonText.fillColor = "CB_" + swatchOBJ.process[i];
-                addonText.fontStyle = "Bold";
-                first = false;
             }
-        }
+        };
 
         if (swatchOBJ.spot.length > 0) {
             var i = swatchOBJ.spot.length;
             while (i--) {
-                if (!first) {
+                if(swatchOBJ.spot[i].checkedState){
+                    if (!first) {
+                        insertPoint = tf.insertionPoints[-1].index;
+                        tf.contents += " + ";
+                        addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                                    tf.insertionPoints[-1]);
+                        addonText.fillColor = "Registration";
+                        //addonText.fontStyle = "Regular";
+                    }
                     insertPoint = tf.insertionPoints[-1].index;
-                    tf.contents += " + ";
+                    tf.contents += swatchOBJ.spot[i].name;
                     addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                        tf.insertionPoints[-1]);
-                    addonText.fillColor = "Registration";
-                    addonText.fontStyle = "Regular";
+                                tf.insertionPoints[-1]);
+                    addonText.fillColor = swatchOBJ.spot[i].name;
+                    //addonText.fontStyle = "Bold";
+                    first = false;
                 }
-                insertPoint = tf.insertionPoints[-1].index;
-                tf.contents += swatchOBJ.spot[i];
-                addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                    tf.insertionPoints[-1]);
-                addonText.fillColor = swatchOBJ.spot[i];
-                addonText.fontStyle = "Bold";
-                first = false;
             }
-        }
+        };
+        
         if (swatchOBJ.finish.length > 0) {
             var i = swatchOBJ.finish.length;
             while (i--) {
-                if (!first) {
+                if (swatchOBJ.finish[i].checkedState == true) {        
+                    if (!first) {
+                        insertPoint = tf.insertionPoints[-1].index;
+                        tf.contents += " + ";
+                        addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
+                            tf.insertionPoints[-1]);
+                        addonText.fillColor = "Registration";
+                        //addonText.fontStyle = "Regular";
+                    }
                     insertPoint = tf.insertionPoints[-1].index;
-                    tf.contents += " + ";
+                    tf.contents += swatchOBJ.finish[i].name;
                     addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                        tf.insertionPoints[-1]);
+                                tf.insertionPoints[-1]);
                     addonText.fillColor = "Registration";
-                    addonText.fontStyle = "Regular";
+                    //addonText.fontStyle = "Regular";
+                    first = false;
                 }
-                insertPoint = tf.insertionPoints[-1].index;
-                tf.contents += swatchOBJ.finish[i];
-                addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                    tf.insertionPoints[-1]);
-                addonText.fillColor = "Registration";
-                addonText.fontStyle = "Regular";
-                first = false;
             }
-        }
-        if (swatchOBJ.note.length > 0) {
+        };
+        
+        if (swatchOBJ.note.checkedState) {
             if (!first) {
                 insertPoint = tf.insertionPoints[-1].index;
                 tf.contents += " + ";
                 addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                    tf.insertionPoints[-1]);
+                            tf.insertionPoints[-1]);
                 addonText.fillColor = "Registration";
-                addonText.fontStyle = "Regular";
+                //addonText.fontStyle = "Regular";
             }
             insertPoint = tf.insertionPoints[-1].index;
-            tf.contents += swatchOBJ.note[0];
+            tf.contents += swatchOBJ.note.text;
             addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
-                tf.insertionPoints[-1]);
+                        tf.insertionPoints[-1]);
             addonText.fillColor = "Registration";
-            addonText.fontStyle = "Bold";
+            //addonText.fontStyle = "Bold";
             first = false;
-        }
-    }
+        };
+    };
     ////////////
     // expose //
     ////////////

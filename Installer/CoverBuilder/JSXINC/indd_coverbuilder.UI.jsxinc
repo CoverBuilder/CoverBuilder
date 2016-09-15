@@ -9,9 +9,15 @@
     function CoverOrder(myApp, CoverObject){
         // The Cover Object this function will return
         var C = null;
+
+        // This is a flag so we can check if we need to remove
+        // the CoverBuilder menu after the Dialog is closed.
+        var add_CoverBuilder_Menu = myApp.Settings.add_CoverBuilder_Menu;
+
         var CURR_CBMU = 0; // Current Measurement Unit in CBMU
 
-        var presetChange = true;
+        var onChangeActive = true;
+
         var savePS    = String(myApp.Localise.UI['SavePreset']);
         var clearPS   = String(myApp.Localise.UI['ClearPreset']);
         var lastUsed  = String(myApp.Localise.UI['LastUsed']);
@@ -32,12 +38,12 @@
         //////////////
         //  window  //
         //////////////
-        var myWindow = new Window ("dialog", "CoverBuilder " + myApp.Settings.version);
+        var myWindow = new Window ("palette", "CoverBuilder " + myApp.Settings.version);
             myWindow.orientation = "column";
-            myWindow.justify = "left";
-            myWindow.alignment = "left";
-            myWindow.margins = [10,10,10,12];
-            myWindow.spacing = 0;
+            myWindow.justify     = "left";
+            myWindow.alignment   = "left";
+            myWindow.margins     = [10,10,10,12];
+            myWindow.spacing     = 0;
 
         var inbetween = 10; // This is what indesign puts in between new elements, not a custom value!
 
@@ -46,152 +52,185 @@
 
         var unitWidthCombo = unitWidthShort + unitWidthLong + inbetween;
         var unitWidthLongShortLong = (unitWidthLong*2) + unitWidthShort + (inbetween*2);
-        var unitHeight = 25;
+        var unitHeight = 30;
 
         var extraSpace = 10;
+
+        function formatPresetName(Preset){
+            return Preset.name.toUpperCase() + "    ( " + Preset.height + " \u00D7 " + Preset.width + " )";
+        }
 
         ///////////////////////////////////////////////////////////////////////////// START WINDOW
         var globalGroup = myWindow.add ("group");
             globalGroup.orientation = "row";
             globalGroup.alignment   = "left";
             globalGroup.margins = [20,10,20,10];
-            var presets = globalGroup.add ("dropdownlist", [0,0,(unitWidthCombo*2)+inbetween,unitHeight], [String(myApp.Localise.UI['Presets']).toUpperCase()]);
-            for (var i=0,len=MyPresets.presets.length;i<len;i++) {
-                presets.add('item', formatPresetName(MyPresets.presets[i]) );
-            };
 
+        var presets = globalGroup.add ("dropdownlist", [0,0,(unitWidthCombo*2)+inbetween,unitHeight], [String(myApp.Localise.UI['NewPreset']).toUpperCase()]);
+
+        for (var i=0,len=MyPresets.presets.length;i<len;i++) {
+            presets.add('item', formatPresetName(MyPresets.presets[i]) );
+        };
+
+        presets.resetSelection = function(){
+            onChangeActive = false;
             presets.selection = 0;
+            onChangeActive = true;
+        }
 
-            var whiteSpace = globalGroup.add ("statictext", [0,0,(unitWidthLong*2)+unitWidthShort+(inbetween*2),unitHeight], "");
+        presets.resetSelection();
 
-            var mminch = globalGroup.add ("dropdownlist", [0,0,unitWidthShort,unitHeight], [String(myApp.Localise.UI['Mm']),String(myApp.Localise.UI['Inch']),String(myApp.Localise.UI['Pt'])]);
-            mminch.selection = CURR_CBMU;
+        //save load preset button
+        var presetBut = globalGroup.add ("button", [0,0,unitWidthLong+inbetween+unitWidthShort,unitHeight], savePS );
+
+        var whiteSpace = globalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], "");
+
+        var mminch = globalGroup.add ("dropdownlist", [0,0,unitWidthShort,unitHeight], myApp.STools.localisedValidMeasurementUnits(myApp));
+        mminch.selection = CURR_CBMU;
 
         /////////////////////////////////////////////////////////////////////////////
         var minimalGroup = myWindow.add ("group");
             minimalGroup.margins = [0,extraSpace,0,10+extraSpace];
-            var myHeightLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Height'])+":");
-                myHeightLabel.justify = "right";
+        
+        var myHeightLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Height'])+":");
+            myHeightLabel.justify = "right";
 
-            var myHeight = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+        var myHeight = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-            var myWidthLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Width'])+":");
-                myWidthLabel.justify = "right";
+        var myWidthLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Width'])+":");
+            myWidthLabel.justify = "right";
 
-            var myWidth = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+        var myWidth = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-            var mySpineLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Spine'])+":");
-                mySpineLabel.justify = "right";
+        var mySpineLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Spine'])+":");
+            mySpineLabel.justify = "right";
 
-            var mySpine = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+        var mySpine = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-            var myBleedLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Bleed'])+":");
-                myBleedLabel.justify = "right";
+        var myBleedLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Bleed'])+":");
+            myBleedLabel.justify = "right";
 
-            var myBleed = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+        var myBleed = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
         /////////////////////////////////////////////////////////////////////////////
+
         var optionalGroup = myWindow.add ("group");
             var optionalInputpanel = optionalGroup.add ("panel");
                 optionalInputpanel.margins = [10+extraSpace,10+extraSpace,10+extraSpace,5+extraSpace];
                 optionalInputpanel.orientation =  "column";
                 optionalInputpanel.alignChildren = "left";
 
-                var optional2Group = optionalInputpanel.add ("group");
-                    optional2Group.orientation =  "row";
+            var optional2Group = optionalInputpanel.add ("group");
+                optional2Group.orientation =  "row";
 
-                    var hingeOrScoreString = String(myApp.Localise.UI['Hinge']) + "/" + String(myApp.Localise.UI['Score']) + ":";
-                    var hingeDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- "+hingeOrScoreString,"+ "+hingeOrScoreString]);
-                    hingeDropdown.selection = 1;
-                    var myHinge = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+                var hingeOrScoreString = String(myApp.Localise.UI['Hinge']) + "/" + String(myApp.Localise.UI['Score']) + ":";
+                var hingeDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- "+hingeOrScoreString,"+ "+hingeOrScoreString]);
+                hingeDropdown.selection = 1;
+                var myHinge = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-                    var wrapDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- " + String(myApp.Localise.UI['Wrap']) + ":",
-                                                                                                                     "+ " + String(myApp.Localise.UI['Wrap']) + ":"]);
-                    wrapDropdown.selection = 1;
-                    var myWrap = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+                var wrapDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- " + String(myApp.Localise.UI['Wrap']) + " ("  + String(myApp.Localise.UI['Bleed']) + "):",
+                                                                                                                 "+ " + String(myApp.Localise.UI['Wrap']) + ":",
+                                                                                                                 "+ " + String(myApp.Localise.UI['Wrap']) + " (-" + String(myApp.Localise.UI['Bleed']) + "):"]);
+                wrapDropdown.selection = 1;
+                var myWrap = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-                var optional1Group = optionalInputpanel.add ("group");
-                    optional1Group.orientation =  "row";
+            var optional1Group = optionalInputpanel.add ("group");
+                optional1Group.orientation =  "row";
 
-                    var flapQBDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], [String(myApp.Localise.UI['Flaps'])+":",
-                                                                                                                       "- " + String(myApp.Localise.UI['Binding']) + ":",
-                                                                                                                       "+ " + String(myApp.Localise.UI['Binding']) + ":"]);
-                    flapQBDropdown.selection = 0;
-                    var myFlapQB = optional1Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+                var flapQBDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], [String(myApp.Localise.UI['Flaps'])+":",
+                                                                                                                   "- " + String(myApp.Localise.UI['Binding']) + ":",
+                                                                                                                   "+ " + String(myApp.Localise.UI['Binding']) + ":"]);
+                flapQBDropdown.selection = 0;
+                var myFlapQB = optional1Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
-                    var foldDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- " + String(myApp.Localise.UI['Fold']) + ": (" + String(myApp.Localise.UI['Flaps']) + ")",
-                                                                                                                     "+ " + String(myApp.Localise.UI['Fold']) + ":",
-                                                                                                                     "- " + String(myApp.Localise.UI['Fold']) + ": (" + String(myApp.Localise.UI['Width']) + ")"]);
-                    foldDropdown.selection = 0;
-                    foldDropdown.visible = false;
+                var foldDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- " + String(myApp.Localise.UI['Fold']) + ": (" + String(myApp.Localise.UI['Flaps']) + ")",
+                                                                                                                 "+ " + String(myApp.Localise.UI['Fold']) + ":",
+                                                                                                                 "- " + String(myApp.Localise.UI['Fold']) + ": (" + String(myApp.Localise.UI['Width']) + ")"]);
+                foldDropdown.selection = 0;
+                //foldDropdown.visible = false;
 
-                    var myFold = optional1Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
-                    myFold.visible = false;
+                var myFold = optional1Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+                myFold.visible = false;
 
-                var optional3Group = optionalInputpanel.add ("group");
-                    optional3Group.orientation =  "row";
+            var optional3Group = optionalInputpanel.add ("group");
+                optional3Group.orientation =  "row";
 
-                //margin button
-                var marginButAuto   = String(myApp.Localise.UI['Margin']) + ": " + String(myApp.Localise.UI['Auto']),
-                    marginButPreset = String(myApp.Localise.UI['Margin']) + ": " + String(myApp.Localise.UI['Preset']),
-                    marginButCustom = String(myApp.Localise.UI['Margin']) + ": " + String(myApp.Localise.UI['Custom']);
+            //margin button
+            var marginButAuto   = String(myApp.Localise.UI['Margin']) + ": " + String(myApp.Localise.UI['Auto']),
+                marginButPreset = String(myApp.Localise.UI['Margin']) + ": " + String(myApp.Localise.UI['Preset']),
+                marginButCustom = String(myApp.Localise.UI['Margin']) + ": " + String(myApp.Localise.UI['Custom']);
 
-                var marginBut = optional3Group.add ("button", [0,0,unitWidthCombo,unitHeight], String(myApp.Localise.UI['SetMargin']) );
-                    var marginText = optional3Group.add ("statictext", undefined, String(myApp.Localise.UI['GettingData']) );
+            var marginBut = optional3Group.add ("button", [0,0,unitWidthCombo,unitHeight], String(myApp.Localise.UI['SetMargin']) );
+            var marginText = optional3Group.add ("statictext", undefined, String(myApp.Localise.UI['GettingData']) );
 
-                    function updateMarginText(){
-                        marginText.text = String(myApp.Localise.UI['Top'])+": "+MarginObj.CVR14.top+", "+String(myApp.Localise.UI['Outside'])+": "+MarginObj.CVR14.outside_right+", "+String(myApp.Localise.UI['Bottom'])+": "+MarginObj.CVR14.bottom+", "+String(myApp.Localise.UI['Inside'])+": "+MarginObj.CVR14.inside_left+" ("+String(myApp.Localise.UI['Cover'])+" 1-4)";
-                    }
-                    updateMarginText();
+            function updateMarginText(){
+                marginText.text = String(myApp.Localise.UI['Top'])+": "+MarginObj.CVR14.top+", "+String(myApp.Localise.UI['Outside'])+": "+MarginObj.CVR14.outside_right+", "+String(myApp.Localise.UI['Bottom'])+": "+MarginObj.CVR14.bottom+", "+String(myApp.Localise.UI['Inside'])+": "+MarginObj.CVR14.inside_left+" ("+String(myApp.Localise.UI['Cover'])+" 1-4)";
+            }
+            updateMarginText();
 
-                    try{
-                        marginText.graphics.font = ScriptUI.newFont ("Verdana", "Regular", 10);
-                    } catch(_){
-                        //do nothing
-                    }
+            try{
+                marginText.graphics.font = ScriptUI.newFont ("Verdana", "Regular", 10);
+            } catch(_){
+                // Cosmetic: Do nothing
+            }
+            try{
+                marginText.graphics.foregroundColor = marginText.graphics.newPen (myWindow.graphics.PenType.SOLID_COLOR, [0.5, 0.5, 0.5], 0,5);
+            } catch(_){
+                // Cosmetic: Do nothing
+            }
 
-                    marginText.graphics.foregroundColor = marginText.graphics.newPen (myWindow.graphics.PenType.SOLID_COLOR, [0.5, 0.5, 0.5], 0,5);
-
-                    marginBut.onClick = function () {
-                        try{
-                            var updatedMarginObj = showMarginWindow(myApp, getCoverObjectFromUI(myApp, "CURRENT_UI"));
-                            if(myApp.JSON.stringify(updatedMarginObj) != myApp.JSON.stringify(MarginObj)){
-                                // Something has changed
-                                MarginObj = updatedMarginObj;
-                                marginBut.text = marginButCustom;
-                                updateMarginText();
-                                if(presetChange == false){
-                                    presetBut.text = savePS;
-                                }
-                            }
-                        } catch(e){
-                            alert(e);
+            marginBut.onClick = function () {
+                try{
+                    var updatedMarginObj = showMarginWindow(myApp, getCoverObjectFromUI(myApp, "CURRENT_UI"));
+                    if(myApp.JSON.stringify(updatedMarginObj) != myApp.JSON.stringify(MarginObj)){
+                        // Something has changed
+                        MarginObj = updatedMarginObj;
+                        marginBut.text = marginButCustom;
+                        updateMarginText();
+                        if( onChangeActive ){
+                            presetBut.text = savePS;
                         }
                     }
-
-                var optional4Group = optionalInputpanel.add ("group");
-                    optional4Group.orientation =  "row";
+                } catch(e){
+                    alert("CoverBuilder Error\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+                }
+            }
 
         /////////////////////////////////////////////////////////////////////////////
+        
         var myButtonGroup = myWindow.add ("group");
             myButtonGroup.margins = [20,20+extraSpace,20,10+extraSpace];
             myButtonGroup.alignment = "right";
 
-            //register button
-            var helpBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Help']) );
-                helpBut.onClick = function () {
-                    myApp.STools.getHelp();
-                }
+        //register button
+        var helpBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Help']) );
+            helpBut.onClick = function () {
+                myApp.STools.getHelp();
+            }
 
-            //save load preset button
-            var presetBut = myButtonGroup.add ("button", undefined, savePS );
-            //OK CANCEL buttons
-            var cancelBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
-            var buildBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Ok']), {name:"ok"} );
+        //Settings button
+        var preferencesBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Preferences']) );
+
+        //OK CANCEL buttons
+        var cancelBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
+        var buildBut = myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Ok']), {name:"OK"} );
+
+        // Set Return to OK window
+        buildBut.shortcutKey = 'R';
+        buildBut.onShortcutKey = buildBut.onClick;
+        myWindow.defaultElement = buildBut; 
 
         ///////////////////////////////////////////////////////////////////////////// END WINDOW
 
         ////////////// dialog functionality
+        cancelBut.onClick = function () {
+            myWindow.close();
+        }
+
+        preferencesBut.onClick = function () {
+            myApp.Helper.PreferencesUI.load_Pref_UI(myApp);
+        }
+
         buildBut.onClick = function () {
             // Check input
             try{
@@ -207,13 +246,29 @@
 
                 // Check for minimal page size: InDesign can't handle pages smaller then 0.5mm
                 //------
-                var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", mminch.selection.text, 4); // Minimum page width for indesign
-                var thisSpine   = parseFloat(mySpine.text);
-                var thisWidth   = parseFloat(myWidth.text);
-                var thisHeight  = parseFloat(myHeight.text);
+                var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, parseFloat(mminch.selection), 4); // Minimum page width for indesign
 
-                if(thisSpine <= minimumPageWidth || thisWidth <= minimumPageWidth || thisHeight <= minimumPageWidth){
+                var thisSpine   = myApp.NumCon.NaN20( parseFloat(  mySpine.text) );
+                var thisWidth   = myApp.NumCon.NaN20( parseFloat(  myWidth.text) );
+                var thisHeight  = myApp.NumCon.NaN20( parseFloat( myHeight.text) );
+
+                if(thisWidth <= minimumPageWidth){
                     alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_at_least']) + minimumPageWidth + " " + mminch.selection.text);
+                    // Set spine fiels active
+                    myWidth.active = true;
+                    return null;
+                }
+                if(thisHeight <= minimumPageWidth){
+                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_at_least']) + minimumPageWidth + " " + mminch.selection.text);
+                    // Set spine field active
+                    myHeight.active = true;
+                    return null;
+                }
+                
+                if(thisSpine <= minimumPageWidth){
+                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_at_least']) + minimumPageWidth + " " + mminch.selection.text);
+                    // Set spine fiels active
+                    mySpine.active = true;
                     return null;
                 }
 
@@ -221,27 +276,47 @@
                 // let's safe settings to -last used- preset and set the Cover (C) object
                 // This is the object that this function will return at the end.
                 //------
-                if(add2Presets(myApp, lastUsed, true)){
+                var added = add2Presets(myApp, lastUsed, true);
+                if(added.ok){
                     myApp.JSON.saveFile(myApp, f, MyPresets);
                     C = MyPresets.presets[MyPresets.presets.length-1];
                     myWindow.close();
+
+                    myApp.Build.cover(myApp, C);
+                    
+                    // plugin Autorun
+                    for ( var i = 0; i < myApp.plugins.length; i++ ) {
+                        var plugIndex = myApp.STools.getPluginfoIndex(myApp, myApp.Settings.pluginfo, myApp.plugins[i].plugin_name);
+                        if(plugIndex >= 0){
+                            if(myApp.Settings.pluginfo[plugIndex].launch_on_load){
+                                myApp.plugins[i].init(myApp);
+                            }
+                        } else {
+                            // This should never happen but if it does let me know
+                            alert("CoverBuilder\nCould not load settings for plugin: " + myApp.plugins[i].plugin_name);
+                            // Do your job regardless
+                            if(myApp.plugins[i].launch_on_load){
+                                myApp.plugins[i].init(myApp);
+                            }
+                        }
+                    }
+                    return null;
                 } else {
                     alert(String(myApp.Localise.UIalert['trouble_saving_settings']));
                     return null;
                 }
-            } catch(err){
-                alert(String(myApp.Localise.UIalert['encountered_error']) + err);
+            } catch(e){
+                alert(String(myApp.Localise.UIalert['encountered_error']) + e.message + " (Line " + e.line + " in file " + e.fileName + ")");
                 return null;
             }
         }
         presetBut.onClick = function () {
             if(presetBut.text == savePS){
                 //create preset
-                var cp = add2Presets(myApp, prompt(String(myApp.Localise.UIalert['Name'])));
-                if(cp == "error"){
-                    //User is allready up-to-date!
-                } else if(cp != true){ //reset presets
-                    alert(String(myApp.Localise.UIalert['Error_creating_presets']) + String(myApp.Localise.UIalert['Please_check_input']));
+                var cp = add2Presets(myApp, prompt(String(myApp.Localise.UI['Name'])));
+                if( !cp.ok && !cp.user_notified ){
+                    // If the user is not notifed about an error (or did not want to overwrite a preset)
+                    alert( String(myApp.Localise.UIalert['Error_creating_presets']) );
                 } else {
                     //update dialog
                     presets.add('item', formatPresetName(MyPresets.presets[MyPresets.presets.length-1]) );
@@ -249,7 +324,7 @@
                     try{
                         myApp.JSON.saveFile(myApp, f, MyPresets);
                     } catch(e){
-                        alert(String(myApp.Localise.UIalert['Error_saving_presets'])+e.description);
+                        alert(String(myApp.Localise.UIalert['Error_saving_presets']) + "\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
                     }
                 }
             } else if(presetBut.text == clearPS){
@@ -263,65 +338,78 @@
                 alert(String(myApp.Localise.UIalert['Error_saving_presets']) + "presetBut.text = " + presetBut.text);
             }
         }
+
         presets.onChange = function () {
-            presetChange = true;
-            if(presets.selection-1 >= 0){
-                //make sure user can't delete last used settings
-                if(MyPresets.presets[presets.selection-1].name != String(myApp.Localise.UI['LastUsed'])){
-                    presetBut.text = clearPS;
+            if( onChangeActive ){
+                if(presets.selection > 0){
+                    //make sure user can't delete last used settings
+                    if(MyPresets.presets[presets.selection-1].name != String(myApp.Localise.UI['LastUsed']).toUpperCase() ){
+                        presetBut.text = clearPS;
+                    } else {
+                        presetBut.text = savePS;
+                    }
+                    // Loading presets in UI
+                    loadUIdata(MyPresets.presets[presets.selection-1]);
                 } else {
                     presetBut.text = savePS;
+                    resetUIdata(myApp);
                 }
-                // Loading presets in UI
-                loadUIdata(MyPresets.presets[presets.selection-1]);
-            } else {
-                presetBut.text = savePS;
             }
-            presetChange = false;
         }
+
         mminch.onChange = function () {
-            if(presetChange == false){
-                presets.selection = 0;
+            if( onChangeActive){
+                presets.resetSelection();
                 presetBut.text = savePS;
                 //ask user if he wants to convert numbers
                 if(confirm(String(myApp.Localise.UIalert['Convert_numbers']))===true){
-                    convert2(myApp, myApp.NumCon.cUnit(myApp, mminch.selection.text));
+                    convert2(myApp, myApp.NumCon.cUnit(myApp, parseFloat(mminch.selection) ));
                 }
             }
             // Keep track of current units
-            CURR_CBMU = myApp.NumCon.cUnit(myApp, mminch.selection.text);
+            CURR_CBMU = myApp.NumCon.cUnit(myApp, parseFloat(mminch.selection) );
         }
         myWidth.onChange = function () {
-            presets.selection = 0;
-            presetBut.text = savePS;
-            myWidth.text = parseFloat(myWidth.text.replace(",", "."));
-            if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
-                hingeDropdown.selection = 1;
+            if( onChangeActive ){
+                presets.resetSelection();
+                presetBut.text = savePS;
+                myWidth.text = myApp.NumCon.NaN20( parseFloat(myWidth.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+                if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
+                    hingeDropdown.selection = 1;
+                }
             }
         }
         myHeight.onChange = function () {
-            presets.selection = 0;
-            presetBut.text = savePS;
-            myHeight.text = parseFloat(myHeight.text.replace(",", "."))
+            if( onChangeActive ){
+                presets.resetSelection();
+                presetBut.text = savePS;
+                myHeight.text = myApp.NumCon.NaN20( parseFloat(myHeight.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+            }
         }
         mySpine.onChange = function () {
-            presetBut.text = savePS;
-            mySpine.text = parseFloat(mySpine.text.replace(",", "."));
+            if( onChangeActive ){
+                presets.resetSelection();
+                presetBut.text = savePS;
+                mySpine.text = myApp.NumCon.NaN20( parseFloat(mySpine.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+            }
         }
         myBleed.onChange = function () {
-            presetBut.text = savePS;
-            myBleed.text = parseFloat(myBleed.text.replace(",", "."));
-            if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
-                wrapDropdown.selection = 1;
-                alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+            if( onChangeActive ){
+                presets.resetSelection();
+                presetBut.text = savePS;
+                myBleed.text = myApp.NumCon.NaN20( parseFloat(myBleed.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+                if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
+                    wrapDropdown.selection = 1;
+                    alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                }
             }
         }
         myFlapQB.onChange = function () {
-            if(presetChange == false){
-               presets.selection = 0;
-               presetBut.text = savePS;
-               myFlapQB.text = parseFloat(myFlapQB.text.replace(",", "."));
-               if(parseFloat(myFlapQB.text) > 0 && flapQBDropdown.selection == 0){
+            if( onChangeActive ){
+                presets.resetSelection();
+                presetBut.text = savePS;
+                myFlapQB.text = myApp.NumCon.NaN20( parseFloat(myFlapQB.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+                if( flapQBDropdown.selection == 0){
                     foldDropdown.visible = true;
                     myFold.visible = true;
                 } else {
@@ -331,43 +419,44 @@
             }
         }
         wrapDropdown.onChange = function () {
-            if(presetChange == false){
-                presets.selection = 0;
+            if( onChangeActive ){
+                presets.resetSelection();
                 presetBut.text = savePS;
-            }
-            if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0 && presetChange == false){
-                wrapDropdown.selection = 1;
-                alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
+                    wrapDropdown.selection = 1;
+                    alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                }
             }
         }
+
         hingeDropdown.onChange = function () {
-            if(presetChange == false){
-                presets.selection = 0;
+            if( onChangeActive ){
+                presets.resetSelection();
                 presetBut.text = savePS;
-            }
-            if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
-                hingeDropdown.selection = 1;
-                alert(String(myApp.Localise.UIalert['Cant_subtract_hinge_from_cover']));
+                if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
+                    hingeDropdown.selection = 1;
+                    alert(String(myApp.Localise.UIalert['Cant_subtract_hinge_from_cover']));
+                }
             }
         }
+
         flapQBDropdown.onChange = function () {
-            if(presetChange == false){
-                presets.selection = 0;
+            if( onChangeActive ){
+                presets.resetSelection();
                 presetBut.text = savePS;
                 if(this.selection != 0){
                     foldDropdown.visible = false;
                     myFold.visible = false;
                 } else {
-                    if(parseFloat(myFlapQB.text) > 0){
-                        foldDropdown.visible = true;
-                        myFold.visible = true;
-                    }
+                    foldDropdown.visible = true;
+                    myFold.visible = true;
                 }
             }
         }
+
         foldDropdown.onChange = function () {
-            if(presetChange == false){
-                presets.selection = 0;
+            if( onChangeActive ){
+                presets.resetSelection();
                 presetBut.text = savePS;
                 if(parseFloat(myFlapQB.text) <= parseFloat(myFold.text) && flapQBDropdown.selection == 0 && this.selection == 0){
                     this.selection = 1;
@@ -375,26 +464,38 @@
                 }
             }
         }
+
         myHinge.onChange = function () {
-            presets.selection = 0;
-            myHinge.text = parseFloat(myHinge.text.replace(",", "."));
-            if(parseFloat(myHinge.text) >= parseFloat(myWidth.text)){
-                hingeDropdown.selection = 1;
+            if( onChangeActive ){
+                presets.resetSelection();
+                myHinge.text = myApp.NumCon.NaN20( parseFloat(myHinge.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+                if(parseFloat(myHinge.text) >= parseFloat(myWidth.text)){
+                    hingeDropdown.selection = 1;
+                }
             }
         }
+
         myFold.onChange = function () {
-            presetBut.text = savePS;
-            myFold.text = parseFloat(myFold.text.replace(",", "."));
-            if(parseFloat(myFold.text) >= parseFloat(myFlapQB.text)){
-                foldDropdown.selection = 1;
+            if( onChangeActive ){
+                presets.resetSelection();
+                presetBut.text = savePS;
+                myFold.text = myApp.NumCon.NaN20( parseFloat(myFold.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+                if(parseFloat(myFold.text) >= parseFloat(myFlapQB.text)){
+                    foldDropdown.selection = 1;
+                }
             }
         }
+
         myWrap.onChange = function () {
-            presetBut.text = savePS;
-            myWrap.text = parseFloat(myWrap.text.replace(",", "."));
-            if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0 && presetChange == false){
-                wrapDropdown.selection = 1;
-                alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+            if( onChangeActive ){
+                presets.resetSelection();
+                presetBut.text = savePS;
+                myWrap.text = myApp.NumCon.NaN20( parseFloat(myWrap.text.replace(",", ".").replace(/[^\d.]/g, '')) );
+                if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
+                    //wrapDropdown.selection = 1;
+                    myWrap.text = 0;
+                    alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                }
             }
         }
 
@@ -436,15 +537,51 @@
                      flap: newFlap,
                      fold: newFold,
                      inExCludeFold: myApp.NumCon.NaN20(parseFloat(foldDropdown.selection)),
-                     wrap: myApp.NumCon.NaN20(parseFloat(myWrap.text)),
+                     wrap:          myApp.NumCon.NaN20(parseFloat(myWrap.text)),
                      inExCludeWrap: myApp.NumCon.NaN20(parseFloat(wrapDropdown.selection)),
-                     margin: MarginObj,
-                     measureUnit: myApp.NumCon.NaN20(parseFloat(mminch.selection)),
-                     resolved: false };
+                     margin:        MarginObj,
+                     measureUnit:   myApp.NumCon.NaN20(parseFloat(mminch.selection)),
+                     slugPageSize:  myApp.Settings.pageSizes_in_Slug,
+                     slugTrimSize:  myApp.Settings.totalTrim_in_Slug,
+                     resolved:      false,
+                     colorProfile:  "undefined"};
+        }
+
+        function resetUIdata(myApp){
+            // This function clears all data in the UI
+            // and sets the UI to default values
+
+            onChangeActive = false; // Deactivate UI onChange
+
+            mminch.selection         = 0;
+            CURR_CBMU                = 0;
+
+            hingeDropdown.selection  = 0;
+            wrapDropdown.selection   = 1;
+            foldDropdown.selection   = 0;
+            flapQBDropdown.selection = 0;
+
+            myWidth.text             = 0;
+            myHeight.text            = 0;
+            mySpine.text             = 0;
+            myBleed.text             = 0;
+            myHinge.text             = 0;
+            myWrap.text              = 0;
+            marginBut.text           = marginButAuto;
+            myFlapQB.text            = 0;
+            myFold.text              = 0;
+
+            MarginObj                = myApp.STools.MarginObj;
+            myFold.visible           = true;
+            foldDropdown.visible     = true;
+
+            onChangeActive = true; // Reactivate UI onChange
         }
 
         function loadUIdata(thisC){
-            // This function loads a Cover object into the menu
+            // This function loads a Cover object into the UI
+            onChangeActive = false; // Deactivate UI onChange
+
             mminch.selection        = thisC.measureUnit;
             myWidth.text            = thisC.width;
             myHeight.text           = thisC.height;
@@ -474,56 +611,49 @@
 
                 myFold.text = thisC.fold;
 
-                if(myFlapQB.text > 0){
-                    myFold.visible = true;
-                    foldDropdown.visible = true;
-                } else {
-                    myFold.visible = false;
-                    foldDropdown.visible = false;
-                }
+                myFold.visible = true;
+                foldDropdown.visible = true;
             }
-            
-            CURR_CBMU = thisC.measureUnit;
-        }
 
-        function formatPresetName(Preset){
-            if(Preset.name.length < 4){
-                var mt = "\t\t\t\t( ";
-            } else if (Preset.name.length < 8){
-                var mt = "\t\t\t( ";
-            } else if (Preset.name.length < 12){
-                var mt = "\t\t( ";
-            } else {
-                var mt = "\t( ";
-            }
-            return Preset.name.toUpperCase() + mt + Preset.height + " \u00D7 " + Preset.width + " )";
+            CURR_CBMU = thisC.measureUnit;
+            onChangeActive = true; // Reactivate UI onChange
         }
 
         function add2Presets(myApp, newName, overwriteLastUsed){
+            onChangeActive = false;
+
+            function returnRes(OK, MSG, USER_NOTIFIED){
+                var OK            = Boolean(OK == true); // Optional parameter
+                var USER_NOTIFIED = Boolean(USER_NOTIFIED == true); // Optional parameter
+                onChangeActive = true;
+                return {ok: OK, response:"ID78925456: " + String(MSG), user_notified: USER_NOTIFIED};
+            }
+
             var overwriteLastUsed = overwriteLastUsed || false;
             if(overwriteLastUsed.constructor != Boolean){
-                overwriteLastUsed =  false;
+                overwriteLastUsed = false;
                 //I want to know if we receive something unexpected
                 alert(String(myApp.Localise.UIalert['encountered_error']) + "indd_coverbuilder.UI.jsxinc -> add2Presets -> Expected Boolean" );
             }
+
             if(typeof newName == 'string'){
                 if( (newName != lastUsed) || overwriteLastUsed){
                     //check if newName is allready in list, if so remove the old one
                     var plen = MyPresets.presets.length-1;
                     for (var i = plen; i >= 0; i--) {
                         if(MyPresets.presets[i].name == newName){
-                          //ask if the user wants to overwrite this preset
-                          if(overwriteLastUsed){
+                            //ask if the user wants to overwrite this preset
+                            if(overwriteLastUsed){
                               var cool = true;
-                          } else {
+                            } else {
                               var cool = confirm(String(myApp.Localise.UI['overwrite_preset']));
-                          }
-                          if(cool){
+                            }
+                            if(cool){
                               MyPresets.presets.splice(i,1);
                               presets.remove(i+1);
-                          } else {
-                              return "error";
-                          }
+                            } else {
+                              return returnRes(false, "User did not want to save message.");
+                            }
                         }
                     }
                 }
@@ -531,17 +661,15 @@
                 try{
                     MyPresets.presets.push(getCoverObjectFromUI(myApp, newName));
                 } catch (e) {
-                    alert(e);
+                    alert("CoverBuilder Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
                 }
-                return myApp.STools.sameProps(MyPresets, myApp.STools.PresetObj); //report back if it went well
-            } //end check for string
-            return "error";
-        }
 
-        function resetPresetDrop(){
-            if(presetChange === false){
-                dlg.presetDrop.items[0].selected = true;
-            }
+                //report back if it went well
+                var returnObj = myApp.STools.sameProps(MyPresets, myApp.STools.PresetObj); //returns {ok: bool, response: string }
+                return returnRes(returnObj.ok, returnObj.response);
+
+            } //end check for string
+            return returnRes(false, "End of function, nothing happend.");
         }
 
         function convert2(myApp, unit){
@@ -555,17 +683,18 @@
             myWrap.text     = myApp.NumCon.convert(myApp, parseFloat(myWrap.text   ), CURR_CBMU, unit, 3);
         }
 
+        // Fill the dialog with data
         if(LoadCoverObject){
-            // Fill the dialog with data
             loadUIdata(Cool);
         } else if(myApp.Settings.autoload_last_used_settings){
+            onChangeActive = true;
             presets.selection = MyPresets.presets.length;
         }
 
-        presetChange = false;
-        myWindow.show();
+        // Make sure onChange is activated
+        onChangeActive = true;
 
-        return C;
+        myWindow.show();
     }
 
     //--------------------------------------------------------------------------------------------------- START SHOW MARGIN WINDOW
@@ -573,9 +702,15 @@
         // Param C Object
         // Returns margin object, either original C margin or with updated values
 
+        var unitWidthShort = 70; // Fit 6 numbers and separator: 000.000
+        var unitHeight = 30;
+
+        var linkClosedIcon = "\u0089PNG\r\n\x1A\n\x00\x00\x00\rIHDR\x00\x00\x00\x1A\x00\x00\x00\x1A\b\x03\x00\x00\x00\u009E\u0094\u00BC\u00FC\x00\x00\x00\tpHYs\x00\x00\x0B\x13\x00\x00\x0B\x13\x01\x00\u009A\u009C\x18\x00\x009\u00AEiTXtXML:com.adobe.xmp\x00\x00\x00\x00\x00<?xpacket begin=\"\u00EF\u00BB\u00BF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"Adobe XMP Core 5.6-c111 79.158325, 2015/09/10-01:10:20        \">\n   <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n      <rdf:Description rdf:about=\"\"\n            xmlns:xmpMM=\"http://ns.adobe.com/xap/1.0/mm/\"\n            xmlns:stRef=\"http://ns.adobe.com/xap/1.0/sType/ResourceRef#\"\n            xmlns:stEvt=\"http://ns.adobe.com/xap/1.0/sType/ResourceEvent#\"\n            xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"\n            xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n            xmlns:photoshop=\"http://ns.adobe.com/photoshop/1.0/\"\n            xmlns:tiff=\"http://ns.adobe.com/tiff/1.0/\"\n            xmlns:exif=\"http://ns.adobe.com/exif/1.0/\">\n         <xmpMM:OriginalDocumentID>xmp.did:0fe892e1-c957-4b2a-a54f-d4aa7134cf65</xmpMM:OriginalDocumentID>\n         <xmpMM:DocumentID>xmp.did:9FE19284AE0811E5915DF5559821E449</xmpMM:DocumentID>\n         <xmpMM:InstanceID>xmp.iid:b894ba9b-598f-4ed3-997b-953b997ade1e</xmpMM:InstanceID>\n         <xmpMM:DerivedFrom rdf:parseType=\"Resource\">\n            <stRef:instanceID>xmp.iid:73a9816c-f47f-452a-8045-2aebb3894ee7</stRef:instanceID>\n            <stRef:documentID>xmp.did:0fe892e1-c957-4b2a-a54f-d4aa7134cf65</stRef:documentID>\n         </xmpMM:DerivedFrom>\n         <xmpMM:History>\n            <rdf:Seq>\n               <rdf:li rdf:parseType=\"Resource\">\n                  <stEvt:action>saved</stEvt:action>\n                  <stEvt:instanceID>xmp.iid:b894ba9b-598f-4ed3-997b-953b997ade1e</stEvt:instanceID>\n                  <stEvt:when>2016-01-08T20:06:24+11:00</stEvt:when>\n                  <stEvt:softwareAgent>Adobe Photoshop CC 2015 (Macintosh)</stEvt:softwareAgent>\n                  <stEvt:changed>/</stEvt:changed>\n               </rdf:li>\n            </rdf:Seq>\n         </xmpMM:History>\n         <xmp:CreatorTool>Adobe Photoshop CC 2015 (Macintosh)</xmp:CreatorTool>\n         <xmp:CreateDate>2016-01-08T19:15:38+11:00</xmp:CreateDate>\n         <xmp:ModifyDate>2016-01-08T20:06:24+11:00</xmp:ModifyDate>\n         <xmp:MetadataDate>2016-01-08T20:06:24+11:00</xmp:MetadataDate>\n         <dc:format>image/png</dc:format>\n         <photoshop:ColorMode>2</photoshop:ColorMode>\n         <tiff:Orientation>1</tiff:Orientation>\n         <tiff:XResolution>720000/10000</tiff:XResolution>\n         <tiff:YResolution>720000/10000</tiff:YResolution>\n         <tiff:ResolutionUnit>2</tiff:ResolutionUnit>\n         <exif:ColorSpace>65535</exif:ColorSpace>\n         <exif:PixelXDimension>26</exif:PixelXDimension>\n         <exif:PixelYDimension>26</exif:PixelYDimension>\n      </rdf:Description>\n   </rdf:RDF>\n</x:xmpmeta>\n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                            \n<?xpacket end=\"w\"?>\u00A6\x1F\b\u0083\x00\x00\x00 cHRM\x00\x00z%\x00\x00\u0080\u0083\x00\x00\u00F9\u00FF\x00\x00\u0080\u00E8\x00\x00R\b\x00\x01\x15X\x00\x00:\u0097\x00\x00\x17o\u00D7Z\x1F\u0090\x00\x00\x03\x00PLTE\u00C9\u00C9\u00C9EEE\x7F\x7F\x7FRRRuuu\\\\\\\u00CB\u00CB\u00CB\u00B4\u00B4\u00B4\u00BE\u00BE\u00BEiii\u0081\u0081\u0081\u00A7\u00A7\u00A7\u00A2\u00A2\u00A2PPPrrr\u00C7\u00C7\u00C7\u00B9\u00B9\u00B9VVV\u00AF\u00AF\u00AF\u0087\u0087\u0087\u00FF\u00FF\u00FF\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1A\x1A\x1A\x1B\x1B\x1B\x1C\x1C\x1C\x1D\x1D\x1D\x1E\x1E\x1E\x1F\x1F\x1F   !!!\"\"\"###$$$%%%&&&'''((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7F\x7F\x7F\u0080\u0080\u0080\u0081\u0081\u0081\u0082\u0082\u0082\u0083\u0083\u0083\u0084\u0084\u0084\u0085\u0085\u0085\u0086\u0086\u0086\u0087\u0087\u0087\u0088\u0088\u0088\u0089\u0089\u0089\u008A\u008A\u008A\u008B\u008B\u008B\u008C\u008C\u008C\u008D\u008D\u008D\u008E\u008E\u008E\u008F\u008F\u008F\u0090\u0090\u0090\u0091\u0091\u0091\u0092\u0092\u0092\u0093\u0093\u0093\u0094\u0094\u0094\u0095\u0095\u0095\u0096\u0096\u0096\u0097\u0097\u0097\u0098\u0098\u0098\u0099\u0099\u0099\u009A\u009A\u009A\u009B\u009B\u009B\u009C\u009C\u009C\u009D\u009D\u009D\u009E\u009E\u009E\u009F\u009F\u009F\u00A0\u00A0\u00A0\u00A1\u00A1\u00A1\u00A2\u00A2\u00A2\u00A3\u00A3\u00A3\u00A4\u00A4\u00A4\u00A5\u00A5\u00A5\u00A6\u00A6\u00A6\u00A7\u00A7\u00A7\u00A8\u00A8\u00A8\u00A9\u00A9\u00A9\u00AA\u00AA\u00AA\u00AB\u00AB\u00AB\u00AC\u00AC\u00AC\u00AD\u00AD\u00AD\u00AE\u00AE\u00AE\u00AF\u00AF\u00AF\u00B0\u00B0\u00B0\u00B1\u00B1\u00B1\u00B2\u00B2\u00B2\u00B3\u00B3\u00B3\u00B4\u00B4\u00B4\u00B5\u00B5\u00B5\u00B6\u00B6\u00B6\u00B7\u00B7\u00B7\u00B8\u00B8\u00B8\u00B9\u00B9\u00B9\u00BA\u00BA\u00BA\u00BB\u00BB\u00BB\u00BC\u00BC\u00BC\u00BD\u00BD\u00BD\u00BE\u00BE\u00BE\u00BF\u00BF\u00BF\u00C0\u00C0\u00C0\u00C1\u00C1\u00C1\u00C2\u00C2\u00C2\u00C3\u00C3\u00C3\u00C4\u00C4\u00C4\u00C5\u00C5\u00C5\u00C6\u00C6\u00C6\u00C7\u00C7\u00C7\u00C8\u00C8\u00C8\u00C9\u00C9\u00C9\u00CA\u00CA\u00CA\u00CB\u00CB\u00CB\u00CC\u00CC\u00CC\u00CD\u00CD\u00CD\u00CE\u00CE\u00CE\u00CF\u00CF\u00CF\u00D0\u00D0\u00D0\u00D1\u00D1\u00D1\u00D2\u00D2\u00D2\u00D3\u00D3\u00D3\u00D4\u00D4\u00D4\u00D5\u00D5\u00D5\u00D6\u00D6\u00D6\u00D7\u00D7\u00D7\u00D8\u00D8\u00D8\u00D9\u00D9\u00D9\u00DA\u00DA\u00DA\u00DB\u00DB\u00DB\u00DC\u00DC\u00DC\u00DD\u00DD\u00DD\u00DE\u00DE\u00DE\u00DF\u00DF\u00DF\u00E0\u00E0\u00E0\u00E1\u00E1\u00E1\u00E2\u00E2\u00E2\u00E3\u00E3\u00E3\u00E4\u00E4\u00E4\u00E5\u00E5\u00E5\u00E6\u00E6\u00E6\u00E7\u00E7\u00E7\u00E8\u00E8\u00E8\u00E9\u00E9\u00E9\u00EA\u00EA\u00EA\u00EB\u00EB\u00EB\u00EC\u00EC\u00EC\u00ED\u00ED\u00ED\u00EE\u00EE\u00EE\u00EF\u00EF\u00EF\u00F0\u00F0\u00F0\u00F1\u00F1\u00F1\u00F2\u00F2\u00F2\u00F3\u00F3\u00F3\u00F4\u00F4\u00F4\u00F5\u00F5\u00F5\u00F6\u00F6\u00F6\u00F7\u00F7\u00F7\u00F8\u00F8\u00F8\u00F9\u00F9\u00F9\u00FA\u00FA\u00FA\u00FB\u00FB\u00FB\u00FC\u00FC\u00FC\u00FD\u00FD\u00FD\u00FE\u00FE\u00FE\u00FF\u00FF\u00FF\u00E1\u009A\u00D6\x16\x00\x00\x00\x15tRNS\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\x00+\u00D9}\u00EA\x00\x00\x00ZIDATx\u00DA\u00E4\u00D1\u00A7\x11\x001\fDQE\x07\u00E0\u00B8\u00EE\u00BF\u00D6\u0083\x16\u00B9\n,\u00F2\u00C1\x03\u00D2\u008C\u00E8\u00FC\x0E\u00BDK\x00\x10{I\x12Q\u0092\u00DBK6\u00CC\x04\x00\x001\x1B\x16\u00A8\u00CEzz\"\"J\u00FD\u00D4Y\x03\u00F9v_\u00AA\u00AA\u00AA\u00CB}{\u00DC\u00D5r)\u00B9\u00DD\u00C6\x0B\u0099\u0099c\u00DF\u00FC\u00D77\x00T&0\u00D7\\$\u00E1\u00A4\x00\x00\x00\x00IEND\u00AEB`\u0082";
+        var linkOpenIcon = "\u0089PNG\r\n\x1A\n\x00\x00\x00\rIHDR\x00\x00\x00\x1A\x00\x00\x00\x1A\b\x03\x00\x00\x00\u009E\u0094\u00BC\u00FC\x00\x00\x00\tpHYs\x00\x00\x0B\x13\x00\x00\x0B\x13\x01\x00\u009A\u009C\x18\x00\x00;jiTXtXML:com.adobe.xmp\x00\x00\x00\x00\x00<?xpacket begin=\"\u00EF\u00BB\u00BF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"Adobe XMP Core 5.6-c111 79.158325, 2015/09/10-01:10:20        \">\n   <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n      <rdf:Description rdf:about=\"\"\n            xmlns:xmpMM=\"http://ns.adobe.com/xap/1.0/mm/\"\n            xmlns:stRef=\"http://ns.adobe.com/xap/1.0/sType/ResourceRef#\"\n            xmlns:stEvt=\"http://ns.adobe.com/xap/1.0/sType/ResourceEvent#\"\n            xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"\n            xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n            xmlns:photoshop=\"http://ns.adobe.com/photoshop/1.0/\"\n            xmlns:tiff=\"http://ns.adobe.com/tiff/1.0/\"\n            xmlns:exif=\"http://ns.adobe.com/exif/1.0/\">\n         <xmpMM:OriginalDocumentID>xmp.did:0fe892e1-c957-4b2a-a54f-d4aa7134cf65</xmpMM:OriginalDocumentID>\n         <xmpMM:DocumentID>xmp.did:9FE19284AE0811E5915DF5559821E449</xmpMM:DocumentID>\n         <xmpMM:InstanceID>xmp.iid:e9f62b23-8157-4063-a58a-646253db1de6</xmpMM:InstanceID>\n         <xmpMM:DerivedFrom rdf:parseType=\"Resource\">\n            <stRef:instanceID>xmp.iid:73a9816c-f47f-452a-8045-2aebb3894ee7</stRef:instanceID>\n            <stRef:documentID>xmp.did:0fe892e1-c957-4b2a-a54f-d4aa7134cf65</stRef:documentID>\n         </xmpMM:DerivedFrom>\n         <xmpMM:History>\n            <rdf:Seq>\n               <rdf:li rdf:parseType=\"Resource\">\n                  <stEvt:action>saved</stEvt:action>\n                  <stEvt:instanceID>xmp.iid:b894ba9b-598f-4ed3-997b-953b997ade1e</stEvt:instanceID>\n                  <stEvt:when>2016-01-08T20:06:24+11:00</stEvt:when>\n                  <stEvt:softwareAgent>Adobe Photoshop CC 2015 (Macintosh)</stEvt:softwareAgent>\n                  <stEvt:changed>/</stEvt:changed>\n               </rdf:li>\n               <rdf:li rdf:parseType=\"Resource\">\n                  <stEvt:action>saved</stEvt:action>\n                  <stEvt:instanceID>xmp.iid:e9f62b23-8157-4063-a58a-646253db1de6</stEvt:instanceID>\n                  <stEvt:when>2016-01-08T20:12:52+11:00</stEvt:when>\n                  <stEvt:softwareAgent>Adobe Photoshop CC 2015 (Macintosh)</stEvt:softwareAgent>\n                  <stEvt:changed>/</stEvt:changed>\n               </rdf:li>\n            </rdf:Seq>\n         </xmpMM:History>\n         <xmp:CreatorTool>Adobe Photoshop CC 2015 (Macintosh)</xmp:CreatorTool>\n         <xmp:CreateDate>2016-01-08T19:15:38+11:00</xmp:CreateDate>\n         <xmp:ModifyDate>2016-01-08T20:12:52+11:00</xmp:ModifyDate>\n         <xmp:MetadataDate>2016-01-08T20:12:52+11:00</xmp:MetadataDate>\n         <dc:format>image/png</dc:format>\n         <photoshop:ColorMode>2</photoshop:ColorMode>\n         <tiff:Orientation>1</tiff:Orientation>\n         <tiff:XResolution>720000/10000</tiff:XResolution>\n         <tiff:YResolution>720000/10000</tiff:YResolution>\n         <tiff:ResolutionUnit>2</tiff:ResolutionUnit>\n         <exif:ColorSpace>65535</exif:ColorSpace>\n         <exif:PixelXDimension>26</exif:PixelXDimension>\n         <exif:PixelYDimension>26</exif:PixelYDimension>\n      </rdf:Description>\n   </rdf:RDF>\n</x:xmpmeta>\n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                                                                                                    \n                            \n<?xpacket end=\"w\"?>\u00C1 \u00E0\u00A6\x00\x00\x00 cHRM\x00\x00z%\x00\x00\u0080\u0083\x00\x00\u00F9\u00FF\x00\x00\u0080\u00E8\x00\x00R\b\x00\x01\x15X\x00\x00:\u0097\x00\x00\x17o\u00D7Z\x1F\u0090\x00\x00\x03\x00PLTE\u00C9\u00C9\u00C9EEE\x7F\x7F\x7FRRRuuu\\\\\\\u00CB\u00CB\u00CB\u00B4\u00B4\u00B4\u00BE\u00BE\u00BEiii\u0081\u0081\u0081\u00A7\u00A7\u00A7\u00A2\u00A2\u00A2PPPrrr\u00C7\u00C7\u00C7\u00B9\u00B9\u00B9VVV\u00AF\u00AF\u00AF\u0087\u0087\u0087\u00FF\u00FF\u00FF\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1A\x1A\x1A\x1B\x1B\x1B\x1C\x1C\x1C\x1D\x1D\x1D\x1E\x1E\x1E\x1F\x1F\x1F   !!!\"\"\"###$$$%%%&&&'''((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7F\x7F\x7F\u0080\u0080\u0080\u0081\u0081\u0081\u0082\u0082\u0082\u0083\u0083\u0083\u0084\u0084\u0084\u0085\u0085\u0085\u0086\u0086\u0086\u0087\u0087\u0087\u0088\u0088\u0088\u0089\u0089\u0089\u008A\u008A\u008A\u008B\u008B\u008B\u008C\u008C\u008C\u008D\u008D\u008D\u008E\u008E\u008E\u008F\u008F\u008F\u0090\u0090\u0090\u0091\u0091\u0091\u0092\u0092\u0092\u0093\u0093\u0093\u0094\u0094\u0094\u0095\u0095\u0095\u0096\u0096\u0096\u0097\u0097\u0097\u0098\u0098\u0098\u0099\u0099\u0099\u009A\u009A\u009A\u009B\u009B\u009B\u009C\u009C\u009C\u009D\u009D\u009D\u009E\u009E\u009E\u009F\u009F\u009F\u00A0\u00A0\u00A0\u00A1\u00A1\u00A1\u00A2\u00A2\u00A2\u00A3\u00A3\u00A3\u00A4\u00A4\u00A4\u00A5\u00A5\u00A5\u00A6\u00A6\u00A6\u00A7\u00A7\u00A7\u00A8\u00A8\u00A8\u00A9\u00A9\u00A9\u00AA\u00AA\u00AA\u00AB\u00AB\u00AB\u00AC\u00AC\u00AC\u00AD\u00AD\u00AD\u00AE\u00AE\u00AE\u00AF\u00AF\u00AF\u00B0\u00B0\u00B0\u00B1\u00B1\u00B1\u00B2\u00B2\u00B2\u00B3\u00B3\u00B3\u00B4\u00B4\u00B4\u00B5\u00B5\u00B5\u00B6\u00B6\u00B6\u00B7\u00B7\u00B7\u00B8\u00B8\u00B8\u00B9\u00B9\u00B9\u00BA\u00BA\u00BA\u00BB\u00BB\u00BB\u00BC\u00BC\u00BC\u00BD\u00BD\u00BD\u00BE\u00BE\u00BE\u00BF\u00BF\u00BF\u00C0\u00C0\u00C0\u00C1\u00C1\u00C1\u00C2\u00C2\u00C2\u00C3\u00C3\u00C3\u00C4\u00C4\u00C4\u00C5\u00C5\u00C5\u00C6\u00C6\u00C6\u00C7\u00C7\u00C7\u00C8\u00C8\u00C8\u00C9\u00C9\u00C9\u00CA\u00CA\u00CA\u00CB\u00CB\u00CB\u00CC\u00CC\u00CC\u00CD\u00CD\u00CD\u00CE\u00CE\u00CE\u00CF\u00CF\u00CF\u00D0\u00D0\u00D0\u00D1\u00D1\u00D1\u00D2\u00D2\u00D2\u00D3\u00D3\u00D3\u00D4\u00D4\u00D4\u00D5\u00D5\u00D5\u00D6\u00D6\u00D6\u00D7\u00D7\u00D7\u00D8\u00D8\u00D8\u00D9\u00D9\u00D9\u00DA\u00DA\u00DA\u00DB\u00DB\u00DB\u00DC\u00DC\u00DC\u00DD\u00DD\u00DD\u00DE\u00DE\u00DE\u00DF\u00DF\u00DF\u00E0\u00E0\u00E0\u00E1\u00E1\u00E1\u00E2\u00E2\u00E2\u00E3\u00E3\u00E3\u00E4\u00E4\u00E4\u00E5\u00E5\u00E5\u00E6\u00E6\u00E6\u00E7\u00E7\u00E7\u00E8\u00E8\u00E8\u00E9\u00E9\u00E9\u00EA\u00EA\u00EA\u00EB\u00EB\u00EB\u00EC\u00EC\u00EC\u00ED\u00ED\u00ED\u00EE\u00EE\u00EE\u00EF\u00EF\u00EF\u00F0\u00F0\u00F0\u00F1\u00F1\u00F1\u00F2\u00F2\u00F2\u00F3\u00F3\u00F3\u00F4\u00F4\u00F4\u00F5\u00F5\u00F5\u00F6\u00F6\u00F6\u00F7\u00F7\u00F7\u00F8\u00F8\u00F8\u00F9\u00F9\u00F9\u00FA\u00FA\u00FA\u00FB\u00FB\u00FB\u00FC\u00FC\u00FC\u00FD\u00FD\u00FD\u00FE\u00FE\u00FE\u00FF\u00FF\u00FF\u00E1\u009A\u00D6\x16\x00\x00\x00\x15tRNS\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\u00FF\x00+\u00D9}\u00EA\x00\x00\x00ZIDATx\u00DA\u00E4\u0091;\x0E\u00C0 \fCC>\x05\x06D\u00C1\u00B9\u00FFY;TU\u00B2\u00F4\x04dy\u00B2\u00DE`K!\u00FF=:W\x01@f(\u00BE\u0088.\x0E\u0086\u00D2\u00A9\u00CA\u0080;\u00C0\u00AAS\u0093\u00EAw\u008F\u008E/\u00BC\u00CA\u00B6\u00D9\x12q\x17Yf\u00DBr\u00D7\u00A8\u00AD\u00D5\x11\u00CC\x0BK)%\u00F3\u00CC\x7F=\x03\x00\x1E\x7F1s\u00CB\u00E3a\x1C\x00\x00\x00\x00IEND\u00AEB`\u0082";
+
         function panel(thisGroup, panelName, theseMargins) {
             this.changeInternal = false;
-
+            this.currUnits = theseMargins.units;
             // panel class
             this.name = panelName;
             this.linkedPanels = new Array();
@@ -603,7 +738,7 @@
 
              //CVR1 Outside
             this.Row1.add ("statictext", undefined, this.inside_left_text);
-            this.inside_left = this.Row1.add ("edittext", undefined, theseMargins.inside_left);
+            this.inside_left = this.Row1.add ("edittext", [0,0,unitWidthShort,unitHeight], theseMargins.inside_left);
             this.inside_left.characters = 6;
 
             // C O L U M N - 2
@@ -613,21 +748,22 @@
 
             //CVR1 Top
             this.Row2.add ("statictext", undefined, String(myApp.Localise.UI['Top']));
-            this.top = this.Row2.add ("edittext", undefined, theseMargins.top);
+            this.top = this.Row2.add ("edittext", [0,0,unitWidthShort,unitHeight], theseMargins.top);
             this.top.characters = 6;
 
-            this.Row2.add ("statictext", undefined, " ");
-            //this.Row2.add ("statictext", undefined, " ");
-            this.unit = this.Row2.add ("dropdownlist", undefined, [String(myApp.Localise.UI['Mm']),String(myApp.Localise.UI['Inch']),String(myApp.Localise.UI['Pt'])]);
+            this.Row2.add ("statictext", [0,0,unitWidthShort,0], " "); // Prettify
+            this.unit = this.Row2.add ("dropdownlist", [0,0,unitWidthShort,unitHeight], myApp.STools.localisedValidMeasurementUnits(myApp));
             this.unit.selection = theseMargins.units;
 
             //CVR1 Bottom
             this.Row2.add ("statictext", undefined, String(myApp.Localise.UI['Bottom']));
-            this.bottom = this.Row2.add ("edittext", undefined, theseMargins.bottom);
+            this.bottom = this.Row2.add ("edittext", [0,0,unitWidthShort,unitHeight], theseMargins.bottom);
             this.bottom.characters = 6;
 
             this.Row2.add ("statictext", undefined, " ");
-            this.link = this.Row2.add ("checkbox", undefined, String(myApp.Localise.UI['Link']));
+            //this.link = this.Row2.add ("checkbox", undefined, String(myApp.Localise.UI['Link']));
+            this.link = this.Row2.add ("iconbutton", [0,0,26,26], linkClosedIcon, {toggle: true});
+
             this.link.value = theseMargins.linked;
 
             // C O L U M N - 3
@@ -640,11 +776,10 @@
 
             //CVR1 Inside
             this.Row3.add ("statictext", undefined, this.outside_right_text);
-            this.outside_right = this.Row3.add ("edittext", undefined, theseMargins.outside_right);
+            this.outside_right = this.Row3.add ("edittext", [0,0,unitWidthShort,unitHeight], theseMargins.outside_right);
             this.outside_right.characters = 6;
 
             this.getSettings = function(){
-                alert(myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.top.text)),3           ));
                 return {
                     top             : myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.top.text)),3           ),
                     outside_right   : myApp.NumCon.doRound( myApp.NumCon.NaN20(parseFloat(this.outside_right.text)),3 ),
@@ -669,11 +804,27 @@
                     this.inside_left.text   = ReplaceMargins.inside_left;
                     this.bottom.text        = ReplaceMargins.bottom;
                     this.unit.selection     = ReplaceMargins.units;
+                    this.currUnits          = ReplaceMargins.units;
                 }
                 this.changeInternal = false;
             }
 
             var self = this;
+
+            self.convertUnits = function(oldUnit, newUnit){
+
+                this.changeInternal = true; //prevent recursion
+
+                self.top.text           = myApp.NumCon.convert(myApp, parseFloat(self.top.text           ), oldUnit, newUnit, 3);
+                self.outside_right.text = myApp.NumCon.convert(myApp, parseFloat(self.outside_right.text ), oldUnit, newUnit, 3);
+                self.inside_left.text   = myApp.NumCon.convert(myApp, parseFloat(self.inside_left.text   ), oldUnit, newUnit, 3);
+                self.bottom.text        = myApp.NumCon.convert(myApp, parseFloat(self.bottom.text        ), oldUnit, newUnit, 3);
+                self.unit.selection     = newUnit;
+                self.currUnits          = newUnit;
+
+                self.changeInternal = false;
+            }
+
             self.changeLinked = function(){
                 if(self.link.value){
                     var marginupdate = self.getSettings();
@@ -697,8 +848,19 @@
                     }
                 }
             }
+
+            self.unit.onChange = function () {
+                if(!self.changeInternal){ // prevent recursion
+                    if(confirm(String(myApp.Localise.UIalert['Convert_numbers']))===true){
+                        //alert("Convert numbers from " + self.currUnits + " to " + parseInt(self.unit.selection));
+                        self.convertUnits(self.currUnits, parseInt(self.unit.selection) );
+                    }
+                    // Update linked panels
+                    self.changeLinked()
+                }
+            }
+
             self.link.onClick           = function(){self.getLinkData()}
-            self.unit.onChange          = function(){if(!self.changeInternal){self.changeLinked()}}
             self.inside_left.onChange   = function(){self.changeLinked()}
             self.outside_right.onChange = function(){self.changeLinked()}
             self.top.onChange           = function(){self.changeLinked()}
@@ -761,8 +923,8 @@
         var myButtonGroup = marginWindow.add ("group");
             myButtonGroup.margins = [20,5,20,15];
             myButtonGroup.alignment = "center";
-            myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
-            myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Ok']), {name:"ok"} );
+            myButtonGroup.add ("button", [0,0,unitWidthShort,unitHeight], String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
+            myButtonGroup.add ("button", [0,0,unitWidthShort,unitHeight], String(myApp.Localise.UI['Ok']), {name:"ok"} );
         // BUTTONS ///////////////////////////////////////////////
 
         var myResult = marginWindow.show();
@@ -788,7 +950,7 @@
     }
     //--------------------------------------------------------------------------------------------------- END MARGIN WINDOW
 
-    function getFontName(myApp){
+    function getAvailableFontFamilies(){
         // This funtion is written by Marijan Tompa (thank you tomaxxi)
         // https://indisnip.wordpress.com/2010/08/04/get-font-styles-from-font-family/
         Array.prototype.unique = function (){
@@ -799,36 +961,33 @@
                 r[r.length] = this[i];}
             return r;
         }
-        Array.prototype.findIn = function(search){
-            var r = Array();
-            for (var i=0; i<this.length; i++)
-                if (this[i].indexOf(search) != -1){
-                    r.push(this[i].substr(this[i].indexOf("\t") + 1, this[i].length));
-                }
-            return r;
-        }
+        return app.fonts.everyItem().fontFamily.unique();
+    }
 
-        var myFonts = app.fonts.everyItem();
-        var myFontsList = myFonts.fontFamily.unique();
+    function getFontName(myApp){
+        var returnObj = {fontName : undefined, savePrefs : false};
+
+        var myFontsList = getAvailableFontFamilies();
             myFontsList.unshift("- Select Font Family -");
 
         var myWin = new Window('dialog', 'My Fonts');
         myWin.orientation = 'row';
         with(myWin){
             myWin.sText = add('statictext', undefined, 'Select Font for Slug:');
-            myWin.myFontDrop = add('dropdownlist',undefined,undefined,{items:myFontsList});
+            myWin.myFontDrop = add('dropdownlist', undefined, undefined, {items:myFontsList});
             myWin.myFontDrop.selection = 0;
+            myWin.savePrefs = add("checkbox", undefined, "Update my preferences");
+            myWin.savePrefs.value = false;
             myWin.btnOK = add('button', undefined, 'OK');
             };
         myWin.center();
-        var myWindow = myWin.show();
 
-        if(myWindow == true && myWin.myFontDrop.selection.index != 0){
-            var myFont = myWin.myFontDrop.selection;
-            var myFontStyles = myFonts.name.findIn(myFont);
+        if(myWin.show() == true && myWin.myFontDrop.selection.index != 0){
+            returnObj.fontName   = String(myWin.myFontDrop.selection);
+            returnObj.savePrefs  = myWin.savePrefs.value;
         }
 
-        return {fontName : myFont, fontStyles : myFontStyles};
+        return returnObj;
     }
 
     ////////////
@@ -836,6 +995,7 @@
     ////////////
       return {
         CoverOrder  : CoverOrder,
-        getFontName : getFontName
+        getFontName : getFontName,
+        getAvailableFontFamilies : getAvailableFontFamilies
     };
 })();

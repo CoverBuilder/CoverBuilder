@@ -1,0 +1,291 @@
+// Initialises the CoverBuilder plugin
+// Version 1.0
+
+(function() {
+    //////////////
+    // privates //
+    //////////////
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // C O M M O N   F U N C T I O N S
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    function checkPathObj(pathObj){
+        for(var prop in pathObj) {
+            if(!File(pathObj[prop]).exists){
+                alert("CoverBuilder\nCan't find module "+prop+" at: " + pathObj[prop]);
+                // ask to locate it?
+                exit();
+            }
+        }
+    }
+
+    function loadUserSettings(myApp, NewSettings){
+        var Settings = undefined;
+        //read settings file
+        var fSettings = File(myApp.PathTo.settings);
+        if(fSettings.exists){
+            fSettings.open('r');
+            var settings = fSettings.read();
+            fSettings.close();
+        } else {
+            var settings = false;
+        }
+        if(settings){
+            try{
+                Settings = myApp.JSON.parse(settings);
+            } catch(e){
+                //alert("CoverBuilder\nCan't read settings at " + myApp.PathTo.settings);
+                //Settings = myApp.JSON.ask2Safe(myApp, "CoverBuilder settings seem corrupt!\nWould you like me to overwrite with new settings?", fSettings, NewSettings);
+                Settings = NewSettings;
+            }
+        } else {
+            Settings = NewSettings;
+        }
+        
+        // Check if PathInfo contains pathToPlugin!
+        // and add it to the settings before saving
+        if(NewSettings.Platform.hasOwnProperty('pathToPlugin')) {
+            Settings.Platform.pathToPlugin = NewSettings.Platform.pathToPlugin;
+        }
+        
+        if(Settings.version != NewSettings.version){
+            //alert("CoverBuilder is updating to " + NewSettings.version);
+            //var updatedSettings = updateUserSettings(myApp, Settings, NewSettings);
+            //Settings = myApp.JSON.saveFile(myApp, fSettings, updatedSettings);
+            Settings = updateUserSettings(myApp, Settings, NewSettings);
+        }
+
+        Settings.pluginfo = updatePlugInfo(myApp, Settings);
+        
+        // Safe settings
+        Settings = myApp.JSON.saveFile(myApp, fSettings, Settings);
+
+        return Settings;
+    }
+
+    function updateUserSettings(myApp, OldSettings, NewSettings){
+        // This function will try and copy the old settings
+        for (var key in NewSettings) {
+            if(OldSettings.hasOwnProperty(key) && key != "version" && key != "Platform"){
+                NewSettings[key] = OldSettings[key];
+            }
+        }
+        return NewSettings;
+    }
+
+    function getPaths(PlatformInfo){
+        // F O L D E R S
+        var PathTo = {
+                plugin         : PlatformInfo.pathToPlugin,
+                settingsFolder : Folder.userData + PlatformInfo.trailSlash,
+                libraryFolder  : PlatformInfo.pathToPlugin + "INDD_LIB" + PlatformInfo.trailSlash,
+                helpers        : PlatformInfo.pathToPlugin + "Helpers"  + PlatformInfo.trailSlash,
+                plugins        : PlatformInfo.pathToPlugin + "Plugins"  + PlatformInfo.trailSlash,
+                scriptFolder   : PlatformInfo.pathToPlugin + "JSXINC"   + PlatformInfo.trailSlash
+        }
+        // F I L E S
+        PathTo.settings    = PathTo.settingsFolder + "CoverBuilder.settings";
+        PathTo.preferences = PathTo.settingsFolder + "CoverBuilder.preferences";
+
+        return PathTo;
+    }
+
+    function getSettings(PlatformInfo){
+        var NewSettings = {
+            version                        : "3.0.0",            // String
+            add_CoverBuilder_Menu          : true,               // Boolean // If set to false menu will be removed
+            autoload_last_used_settings    : true,               // Boolean
+            autoload_front_document        : true,               // Boolean // If set to true it will over-ride the autoload_last_used_settings
+            pageSizes_in_Slug              : true,               // Boolean // Show page sizes in slug
+            totalTrim_in_Slug              : true,               // Boolean // Show total trim in slug
+            break_frames_on_spine_change   : true,               // Boolean // Remember the Break Frames over Cover checkBox state when changing the spine
+            ask_for_PPI_on_send            : true,               // Boolean // IF set to true CoverBuilder will show PPI option when sending to PS
+            registration_font              : "Myriad",           // String  // Myriad is a sans serrif font that comes with InDesign
+            standardPPI                    : 300,                // Number
+            add_drop_shadow                : false, //quicker    // Boolean //Setting is for Photoshop only
+            add_margin_guides              : false, //cleaner    // Boolean //Setting is for Photoshop only
+            Platform                       : PlatformInfo,       // Object
+            mmSlug                         : 5,                  // Number: in millimetres
+            minPageWidthINDD               : 0.5,                // Number: in millimetres
+            pluginfo                       : []                  // Array of pluginfo Objects {plugin_name: string, launch_on_load: boolean, add_to_menu: boolean}
+        }
+        return NewSettings;
+    }
+
+    function getModulePaths(PathTo) {
+        var Module = {
+            Localise   : PathTo.scriptFolder + "coverbuilder.Localisation.jsxinc",
+            JSON       : PathTo.scriptFolder + "coverbuilder.JSON.jsxinc",
+            STools     : PathTo.scriptFolder + "coverbuilder.SharedTools.jsxinc",
+            NumCon     : PathTo.scriptFolder + "coverbuilder.NumberConversion.jsxinc",
+            // INDESIGN SPECIFIC MODULES //
+            LibTool    : PathTo.scriptFolder + "indd_coverbuilder.LibTools.jsxinc",
+            Tools      : PathTo.scriptFolder + "indd_coverbuilder.Tools.jsxinc",
+            UI         : PathTo.scriptFolder + "indd_coverbuilder.UI.jsxinc",
+            IDmenu     : PathTo.scriptFolder + "indd_coverbuilder.MenuLoader.jsxinc",
+            XMP        : PathTo.scriptFolder + "indd_coverbuilder.XMP.jsxinc",
+            Slugs      : PathTo.scriptFolder + "indd_coverbuilder.Slugs.jsxinc",
+            Build      : PathTo.scriptFolder + "indd_coverbuilder.Build.jsxinc",
+            // PHOTOSHOP SPECIFIC MODULES //
+            PSui       : PathTo.scriptFolder + "ps_coverbuilder.UI.jsxinc",
+            PStools    : PathTo.scriptFolder + "ps_coverbuilder.Tools.jsxinc",
+            PSprogress : PathTo.scriptFolder + "ps_Progressor.UI.jsxinc",
+            PSbuild    : PathTo.scriptFolder + "ps_coverbuilder.Build.jsxinc"
+        }
+
+        checkPathObj(Module);
+        return Module;
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // I N D E S I G N
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    
+    function getPlugins(folder){
+        var plugins = new Array;
+        var files = folder.getFiles();
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            if (file instanceof File) {
+                // Ignore hidden files and files without .jsinc extensions
+                if(file.name.indexOf('.') != 0 || file.name.indexOf('.jsxinc') != -1 ) {
+                    try{
+                        var thisPlugin = $.evalFile(new File(file));
+                        if(thisPlugin.hasOwnProperty("plugin_name") && thisPlugin.hasOwnProperty("launch_on_load") && thisPlugin.hasOwnProperty("add_to_menu") && thisPlugin.hasOwnProperty("menu_items") ){
+                            // I consider this a valid plugin now :)
+                            if(!thisPlugin.hasOwnProperty("activated")){
+                                thisPlugin.activated = true;
+                            }
+                            plugins.push(thisPlugin);
+                        }
+                    } catch(e){
+                        alert("CoverBuilder Plugin Error\n" + e.message + " (Line " + e.line + " in file " + e.fileName + ")");
+                    }
+                }
+            }
+            else if (file instanceof Folder) {
+                //plugins can use folders for their private files
+                continue;
+            }
+            else {
+                throw new Error("Can't load plugin at \"" + file.fullName);
+            }
+        }
+        return plugins;
+    }
+
+    function updatePlugInfo(myApp, Settings){
+        var updatedPlugInfo = new Array();
+
+        for ( var i=0; i < myApp.plugins.length; i++ ) {
+            updatedPlugInfo.push( myApp.STools.getPluginSettingsFor(myApp, myApp.plugins[i], Settings) );
+        }
+
+        return updatedPlugInfo;
+    }
+
+    function newCover(myApp){
+    
+        if(myApp.Settings.autoload_front_document && app.documents.length > 0){
+            // There are documents open!
+            var C = null; // initialise the famous Cover Object
+            C = myApp.Tools.guessC(myApp, app.activeDocument);
+            if( C != null ){
+                myApp.UI.CoverOrder(myApp, C);
+                return;
+            }
+        }
+        // If we have not yet returned get the UI going
+        myApp.UI.CoverOrder(myApp);
+
+    }
+
+    function getIndesignHelperPaths(PathTo) {
+        var Helpers = {
+                LoadDocPresets : PathTo.helpers + "CB_LoadDocPresets.jsxinc",
+                PS             : PathTo.helpers + "CB_Send2Photoshop.jsxinc",
+                SlugFinisher   : PathTo.helpers + "CB_SlugFinisher.jsxinc",
+                PreferencesUI  : PathTo.helpers + "CB_PreferencesUI.jsxinc",
+                OpenLib        : PathTo.helpers + "CB_OpenLibUI.jsxinc",
+                Spine          : PathTo.helpers + "CB_Spine_Corrector.jsxinc",
+                Place          : PathTo.helpers + "CB_Place.jsxinc",
+                BreakFrames    : PathTo.helpers + "CB_BreakFrames.jsxinc"
+        }
+        checkPathObj(Helpers);
+        return Helpers;
+    }
+
+    function build4Indesign(PlatformInfo){
+        $.localize = true; // enable ExtendScript localisation engine
+        
+        // Build app from modules
+        var myApp = new Object();
+            // Create shortcuts
+            myApp.PathTo  = getPaths(PlatformInfo);
+            myApp.GO      = newCover;
+            myApp.Module  = getModulePaths(myApp.PathTo);
+            myApp.Helpers = getIndesignHelperPaths(myApp.PathTo);
+            myApp.Helper  = new Object();
+
+        for (var key in myApp.Module) {
+            //alert(key); #4567890987654
+            myApp[key] = $.evalFile(new File(myApp.Module[key]));
+        }
+        for (var key in myApp.Helpers) {
+            myApp.Helper[key] = $.evalFile(new File(myApp.Helpers[key]));
+        }
+
+        // P L U G I N S
+        myApp.plugins = getPlugins(Folder(myApp.PathTo.plugins));
+        
+        // U S E R S E T T I N G S
+        myApp.Settings = loadUserSettings(myApp, getSettings(PlatformInfo));
+        
+        return myApp;
+    
+    }
+    
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // P H O T O S H O P
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    
+    function build4Photoshop(PlatformInfo){
+        $.localize = true; // enable ExtendScript localisation engine
+        
+        // Build app from modules
+        var myApp = new Object();
+            // Create shortcuts
+            myApp.PathTo  = getPaths(PlatformInfo);
+            myApp.Module  = getModulePaths(myApp.PathTo);
+        for (var key in myApp.Module) {
+            myApp[key] = $.evalFile(new File(myApp.Module[key]));
+        }
+
+        // P L U G I N S
+        myApp.plugins = getPlugins(Folder(myApp.PathTo.plugins));
+        
+        // U S E R S E T T I N G S
+        myApp.Settings = loadUserSettings(myApp, getSettings(PlatformInfo));
+
+        return myApp;
+
+    }
+ 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // I L L U S T R A T O R
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    function build4Illustrator(PlatformInfo){
+        return("Coming later!");
+    }
+    
+    ////////////
+    // expose //
+    ////////////
+    return {
+        build4InDesign    : build4Indesign,
+        build4Photoshop   : build4Photoshop,
+        build4Illustrator : build4Illustrator
+    };
+})();

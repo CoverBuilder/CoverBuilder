@@ -4,10 +4,10 @@
 --------------------------------------------
 
     CB_LoadSettingsDoc.jsxinc   (A CoverBuilder Helper Script)
-    An InDesign CS5 Javascript      (Tested in CS6)
-    Version 0.1 Alpha
+    An InDesign CS5 Javascript  (Tested in CS6 - CC 2015)
+    Version 1
 
-    Bruno Herfst 2014
+    Bruno Herfst 2014-2016
 
     This script loads settings from current document into coverbuilder
 
@@ -21,18 +21,46 @@
     //////////////
 
     function loadsettings(myApp) {
-        var myCover = myApp.Tools.getActiveCover(myApp);
-        var C       = myApp.XMP.retrieveCoverObject(myApp, myCover);
+        try{
+            var myCover = myApp.Tools.getActiveCover(myApp, true);
+            var C       = myApp.XMP.retrieveCoverObject(myApp, myCover);
+            
+            if( C == null ) {
+                C = myApp.Tools.guessC(myApp, myCover);
+            }
+            
+            if( C != null ){
+                if( (C.width > 0) && (!C.resolved) ){
+                    // Let's check the Doc to see if it matches up
+                    // If not alert the user
+                    var check = myApp.Tools.checkCagainstDoc(myApp, myCover, C, true);
 
-        if( C != null ){
-            C  = myApp.UI.CoverOrder(myApp, C);
-        } else {
-           alert("Could not load cover details.");
-           return;
+                    if( !check.message.ok ){
+                    	alert( "CoverBuilder: " + String(myApp.Localise.UIalert['Beware_Data_Out_of_Date']) + "\n" + check.message.text);
+					}
+
+					// Update data if changed
+					if(check.C_changed){
+						C = check.C;
+					}
+
+                    myApp.UI.CoverOrder(myApp, C);  //UI with C data
+
+                } else { // Not a good C object
+                    C = myApp.Tools.guessC(myApp, myCover);
+                    if( C == null){
+                    	alert( "CoverBuilder\n" + String(myApp.Localise.UIalert['doc_not_build_with_coverBuilder']) );
+                        return;
+                    }
+                    myApp.UI.CoverOrder(myApp, C);  //UI with C data
+                }
+            } else {
+               alert( "CoverBuilder\n" + String(myApp.Localise.UIalert['Could_not_load_Cover_Details']) );
+               return;
+            }
+        } catch(e) {
+            alert("CoverBuilder Load Settings Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
-        if(C != null){
-            myApp.Build.cover(myApp, C);
-        } // else user pressed cancel
     }
 
     ////////////

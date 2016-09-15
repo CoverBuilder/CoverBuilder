@@ -1,13 +1,25 @@
 // Shared Tools
 // Indesign helpers for CoverBuilder and CoverBuilderPS
 // Bruno Herfst 2014
-// Version 1.2
+// Version 1.3
 
 (function() {
     //////////////
     // privates //
     //////////////
+    
     var validMeasurementUnits = ["mm", "inch", "pt"]; // In that order! This is how they appear in the dropdowns and this script saves the indexes as a preset
+    
+    function localisedValidMeasurementUnits(myApp){
+        return [String(myApp.Localise.UI['Mm']),String(myApp.Localise.UI['Inch']),String(myApp.Localise.UI['Pt'])];
+    }
+    
+    function getLocalisedUnits(myApp, Cunits){
+        // Converts a C unit to a localised units String
+        // For example: input 0 = returns: mm
+        var localUnits = localisedValidMeasurementUnits(myApp);
+        return localUnits[Cunits];
+    }
 
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS variables
@@ -20,10 +32,10 @@
         };
 
     var PresetObj = {"presets": [
-            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false},
-            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, resolved:false}
+            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, slugPageSize:true, slugTrimSize:true, resolved:false, colorProfile:"undefined", registration_font:"undefined", extraGuides: new Array()},
+            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, slugPageSize:true, slugTrimSize:true, resolved:false, colorProfile:"undefined", registration_font:"undefined", extraGuides: new Array()}
         ]};
-               
+
     //-----------------------------------------------------------------------------------
     //  C (COVER OBJECT) TOOLS
     //-----------------------------------------------------------------------------------
@@ -33,14 +45,18 @@
         var inddMU = returnInDesignMeasurementUnits || false;
         switch(typeof C) {
             case "object":
-            case "number":
                 // We need to return a string
                 if(C.hasOwnProperty("measureUnit")){
                     var munit = C.measureUnit;
+                    return getMeasurementUnits(myApp, munit, inddMU);
                 } else if( !isNaN(parseInt(C)) ){
                     var munit = parseInt(C); // We got a number, let give back the corresponding unit
+                    return getMeasurementUnits(myApp, munit, inddMU);
+                } else {
+                    alert("Could not parse measure unit from object.");
                 }
-                switch(munit) {
+            case "number":
+                switch(C) {
                     case 0:
                         if(inddMU){
                             return 2053991795;
@@ -60,55 +76,85 @@
                         return String(myApp.Localise.UI['Pt']);
                         break;
                     default:
-                        alert("getMeasurementUnits could not find unit from " + munit);
+                        alert("getMeasurementUnits could not find unit for number: " + munit);
                         return undefined;
                 }
                 break;
             case "string":
                 // We need to return a number
                 switch(C.toLowerCase()) {
-                    case String(myApp.Localise.UI['Mm']):
+                    case "mm":
+                    case "millimeters":
+                    case "millimeter":
+                    case "zmms":
                         if(inddMU){
                             return 2053991795;
                         }
                         return 0;
                         break;
-                    case String(myApp.Localise.UI['Inch']):
+                    case "inchesDecimal":
+                    case "inch":
+                    case "zoll":
+                    case "pouce":
+                    case "zind":
                         if(inddMU){
                             return 2053729891;
                         }
                         return 1;
                         break;
-                    case String(myApp.Localise.UI['Pt']):
+                    case "points":
+                    case "pt":
+                    case "zpoi":
                         if(inddMU){
                             return 2054188905;
                         }
                         return 2;
                         break;
                     default:
-                        alert("getMeasurementUnits could not find unit from " + C);
+                        alert("getMeasurementUnits could not find unit for string: " + C.toLowerCase());
                         return undefined;
                 }
                 break;
             default:
-                alert("Something went wrong! \n Could not find unit from " + C);
+                alert("Not a valid type! \n  " + typeof C);
                 return null;
         }
     }   
 
+    function revertSizes(myApp, C){
+
+    }
+
     function resolveSizes(myApp, C){
+        if(typeof C["resolved"] !== "boolean") {
+            alert("Could not resolve sizes.\n " + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+            return C;
+        }
+        if(C.resolved) {
+            // C is allready resolved
+            return C;
+        }
+
         // This function takes the C object and resolves all the sizes
         try {
             // First make sure all measurements are in the same measure unit
-            C = convertUnits(myApp, C, C.measureUnit); //make sure all units are the same
+            C = myApp.JSON.parse(myApp.JSON.stringify(C)); // Make a copy
+            
+            // Save UI data
+            C.uiBleed   = C.bleed;
+            C.uiFlap    = C.flap;
+            C.uiWidth   = C.width;
+            C.uiBinding = C.binding;
+            C.uiMargin  = C.margin;
 
             // RESOLVE WRAP
-            if(C.inExCludeWrap == 1){
-                C.bleed += C.wrap;
-            } else {
+            if(C.inExCludeWrap == 0){
                 C.bleed -= C.wrap;
+            } else if(C.inExCludeWrap == 2) {
+                C.bleed = C.wrap;
+            } else {
+                C.bleed += C.wrap;
             }
-            //C.wrap = 0;  // Do not reset the origin as we still need them.
 
             // RESOLVE FOLD
             if(C.inExCludeFold == 1){
@@ -117,8 +163,7 @@
                 C.width -= C.fold;
                 C.flap  += C.fold
             }
-            //C.fold = 0;
-
+            
             // RESOLVE HINGE
             if(C.inExCludeHinge == 1){
                 C.width += C.hinge;
@@ -126,18 +171,32 @@
                     C.binding += C.hinge;
                 }
             }
-            //C.hinge = 0;
-
+            
             // RESOLVE BINDING
             if(C.inExCludeQB == 0){
                 C.width -= C.binding;
             }
-            //C.binding = 0;
+            
+            // RESOLVE MARGINS
+            function resolveMargin (myApp, C, margin) {
+                margin.top            = myApp.NumCon.convert(myApp, margin.top           , margin.units, C.measureUnit, 6);
+                margin.outside_right  = myApp.NumCon.convert(myApp, margin.outside_right , margin.units, C.measureUnit, 6);
+                margin.inside_left    = myApp.NumCon.convert(myApp, margin.inside_left   , margin.units, C.measureUnit, 6);
+                margin.bottom         = myApp.NumCon.convert(myApp, margin.bottom        , margin.units, C.measureUnit, 6);
+                margin.units          = C.measureUnit;
+                return margin;
+            }
+
+            C.margin.CVR14 = resolveMargin(myApp, C, C.margin.CVR14);
+            C.margin.Spine = resolveMargin(myApp, C, C.margin.Spine);
+            C.margin.QB    = resolveMargin(myApp, C, C.margin.QB);
+            C.margin.Flaps = resolveMargin(myApp, C, C.margin.Flaps);
+
             C.resolved = true;
 
             return C;
         } catch (e) {
-            alert("Could not resolve sizes \n" + e.description);
+            alert("Could not resolve sizes.\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
     }
 
@@ -146,24 +205,29 @@
             // This function tries to create a valid C object from a C object from an older version.
             // TODO: Make a Margin validator
             var Cool = {
-                name:           (String(     C.name)             || "undefined"),
-                width:          (parseFloat( C.width)            || 0),
-                height:         (parseFloat( C.height)           || 0),
-                spine:          (parseFloat( C.spine)            || 0),
-                ppi:            (parseInt(   C.ppi)              || 600),
-                bleed:          (parseFloat( C.bleed)            || 0),
-                hinge:          (parseFloat( C.hinge)            || 0),
-                inExCludeHinge: (parseFloat( C.inExCludeHinge)   || 0),
-                binding:        (parseFloat( C.binding)          || 0),
-                inExCludeQB:    (parseInt(   C.inExCludeQB)      || 0),
-                flap:           (parseFloat( C.flap)             || 0),
-                fold:           (parseFloat( C.fold)             || 0),
-                inExCludeFold:  (parseInt(   C.inExCludeFold)    || 0),
-                wrap:           (parseFloat( C.wrap)             || 0),
-                inExCludeWrap:  (parseInt(   C.inExCludeWrap)    || 0),
-                margin:         (C.margin                        || MarginObj),
-                measureUnit:    (parseInt(   C.measureUnit)      || 0),
-                resolved:       Boolean(    C.resolved == true)
+                name:               (String(     C.name)             || "undefined"),
+                width:              (parseFloat( C.width)            || 0),
+                height:             (parseFloat( C.height)           || 0),
+                spine:              (parseFloat( C.spine)            || 0),
+                ppi:                (parseInt(   C.ppi)              || 600),
+                bleed:              (parseFloat( C.bleed)            || 0),   
+                hinge:              (parseFloat( C.hinge)            || 0),
+                inExCludeHinge:     (parseFloat( C.inExCludeHinge)   || 0),
+                binding:            (parseFloat( C.binding)          || 0),
+                inExCludeQB:        (parseInt(   C.inExCludeQB)      || 0),
+                flap:               (parseFloat( C.flap)             || 0),
+                fold:               (parseFloat( C.fold)             || 0),
+                inExCludeFold:      (parseInt(   C.inExCludeFold)    || 0),
+                wrap:               (parseFloat( C.wrap)             || 0),
+                inExCludeWrap:      (parseInt(   C.inExCludeWrap)    || 0),
+                margin:             (C.margin                        || MarginObj),
+                measureUnit:        (parseInt(   C.measureUnit)      || 0),
+                slugPageSize:        Boolean(    (typeof C.slugPageSize == "undefined") || C.slugPageSize),
+                slugTrimSize:        Boolean(    (typeof C.slugPageSize == "undefined") || C.slugTrimSize),
+                resolved:            Boolean(    C.resolved == true),
+                colorProfile:       (String(     C.colorProfile)      || "undefined"),
+                registration_font:  (String(     C.registration_font) || "undefined"),
+                extraGuides:        (C.extraGuides                    || new Array() )
             }
             //alert(myApp.JSON.stringify(C));
             //alert(myApp.JSON.stringify(Cool));
@@ -178,9 +242,9 @@
             var pagemargins = coverMargins[page];
 
             var mlen = myMargins.length;
-			for (var i = 0; i < mlen; i++) {
-				pagemargins[myMargins[i]] = myApp.NumCon.convert(myApp, pagemargins[myMargins[i]], pagemargins.units, to_unit, 3);
-			}
+            for (var i = 0; i < mlen; i++) {
+                pagemargins[myMargins[i]] = myApp.NumCon.convert(myApp, pagemargins[myMargins[i]], pagemargins.units, to_unit, 3);
+            }
 
             pagemargins.units = checkMeasureUnit(myApp, to_unit);
         }
@@ -188,20 +252,20 @@
     }
 
     function convertUnits(myApp, C, to_unit){
-		// Check if we can convert the cover object
+        // Check if we can convert the cover object
         if(!C.hasOwnProperty("measureUnit")){
             alert("Not a valid C object.");
             return C;
         }
 
-		var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
-		var dlen = dimensions.length;
-		for (var i = 0; i < dlen; i++) {
-			C[dimensions[i]] = myApp.NumCon.convert(myApp, C[dimensions[i]], C.measureUnit, to_unit);
-		}
+        var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
+        var dlen = dimensions.length;
+        for (var i = 0; i < dlen; i++) {
+            C[dimensions[i]] = myApp.NumCon.convert(myApp, C[dimensions[i]], C.measureUnit, to_unit);
+        }
 
-        // Do margin
-        C.margin      = convertMargins(myApp, C.margin, to_unit);
+        // Don't do margins
+        // C.margin      = convertMargins(myApp, C.margin, to_unit);
         C.measureUnit = checkMeasureUnit(myApp, to_unit);
 
         return C;
@@ -211,6 +275,15 @@
     //  PRESET TOOLS validator
     //-----------------------------------------------------------------------------------
     function sameProps( induceObj, sampleObj ) {
+        // This function returns an object with an response object:
+        function returnRes(OK, MSG){
+            return {ok: (OK || false), response: "ID45862516: " + String( MSG || "") };
+        }
+        
+        if(induceObj == null || sampleObj == null){
+            return returnRes(false, "Recieved null object.");
+        }
+
         if (!Object.keys) {
             Object.keys = (function () {
                 'use strict';
@@ -252,58 +325,54 @@
             }());
         }
 
-		try{
-        	var induceProps = Object.keys( induceObj ),
-            	sampleProps = Object.keys( sampleObj );
-		} catch(_err){
-			alert("sameProps 7956: " + _err);
-		}
-		try{
-			// Objects are bigger as long as they have the requested keyNames
-			if ( induceProps.length != sampleProps.length ) {
-				//alert(myApp.JSON.stringify(induceProps));
-				//alert(myApp.JSON.stringify(sampleProps));
-				return false;
-			}
-			for (key in induceObj) {
-				if (sampleObj.hasOwnProperty(key)) {
-					if(induceObj[key].constructor != sampleObj[key].constructor){
-						//alert("Return false: Property name is different constructor");
-						return false;
-					}
-					switch(induceObj[key].constructor){
-						case Object:
-							if(!sameProps( induceObj[key], sampleObj[key])){
-								//alert("Return false: Sub object does not validate");
-								return false;
-							}
-							break;
-						case Array:
-							if(!sameKeys( induceObj[key], sampleObj[key])){
-								//alert("Return false: Array does not match up");
-								return false;
-							}
-							break;
-						default:
-							break; //do nothing
-					}
-				} else {
-					//alert("Return false: Does not have same property");
-					return false;
-				}
-			}
-		} catch(_err){
-			alert("sameProps 51489: " + _err);
-			return false;
-		}
+        if(induceObj.constructor != sampleObj.constructor){
+            return returnRes(false, "Not the same contructor: " + induceObj.constructor + " != " + sampleObj.constructor);
+        }
+
+        try{
+            var induceProps = Object.keys( induceObj );
+            var sampleProps = Object.keys( sampleObj );
+        } catch(_err){
+            return returnRes(false, "Could not get object keys: " + _err);
+        }
+
+        try{
+            for (key in induceObj) {
+                if (sampleObj.hasOwnProperty(key)) {
+                    if(induceObj[key].constructor != sampleObj[key].constructor){
+                        return returnRes(false, "Property name is of different constructor");
+                    }
+                    switch(induceObj[key].constructor){
+                        case Object:
+                            var check = sameProps( induceObj[key], sampleObj[key] );
+                            if(!check.ok){
+                                return check;
+                            }
+                            break;
+                        case Array:
+                            var check = sameKeys( induceObj[key], sampleObj[key] );
+                            if(!check.ok){
+                                return check;
+                            }
+                            break;
+                        default:
+                            break; //do nothing
+                    }
+                } else {
+                    return returnRes(false, "Property is missing in sample object.");
+                }
+            }
+        } catch(_err){
+            return returnRes(false, _err);
+        }
         // Seems OK
-        return true;
+        return returnRes(true, "No problems found.");
     }
 
     function checkMeasureUnit(myApp, mu){
         // Returns the measurement unit as Number
         // Return error string if there are problems
-        var err     = "number.conversion.convert: \n";
+        var err     = "checkMeasureUnit: \n";
         var validmu = null;
 
         // Start with checking measure unit
@@ -328,6 +397,7 @@
         }
         return validmu
     }
+
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS get
     //-----------------------------------------------------------------------------------
@@ -340,16 +410,22 @@
         }
     }
     function getPresets(myApp){
+        // This function will try and load the preset object.
+        // And return the standard presets
+        // if user presets can not be found or loaded
+
+        var MyPresets = myApp.STools.PresetObj;
+
         //read presets file
         var f = File(myApp.PathTo.preferences);
 
         function resetPresets(){
-            return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, PresetObj);
+            return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, myApp.STools.PresetObj);
         }
 
         if(!f.exists){
             // file does not exist: create it!
-            myApp.JSON.saveFile(myApp, f, PresetObj);
+            myApp.JSON.saveFile(myApp, f, myApp.STools.PresetObj);
         }
 
         try {
@@ -357,7 +433,7 @@
             var jsontext = f.read();
             f.close();
         } catch(e){
-            alert(e.description);
+            alert("CoverBuilder Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
 
         //if it’s there parse it, otherwise create file
@@ -367,9 +443,10 @@
             } catch(e) {
                 MyPresets = resetPresets();
             }
-            // validate presets
-            var cp = sameProps(MyPresets, PresetObj);
-            if(cp != true){                                         // Presets are not valid or out of date
+            
+            var cp = myApp.STools.sameProps(MyPresets, myApp.STools.PresetObj);
+
+            if(cp.ok != true){                                      // Presets are not valid or out of date
                 MyPresets = updatePresets(myApp, MyPresets, f);     // Let's try and update them!
             }
         } else { //file not valid
@@ -377,51 +454,108 @@
         }
         return MyPresets;
     }
+
     function updatePresets(myApp, MyPresets, f){
-        if (MyPresets.presets !== undefined){
-            // There seems to be presets from an older version
-            // Let's try and get safe previous presets
-            var newPresetObj = {"presets": []};
-            for (i in MyPresets.presets) {
-                newPresetObj.presets.push( myApp.STools.Cparser(myApp, MyPresets.presets[i]) );
-            }
-            if(sameProps(newPresetObj, PresetObj)){
-                return newPresetObj;
+        if(typeof(MyPresets) == "object"){
+            if(MyPresets.hasOwnProperty("presets")){
+                // There seems to be presets from an older version
+                // Let's try and get safe previous presets
+                var newPresetObj = {"presets": []};
+                for ( var i=0; i < MyPresets.presets.length; i++ ) {
+                    newPresetObj.presets.push( myApp.STools.Cparser(myApp, MyPresets.presets[i]) );
+                }
+                var check = sameProps(newPresetObj, myApp.STools.PresetObj);
+                if(check.ok){
+                    // safe and return newPresetObj
+                    return myApp.JSON.saveFile(myApp, f, newPresetObj);
+                }
             }
         }
-        return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, PresetObj);
+        return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, myApp.STools.PresetObj);
+    }
+
+    function getPluginfoIndex(myApp, pluginfo, plugName){
+        for ( var i=0; i < pluginfo.length; i++ ) {
+            if(pluginfo[i].plugin_name == plugName){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function getPluginSettingsFor(myApp, thisPlugin, Settings) {
+        // PAR Settings makes sure I can use this function when pluginfo is not loaded yet.
+        if(Settings == undefined){
+            var Settings = myApp.Settings;
+        }
+        
+        var plugName  = thisPlugin.plugin_name
+        
+        var plugIndex = myApp.STools.getPluginfoIndex(myApp, Settings.pluginfo, plugName);
+        
+        if(plugIndex >= 0){
+            return {
+                plugin_name    : Settings.pluginfo[plugIndex].plugin_name, 
+                launch_on_load : Settings.pluginfo[plugIndex].launch_on_load || false, 
+                add_to_menu    : Settings.pluginfo[plugIndex].add_to_menu    || false, 
+                activated      : Settings.pluginfo[plugIndex].activated      || false
+            };
+        } else {
+            return {
+                plugin_name    : thisPlugin.plugin_name, 
+                launch_on_load : thisPlugin.launch_on_load || false,
+                add_to_menu    : thisPlugin.add_to_menu    || false, 
+                activated      : thisPlugin.activated      || false
+            };
+        }
+    }
+
+    function saveUserSettings(myApp){
+        var fSettings = File(myApp.PathTo.settings);
+        myApp.JSON.saveFile(myApp, fSettings, myApp.Settings);
     }
 
     //-----------------------------------------------------------------------------------
     //  ARRAY TOOLS
     //-----------------------------------------------------------------------------------
     function sameKeys(induceArr, sampleArr){
+        // This function returns an object with an response object:
+        function returnRes(OK, MSG){
+            return {ok: (OK || false), response: "ID56789765: " + String( MSG || "") };
+        }
+
+        if(induceArr == undefined || sampleArr == undefined){
+            return returnRes(false, "Undefined is not an array.");
+        }
+
         var arrlen = induceArr.length;
-		for (var key = 0; key < arrlen; key++) {
-			// we can’t have different types of contructors in arrays
+        for (var key = 0; key < arrlen; key++) {
+            // we can’t have different types of contructors in arrays
             // but the array may be longer (That what arrays are for!)
             if(typeof(induceArr[key]) == typeof(sampleArr[0])){
                 switch(typeof(induceArr[key])){
                     case "object":
-                        if(!sameProps( induceArr[key], sampleArr[0])){
-                            return false;
+                        var check = sameProps( induceArr[key], sampleArr[0]);
+                        if(!check.ok){
+                            return check;
                         }
                         break;
                     case "array":
-                        if(!sameKeys( induceArr[key], sampleArr[0])){
-                            return false;
+                        var check = sameKeys( induceArr[key], sampleArr[0]);
+                        if(!check.ok){
+                            return check;
                         }
                         break;
                     default:
                         //do nothing
                 }
             } else {
-            	return false;
+                return returnRes(false, "Found an unexpected contructor in array.");
             }
-		}
-        // Seems OK
-        return true;
+        }
+        return returnRes(true, "Seems OK.");
     }
+
     function getIndex(thisItem, thisArray){
         for (var i = 0, j = thisArray.length; i < j; i++) {
             if (thisArray[i] === thisItem) { return i; }
@@ -465,10 +599,22 @@
     }
 
     function getHelp(){
-        visitURL("http://coverbuilder.brunoherfst.com/faq/");
+        visitURL("http://coverbuilder.brunoherfst.com/faq/?from=Plugin");
     }
     function createBarcode(){
-        visitURL("http://barcode.brunoherfst.com/");
+        visitURL("http://barcode.brunoherfst.com/?from=Plugin");
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  OTHER
+    //-----------------------------------------------------------------------------------
+    function niceErrorAlert(error, header) {
+        if (typeof header === 'string' || header instanceof String) {
+            header += "\n";
+        } else {
+            var header = "CoverBuilder Error\n"; 
+        }
+        alert(header + e.message + " (Line " + e.line + " in file " + e.fileName + ")");
     }
 
     ////////////
@@ -476,26 +622,34 @@
     ////////////
     // Return an object exposed to the public
     return {
+        validMeasurementUnits          : validMeasurementUnits,
+        localisedValidMeasurementUnits : localisedValidMeasurementUnits,
+        getLocalisedUnits     : getLocalisedUnits,
         // Preset Tools
-        getFile              : getFile,
-        MarginObj            : MarginObj,
-        PresetObj            : PresetObj,
-        getPresets           : getPresets,
-        validMeasurementUnits: validMeasurementUnits,
-        // Validator
-        sameProps            : sameProps,
-        checkMeasureUnit     : checkMeasureUnit,
-        // C Tools
-        getMeasurementUnits  : getMeasurementUnits,
-        resolveSizes         : resolveSizes,
-        Cparser              : Cparser,
-        convertUnits         : convertUnits,
-        // Array Tools
-        getIndex             : getIndex,
-        sameKeys             : sameKeys,
-        // Link Jumpers
-        getHelp              : getHelp,
-        createBarcode        : createBarcode,
-        visitURL             : visitURL
+        getFile               : getFile,
+        MarginObj             : MarginObj,
+        PresetObj             : PresetObj,
+        getPresets            : getPresets,
+        saveUserSettings      : saveUserSettings,
+        validMeasurementUnits : validMeasurementUnits,
+        getPluginfoIndex      : getPluginfoIndex,
+        getPluginSettingsFor  : getPluginSettingsFor,
+        // Validator 
+        sameProps             : sameProps,
+        checkMeasureUnit      : checkMeasureUnit,
+        // C Tools 
+        getMeasurementUnits   : getMeasurementUnits,
+        resolveSizes          : resolveSizes,
+        Cparser               : Cparser,
+        convertUnits          : convertUnits,
+        // Array Tools 
+        getIndex              : getIndex,
+        sameKeys              : sameKeys,
+        // Link Jumpers 
+        getHelp               : getHelp,
+        createBarcode         : createBarcode,
+        visitURL              : visitURL,
+        // Other
+        niceErrorAlert        : niceErrorAlert
     };
 })();

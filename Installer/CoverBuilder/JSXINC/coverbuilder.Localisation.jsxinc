@@ -61,7 +61,7 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                      fr: "Document..." },
 
         NewCover : { en: "New Cover...",
-                     de: "Neu Buchhülle...",
+                     de: "Neue Buchhülle...",
                      nl: "Nieuwe Omslag...",
                      fr: "Nouveau Couverture" },
 
@@ -89,6 +89,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                      de: "Infobereich Werkzeug...",
                      nl: "Witruimte Gereedschap...",
                      fr: "Ligne-bloc Outils..." },
+                     
+    	PlaceImage : { en: "Place Cover Image...",
+                     de: "Platz Buchhülle Bild...",
+                     nl: "Plaats Omslag Beeld...",
+                     fr: "Importer Couverture Image..." },
 
         LoadDocPresets : { en: "Load Document Presets...",
                            de: "Load Dokument Vorgaben...",
@@ -104,6 +109,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                           de: "Kreiert Strichcode...",
                           nl: "Creëer Barcode...",
                           fr: "Créer Code-barres..." },
+
+        Preferences : { en: "Preferences...",
+                        de: "Vorinstellungen...",
+                        nl: "Voorkeuren...",
+                        fr: "Préférences..." },
 
         Help : { en: "Help",
                  de: "Hilfe",
@@ -133,6 +143,16 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                    nl: "Instelling",
                    fr: "Paramétre" },
 
+        NewPreset : { en: "-New Preset-",
+                      de: "-Neue Vorgabe-",
+                      nl: "-Nieuwe Instelling-",
+                      fr: "-Nouveau Paramétre-" },
+
+        Preferences : { en: "Preferences",
+                        de: "Vorinstellungen",
+                        nl: "Voorkeuren",
+                        fr: "Préférences" },
+
         Mm  : { en: "mm",
                 de: "mm",
                 nl: "mm",
@@ -159,13 +179,13 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                   fr: "Largeur" },
 
         Spine : { en: "Spine",
-                  de: "Rücken",
+                  de: "Rücken",
                   nl: "Rug",
                   fr: "Dos" },
 
         Bleed : { en: "Bleed",
                   de: "Anschnitt",
-                  nl: "Afloopgebied",
+                  nl: "Afloop",
                   fr: "Fond perdu" },
 
         Hinge : { en: "Hinge",       // 'Joint' is actual name for the outside area but on templates from printers it is the hinge
@@ -268,6 +288,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                    nl: "Annuleren",
                    fr: "Annuler" },
 
+        Save : { en: "Save",
+                 de: "Speichern",
+                 nl: "Opslaan",
+                 fr: "Enregistrer" },
+
         SavePreset : { en: "Save Preset",
                        de: "Vorgabe Speichern",
                        nl: "Instelling Opslaan",
@@ -278,10 +303,10 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                         nl: "Instelling Verwijderen",
                         fr: "Désactivez Paramétre" },
 
-        overwrite_preset : { en: "There is allready a preset with that name.\nDo you want to overwrite it?",
-                             de: "There is allready a preset with that name.\nDo you want to overwrite it?",
-                             nl: "There is allready a preset with that name.\nDo you want to overwrite it?",
-                             fr: "There is allready a preset with that name.\nDo you want to overwrite it?" },
+        overwrite_preset : { en: "There is already a preset with that name.\nDo you want to overwrite it?",
+                             de: "There is already a preset with that name.\nDo you want to overwrite it?",
+                             nl: "There is already a preset with that name.\nDo you want to overwrite it?",
+                             fr: "There is already a preset with that name.\nDo you want to overwrite it?" },
 
         Help : { en: "Help",
                  de: "Hilfe",
@@ -310,7 +335,7 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                  
         New_spine_width : { en: "New spine width",
                             de: "New spine width",
-                            nl: "New spine width",
+                            nl: "Nieuwe rug dikte",
                             fr: "New spine width" },
                           
         Break_frames_over_spine : { en: "Break frames over spine",
@@ -390,7 +415,7 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
         encountered_error : { en: "CoverBuilder encountered an error: \n",
                               de: "CoverBuilder encountered an error: \n",
                               nl: "CoverBuilder encountered an error: \n",
-                              fr: "CoverBuilder encountered an error:\n" },
+                              fr: "CoverBuilder encountered an error: \n" },
 
         Error_reading_settings : { en: "CoverBuilder \nError reading settings",
                                    de: "CoverBuilder \nError reading settings",
@@ -443,14 +468,24 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                                      fr: "Unable to convert values" },
 
         Open_document_before_using_function : { en: "Open a document before using this function.",
-                                                 de: "Open a document before using this function.",
-                                                 nl: "Open a document before using this function.",
-                                                 fr: "Open a document before using this function." },
-
+                                                de: "Open a document before using this function.",
+                                                nl: "Open a document before using this function.",
+                                                fr: "Open a document before using this function." },
+		
+		Could_not_load_Cover_Details : { en: "Could not load cover details.",
+                                         de: "Could not load cover details.",
+                                         nl: "Could not load cover details.",
+                                         fr: "Could not load cover details." },
+                                         
+        Beware_Data_Out_of_Date      : { en: "Beware! This template has been changed outside CoverBuilder and data is out of date.",
+                                         de: "Beware! This template has been changed outside CoverBuilder and data is out of date.",
+                                         nl: "Beware! This template has been changed outside CoverBuilder and data is out of date.",
+                                         fr: "Beware! This template has been changed outside CoverBuilder and data is out of date." },
+                                                
         doc_not_build_with_coverBuilder : { en: "This document is not build with CoverBuilder.",
-                                             de: "This document is not build with CoverBuilder.",
-                                             nl: "This document is not build with CoverBuilder.",
-                                             fr: "This document is not build with CoverBuilder." }
+                                            de: "This document is not build with CoverBuilder.",
+                                            nl: "This document is not build with CoverBuilder.",
+                                            fr: "This document is not build with CoverBuilder." }
     };
     
     var Meta = {

@@ -20,10 +20,11 @@
             myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
 
         } catch(e){
-            alert("CoverBuilder:XMP:set:\n" + e);
+            alert("CoverBuilder:XMP:set:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
         return C;
     }
+
     function setHandBags(myCover, C){
         var myDocXMP = myCover.metadataPreferences;
         try{
@@ -34,35 +35,52 @@
             myDocXMP.setProperty(destNamespace, destContName + "[5]", String(C.JSONstring));
             myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
         } catch(e){
-            alert("CoverBuilder:XMP:set:\n" + e);
+            alert("CoverBuilder:XMP:set:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
         return C;
     }
+
     function safeCoverObject(myApp, myCover, C){
+        if(C.resolved == true) {
+            alert("Can't save C object\nObject is resolved.");
+            return C;
+        }
         var newC = myApp.STools.Cparser(myApp, C);
         newC.JSONstring = myApp.JSON.stringify(newC);
         return setBags(myCover, newC);
     }
+
     function retrieveCoverObject(myApp, myCover){
         try{
-            var C = myApp.JSON.parse(myCover.metadataPreferences.getProperty(destNamespace,destContName + "[5]"));
-        } catch(e1){
-            // There is not such bag
-            var mySpine = myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]") || 0;
-            if(mySpine > 0){
-                try {
-                    var C = { width:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[1]"),
-                              height:      myCover.metadataPreferences.getProperty(destNamespace,destContName + "[2]"),
-                              spine:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]")};
-                        C = safeCoverObject(myApp, myCover, C);
-                } catch(f){
-                    var C = {name:"None"};
-                    alert("Could not parse original settings from document.");
+            // Get property results in empty string if non-existent
+            var C_String = String(myCover.metadataPreferences.getProperty(destNamespace,destContName + "[5]"));
+            if(C_String.length > 3){
+                var C = myApp.JSON.parse(C_String);
+            } else {
+                // There is not such bag
+                var mySpine = myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]") || 0;
+                if(mySpine > 0){
+                    try {
+                        var C = { width:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[1]"),
+                                  height:      myCover.metadataPreferences.getProperty(destNamespace,destContName + "[2]"),
+                                  spine:       myCover.metadataPreferences.getProperty(destNamespace,destContName + "[3]")};
+                            C = safeCoverObject(myApp, myCover, C);
+                    } catch(e){
+                        var C = {name:"undefined"};
+                        alert("Could not parse original settings from document.\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+                    }
+                } else {
+                    var C = {name:"undefined"};
                 }
             }
+        } catch(e){
+            var C = {name:"undefined"};
+            alert("Could not parse original settings from document.\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
+
         return myApp.STools.Cparser(myApp, C); // returns valid C object or null
     }
+
     function newXMP(myApp, myCover, C){
         var myXML = new XML("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:CoverBuilder=\"http://brunoherfst.com/\"><CoverBuilder:contact>mail@brunoherfst.com</CoverBuilder:contact></rdf:Description></rdf:RDF></x:xmpmeta>");
         var myXMLfile = File('TEMP_XMP.xml');
@@ -75,12 +93,33 @@
         myCover.metadataPreferences.createContainerItem(destNamespace, destContName, undefined, ContainerType.BAG);
         safeCoverObject(myApp, myCover, C);
     }
+
+    // Following functions are sourced from here: https://indisnip.wordpress.com/2010/08/17/extract-metadata-with-adobe-xmp-part-2/
+
+    function loadXMPLibrary(){
+        if ( !ExternalObject.AdobeXMPScript ){
+            try{ExternalObject.AdobeXMPScript = new ExternalObject('lib:AdobeXMPScript');}
+            catch (e){alert('Unable to load the AdobeXMPScript library!\n' + e.message +  " (Line " + e.line + " in file " + e.fileName + ")"); return false;}
+        }
+        return true;
+    }
+
+    function unloadXMPLibrary(){
+        if( ExternalObject.AdobeXMPScript ){
+            try{ExternalObject.AdobeXMPScript.unload(); ExternalObject.AdobeXMPScript = undefined;}
+            catch (e){alert('Unable to unload the AdobeXMPScript library!\n' + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");}
+        }
+    }
+
+
     ////////////
     // expose //
     ////////////
       return {
           newXMP              : newXMP,
           safeCoverObject     : safeCoverObject,
-          retrieveCoverObject : retrieveCoverObject
+          retrieveCoverObject : retrieveCoverObject,
+          loadXMPLibrary      : loadXMPLibrary,
+          unloadXMPLibrary    : unloadXMPLibrary
     };
 })();

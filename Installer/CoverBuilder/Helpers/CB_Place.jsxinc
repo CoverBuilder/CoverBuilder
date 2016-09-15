@@ -1,0 +1,146 @@
+/*
+
+--------------------------------------------
+
+    CB_Place.jsxinc                 (A CoverBuilder Helper Script)
+    An InDesign CS5 Javascript      (Tested in CC)
+    Version 1.0
+
+    Bruno Herfst 2015
+
+--------------------------------------------
+
+*/
+
+(function() {
+    //////////////
+    // privates //
+    //////////////
+    var myNamespace = "http://brunoherfst.com/";
+
+    function coverArtInFittedDoc(myApp, escapedImgPathString) {
+        
+        // This function places the cover art in any open doc that has the same dimensions as the given C dimensions
+
+        if(typeof escapedImgPathString != 'string') {
+            return "Expected to receive a string but received " + String(typeof escapedImgPathString);
+        }
+        
+        var unescapedImgPathString = unescape(escapedImgPathString);
+        
+        var myCover = null;
+
+        var myFile = File(unescapedImgPathString);
+
+        if(myFile.exists){
+            // Get XMP data
+            if( myApp.XMP.loadXMPLibrary() ){
+                xmpFile = new XMPFile(myFile.fsName, XMPConst.UNKNOWN, XMPConst.OPEN_FOR_READ);
+                var myXmp = xmpFile.getXMP();
+                xmpFile.closeFile(XMPConst.CLOSE_UPDATE_SAFELY);
+                myApp.XMP.unloadXMPLibrary();
+                
+                if(myXmp){
+                    var PSDC_String = String(myXmp.getProperty(myNamespace, "Settings"));
+                    try {
+                        var PSDC_Object = myApp.JSON.parse(PSDC_String);
+                        if(typeof PSDC_Object == 'object'){
+                            var PSD_C = myApp.STools.Cparser(myApp, PSDC_Object);
+                            if( PSD_C.width > 0) {
+                                var myCover = myApp.Tools.getOrCreateActiveCover(myApp, PSD_C, false);
+                            }
+                        }
+                    } catch (err) {
+                        // Could not parse Cover Object    
+                    }
+                    // continue
+                }
+            }
+
+            if(myCover != null) {
+                var mySpread = myCover.spreads[0];
+                if(!mySpread.isValid) {
+                    alert("Expected a spread.");
+                    return null;
+                }
+                placeArt(myApp, myCover, mySpread, myFile);
+            } else {
+                coverArt(myApp, escapedImgPathString);
+            }
+
+            return "Done!";
+        } else {
+           alert("Not a valid file: " + unescapedImgPathString);
+            return "Not a valid file: " + unescapedImgPathString;
+        }
+
+        alert("CoverBuilder\nError 52830463023"); // Something is wrong with escapedImgPathString
+        return null;
+    }
+
+    function coverArt(myApp, escapedImgPathString) {
+        // This function places the cover art in any open doc
+    	var myFile   = null;
+    	var myCover  = myApp.Tools.getActiveCover(myApp, true);
+        var mySpread = app.activeWindow.activeSpread;
+
+        if(!mySpread.isValid){
+            alert("Expected a spread.");
+            return null;
+        }
+        
+    	if(escapedImgPathString != undefined){
+            if(typeof escapedImgPathString == 'string'){
+            	var unescapedImgPathString = unescape(escapedImgPathString);
+            	myFile = File(unescapedImgPathString);
+                if(myFile.exists){
+                	placeArt(myApp, myCover, mySpread, myFile);
+                	return;
+                } else {
+                	alert("Not a valid file: " + unescapedImgPathString);
+                	// If we not return the user can select the file
+                	// and still cancel from there
+                }
+            }
+        }
+
+        // Choose the file from a dialog
+        function filterFiles(myFile) {
+            if (myFile.constructor.name == "Folder") { return true };
+            if (myFile.name.slice(-4).toLowerCase() == ".psd") { return true };
+            if (myFile.name.slice(-4).toLowerCase() == ".pdf") { return true };
+            if (myFile.name.slice(-4).toLowerCase() == ".tif") { return true };
+            if (myFile.name.slice(-5).toLowerCase() == ".tiff") { return true };
+            return false;
+        }
+
+		myFile = File.openDialog ("Select Cover Art" , filterFiles, false );
+
+        if (myFile != null) {
+            placeArt(myApp, myCover, mySpread, myFile); 
+        }
+    }
+
+    function placeArt(myApp, myCover, mySpread, myFile) {
+        // Let’s think in mm
+        var myUnits = 0;
+        // Save old rulers
+        var originalRulers = myApp.Tools.setRuler(myCover, {units : myUnits});
+
+        var myArtFrame = myApp.Tools.newRect2SpreadBleed(myApp, myCover, mySpread, "Art", myUnits);
+        myArtFrame.place(myFile, false);
+        myArtFrame.fit(FitOptions.centerContent);
+        
+        // reset original rulers
+        myApp.Tools.setRuler(myCover, originalRulers);
+    }
+
+    ////////////
+    // expose //
+    ////////////
+    return {
+        coverArt            : coverArt,
+        coverArtInFittedDoc : coverArtInFittedDoc
+    };
+
+})();

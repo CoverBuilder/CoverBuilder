@@ -16,11 +16,11 @@
     //////////////
     // privates //
     //////////////
-    
+
     function send2photoshopUI(myApp, initPPI){
         // returns PPI or 0 if the user presses cancel
         // if initPPI is set to 0 this function will return the standard DPI
-        
+
         function finalPPI(myPPI){
             if(myPPI <= 0){
                 if(!isNaN(myApp.Settings.standardPPI)){
@@ -32,15 +32,14 @@
             }
             return myPPI;
         }
-        
+
         var myPPI = parseInt(initPPI);
-        var askPPI = myApp.Settings.askForPPI || false;
-        
-        if(!askPPI){
+
+        if(!myApp.Settings.ask_for_PPI_on_send){
             // No need to ask, let's return the setting
             return finalPPI(0);
         }
-        
+
         var  myDialog  = app.dialogs.add({name:"Send to Photoshop", canCancel:true});
         with(myDialog){
             with(dialogColumns.add()){
@@ -48,88 +47,108 @@
                    staticTexts.add({staticLabel: "PPI: "});
                    var ppiinput = integerEditboxes.add({editContents:String(myPPI)});
                }
+               with(dialogRows.add()){
+                   var resFlagCheckbox = checkboxControls.add({staticLabel:"Don't show this dialog again.", checkedState:false});
+               }
             }
         }
-        
+
         if(myDialog.show() == true){
+            if( resFlagCheckbox.checkedState == true){
+                myApp.Settings.ask_for_PPI_on_send = false;
+                myApp.STools.saveUserSettings(myApp);
+            }
             return finalPPI(parseInt(ppiinput.editContents));
         } else {
             // user pressed cancel
             return 0;
         }
     }
-    
-    function coverBuilderPS(myApp, C, addSpine, booktitle){
+
+    function coverBuilderPS(myApp, C, booktitle){
         app.bringToFront();
         var builder = $.evalFile(new File(myApp.Module.PSbuild));
-        builder.startBuilding(myApp,C,addSpine, booktitle);
+        builder.startBuilding(myApp, C, booktitle);
     }
 
-    function CreateBridgeTalkMessage(myApp, C, addSpine, booktitle) {
+    function CreateBridgeTalkMessage(myApp, C, booktitle) {
 
         var script  = coverBuilderPS.toString() + "\r";
-            script += "coverBuilderPS("+myApp.JSON.stringify(myApp)+","+ myApp.JSON.stringify(C)+","+addSpine.toString()+","+"'"+booktitle.toString()+"'"+");";
+            script += "coverBuilderPS("+myApp.JSON.stringify(myApp)+","+ myApp.JSON.stringify(C)+","+"'"+booktitle.toString()+"'"+");";
 
         var bt = new BridgeTalk();
-            bt.target = "photoshop";
+            bt.target = BridgeTalk.getSpecifier("photoshop");
             bt.body = script;
-            bt.onError = function(errObj) {
-                $.writeln("Error: " + errObj.body);
-            };
+            bt.onError = function( BridgeTalkOBJ ) {
+                alert( "Error: " + BridgeTalkOBJ.body );
+            }
             bt.send();
     }
 
     function send2photoshop(myApp){
         var myCover = myApp.Tools.getActiveCover(myApp, true);
         var booktitle = myCover.metadataPreferences.documentTitle.toString().replace(/[^a-zA-Z0-9]/g, "");
-
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-        var addSpine = true; // It is nice we can send a spread or page to photoshop
 
-        if(C == null){ // Not a cover build with CoverBuilder
-            var myPPI = 300;
-            if(!isNaN(myApp.Settings.standardPPI)){
-                myPPI = myApp.Settings.standardPPI;
-            }
+        var currSpread  = app.activeWindow.activeSpread;
 
-            // Safe rulers add set to MM
-            // safe original rulers
-            var myOldRulers = myApp.Tools.setRuler(myApp, myCover,0);
+        var myPPI = 300;
+        if(!isNaN(myApp.Settings.standardPPI)){
+            myPPI = myApp.Settings.standardPPI;
+        }
 
-            // get doc bleed settings //this can be improved
-            var currSpread = app.activeWindow.activeSpread;
-            var myBleed    = myCover.documentPreferences.documentBleedTopOffset;
-            var myPages = new Array();
-            for (i = 0; i < currSpread.pages.length; i++) {
-                myPages.push(myApp.Tools.addPageInfo(myApp, {page: currSpread.pages[i]}));
-            }
+        // Safe rulers add set to MM
+        // safe original rulers
+        var myOldRulers = myApp.Tools.setRuler(myCover, {units : 0});
+        
+        var myBleed     = myApp.Tools.getDocBleed(myApp, myCover);
+        var myPages     = new Array();
+
+        for (var i = 0; i < currSpread.pages.length; i++) {
+            myPages.push(myApp.Tools.addPageInfo(myApp, myCover, {page: currSpread.pages[i]}, 0));
+        }
+
+        if( C.width <= 0 ) {
             if(myPages.length == 1){
-                var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0,ppi:myPPI,bleed:myBleed,measureUnit:0};
+                var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2), spine:0, ppi:myPPI, bleed:myBleed.top, measureUnit:0};
                 C = myApp.STools.Cparser(myApp, newC);
-                addSpine = false;
             } else if(myPages.length == 2){
                 // Check if both pages are the same size
                 if( (parseFloat(myPages[0].w) == parseFloat(myPages[1].w)) && (parseFloat(myPages[0].h) == parseFloat(myPages[1].h)) ){
-                    var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0.005,ppi:myPPI,bleed:myBleed,measureUnit:0};
+                    var newC = {name:"Send to Photoshop",width:myApp.NumCon.doRound(myPages[0].w,2),height:myApp.NumCon.doRound(myPages[0].h,2),spine:0.005,ppi:myPPI,bleed:myBleed.top,measureUnit:0};
                     C = myApp.STools.Cparser(myApp, newC);
-                    addSpine = true;
                 } else {
                     alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to ask for finalising.");
+                    // Reset original rulers
+                    myApp.Tools.setRuler(myCover, myOldRulers);
+                    return;
                 }
             } else {
                 alert("Sending pages that are not covers is still under development\nPlease email mail@brunoherfst.com to ask for finalising.");
+                // Reset original rulers
+                myApp.Tools.setRuler(myCover, myOldRulers);
+                return;
             }
-            // Reset original rulers
-            myApp.Tools.setRuler(myApp, myCover,myOldRulers);
         }
+        // Reset original rulers
+        myApp.Tools.setRuler(myCover, myOldRulers);
+
+        // GET GUIDES SO WE CAN CREATE THEM IN PHOTOSHOP
+        // safe original rulers
+        //var originalRulers = myApp.Tools.setRuler(myCover, {units : C.measureUnit});
         // We have a valid Cover object
+        // C.extraGuides = myApp.Tools.getGuides(myApp, currSpread);
+        // Reset original rulers
+        //myApp.Tools.setRuler(myCover, originalRulers);
+        //------------------------------
+        
         try{
             C.ppi = send2photoshopUI(myApp, C.ppi);
-        } catch(_err){
-            alert(_err);
+        } catch(e){
+            alert("CoverBuilder PPI Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
         if(C.ppi > 0){
-            CreateBridgeTalkMessage(myApp, C, addSpine, booktitle);
+            CreateBridgeTalkMessage(myApp, C, booktitle);
         } // else user canceled
     }
 

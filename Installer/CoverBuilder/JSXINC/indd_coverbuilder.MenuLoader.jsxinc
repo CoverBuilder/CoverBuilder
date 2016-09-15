@@ -6,20 +6,31 @@
     //////////////
     // privates //
     //////////////
+    var CB_MENU_NAME = "CoverBuilder";
+
+    function makeFun(myApp, fun) {
+        // This functions adds the CoverBuilder plugin to the given function.
+        // So the function can access the CoverBuilder plugin
+        return function () {
+            return fun(myApp);
+        }
+    }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // START NEW COVER INSTALLER
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -    
-    function addNewCoverMenu(myApp){
+    function load_NewCover_MenuItem(myApp){
         try{
             var ID_APP_MENU = app.menus.item( '$ID/Main' );
             var cbHandlers = {
                 'onInvoke' : function(){
-                    // prevent undo // Our script is CS5+
                     try{
-                        app.doScript(myApp.GO, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
-                    } catch(error){
-                        alert(error); // Let us know what is going on.
+                    	// create a return value that passes on the CoverBuilder plugin
+                        var fun = makeFun(myApp, myApp.GO);
+                    	// prevent undo - our script is CS5+
+                        app.doScript(fun, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
+                    } catch(e){
+                        alert("CoverBuilder Menu Error:" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")"); // Let us know what is going on.
                     }
                 }};
 
@@ -46,7 +57,8 @@
     }
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // END NEW COVER INSTALLER
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     function removeSubMenu(myApp, MY_MENU){
         if(!MY_MENU.isValid){
             alert("Submenu " + MY_MENU.name + " does not resolve to object.");
@@ -64,7 +76,7 @@
                 try{
                     removeSubMenu(myApp, subMenu);
                 } catch(e){
-                    alert("Could not remove submenu " + MY_MENU.name +"/n" + e.description);
+                    alert("Could not remove submenu " + MY_MENU.name +"/n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
                 }
             }
         }
@@ -105,7 +117,7 @@
         } catch(e) { }
     }
     
-    function addCBMenu(myApp, Menu, MENU_NAME){
+    function load_ID_Menu(myApp, Menu, MENU_NAME){
         // Install and/or update the menu/submenu and connect the corresponding menu actions
         // http://www.indiscripts.com/post/2011/12/indesign-scripting-forum-roundup-2
         // ---
@@ -131,11 +143,6 @@
                     if(menuItem.fun.constructor == Function) {
                         // The script file is a function => create the corresponding action
                         // ---
-                        function makeFun(myApp, fun) {
-                            return function () {
-                                return fun(myApp);
-                            }
-                        }
                         var fun = makeFun(myApp, menuItem.fun);
 
                         (menuItem.action = app.scriptMenuActions.add( menuItem.caption )).addEventListener('onInvoke', fun);
@@ -168,11 +175,11 @@
                 }
             }
         } catch (e) {
-            alert(e);
+            alert("CoverBuilder Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
     }
     
-    function removeCBMenu(myApp, MENU_NAME){
+    function unload_ID_Menu(myApp, MENU_NAME){
         try{
             var ID_APP_MENU = app.menus.item( '$ID/Main' );
             if(!ID_APP_MENU.isValid){
@@ -182,46 +189,113 @@
             for (var AMM = ALLMAINMENUS - 1; AMM >= 0; AMM--){
                 var old_Menu = ID_APP_MENU.submenus[AMM].name;
                 //alert(old_Menu);
-                if (old_Menu.indexOf("CoverBuilder") !=-1) {
+                if (old_Menu.indexOf(MENU_NAME) !=-1) {
                     removeSubMenu(myApp, ID_APP_MENU.submenus[AMM]);
                 }
             }
              
-            var CB_MENU = ID_APP_MENU.submenus.itemByName( MENU_NAME );
+            var THIS_MENU = ID_APP_MENU.submenus.itemByName( MENU_NAME );
 
-            if(CB_MENU.isValid){
-                removeSubMenu(myApp, CB_MENU);
+            if(THIS_MENU.isValid){
+                removeSubMenu(myApp, THIS_MENU);
                 
-                for(var key in CB_MENU.properties) {
+                for(var key in THIS_MENU.properties) {
                     try{
-                        delete CB_MENU.properties[key];
-                    } catch(e) {  alert("Cant delete property: " + CB_MENU.properties[key] + "\n" + e)  }
+                        delete THIS_MENU.properties[key];
+                    } catch(e) {  alert("Can't delete property: " + THIS_MENU.properties[key] + "\n"  + e.message +  " (Line " + e.line + " in file " + e.fileName + ")")  }
                 }
             }
         } catch (e) {
-            alert("Could not clear CoverBuilder menu\n" + e);
+            alert("Could not clear menu\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
     }
 
-    function loadMenus (myApp, Menu, MENU_NAME) {
+    function build_CB_Menu(myApp){
+        
+        var Menu = [
+            { caption: String(myApp.Localise.Menu['NewCover']),              fun: myApp.GO,  subName: "" },
+            { separator: true, subName: "" },
+            { caption: String(myApp.Localise.Menu['SendToPhotoshop']),       fun: myApp.Helper.PS.send2photoshop, subName: "" },
+            { caption: String(myApp.Localise.Menu['PlaceImage']),            fun: myApp.Helper.Place.coverArt, subName: "" },
+            { separator: true, subName: "" },
+            { caption: String(myApp.Localise.Menu['CorrectSpine']),          fun: myApp.Helper.Spine.changeSpine, subName: "" },
+            { caption: String(myApp.Localise.Menu['SlugTool']),              fun: myApp.Helper.SlugFinisher.go,   subName: "" },
+            { separator: true, subName: "" },
+            { caption: String(myApp.Localise.Menu['LoadDocPresets']),        fun: myApp.Helper.LoadDocPresets.loadsettings,  subName: "" }
+        ];
+
+        if(Folder(myApp.PathTo.libraryFolder).getFiles("*.indl").length > 0){
+            Menu.push({ caption: String(myApp.Localise.Menu['OpenLibrary']), fun: myApp.Helper.OpenLib.loadUI,  subName: ""  });
+        }
+
+        Menu.push({ separator: true, subName: "" });
+
+        // Add plugins to menu
+        for ( var i=0; i < myApp.plugins.length; i++ ) {
+            var plugName = myApp.plugins[i].plugin_name;
+            var plugMenu = myApp.plugins[i].menu_items;
+			
+			var plugSettings = myApp.STools.getPluginSettingsFor(myApp, myApp.plugins[i]);
+			
+            if(plugSettings.activated && plugSettings.add_to_menu && plugMenu.length > 0 ){
+                Menu.push({
+                    separator: true, subName: plugName
+                });
+                for ( menuItem=0; menuItem < plugMenu.length; menuItem++ ) {
+                    if( plugMenu[menuItem].separator ) {
+                        Menu.push({ separator: true, subName: plugName });
+                    } else {
+                        Menu.push({
+                            caption: plugMenu[menuItem].name, fun: plugMenu[menuItem].f, subName: plugName,
+                        });
+                    }
+                }
+            }
+        }
+
+        // Add report bug request feature
+        Menu.push({ separator: true, subName: "" },
+                  { caption: String(myApp.Localise.Menu['Preferences']),  fun: myApp.Helper.PreferencesUI.load_Pref_UI,  subName: "" },
+                  { caption: String(myApp.Localise.Menu['Help']),         fun: myApp.STools.getHelp,                   subName: "" });
+
+        return Menu;
+    }
+
+    function load_CB_Menu (myApp) {
+        // Make sure old menu is removed before building a new one
+        unload_CB_Menu(myApp);
+
+        var CB_Menu = build_CB_Menu(myApp);
+        load_ID_Menu(myApp, CB_Menu, CB_MENU_NAME);
+    }
+
+    function unload_CB_Menu (myApp) {
+        unload_ID_Menu(myApp, CB_MENU_NAME);
+    }
+
+    function load_All_Menus (myApp) {
+        // Add the New Cover... menu item under File > New
+        load_NewCover_MenuItem(myApp);
+        
+        // Build and load CoverBuilder Menu
         // ---
         // Note:  menus/submenus are application-persistent
         // ---
-        removeCBMenu(myApp, MENU_NAME);
-        
-        addNewCoverMenu(myApp);
-        
         if(myApp.Settings.add_CoverBuilder_Menu){
-            addCBMenu(myApp, Menu, MENU_NAME);
+            // Load the Menu // Old menu will be removed as well
+            load_CB_Menu (myApp);
+        } else {
+            // Make sure old menu is removed
+            unload_ID_Menu(myApp, CB_MENU_NAME);
         }
     }
 
     ////////////
     // expose //
     ////////////
-      return {
-          loadMenus    : loadMenus,
-          addCBMenu    : addCBMenu,
-          removeCBMenu : removeCBMenu
+    return {
+        load_All_Menus : load_All_Menus,
+        load_CB_Menu   : load_CB_Menu,
+        unload_CB_Menu : unload_CB_Menu
     };
 })();

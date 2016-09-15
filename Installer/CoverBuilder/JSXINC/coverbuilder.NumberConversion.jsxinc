@@ -64,8 +64,8 @@
         try{
             var validInput  = myApp.STools.checkMeasureUnit( myApp, unitInput  );
             var validOutput = myApp.STools.checkMeasureUnit( myApp, unitOutput );
-        } catch(err){
-            alert(err);
+        } catch(e){
+            alert("CoverBuilder NumCon Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
 
         if( (typeof validInput == "number") && (typeof validOutput == "number") && (typeof measure == "number") ){
@@ -151,6 +151,11 @@
         return Math.round(num*roundMulit)/roundMulit;
     }
 
+    function roundToGridStep(num, gridStep, roundDec){
+        var roundDec = roundDec || 3;
+        return doRound(Math.round(num/gridStep)*gridStep, roundDec);
+    }
+
     function constrain(_number, _min, _max, _warn, _message){
         var warn = _warn || false;
         var clipped = Math.max(Math.min(_number, _max), _min);
@@ -160,20 +165,52 @@
         return clipped;
     }
 
+	function convertToPixels(myApp, measure, unit, ppi) {
+    	// Move this to convert function? 
+    	// MAKE SURE CONVERT TO PIXELS IS SETUP PROPERLY TICKET 0987654
+        switch(String(unit).toLowerCase()){
+            case "0":
+			case "millimeters":
+			case "mm":
+			case "millimeter":
+			case "zmms":
+			case "2053991795":
+                //convert mm to inch, then gets multiplied by PPI to get pixels.
+                return (measure / 25.4) * ppi;
+            case "1":
+			case "inchesDecimal":
+			case "inch": // shorthand to decimal
+			case "zind":
+			case "2053729892":
+                return measure * ppi;
+            case "2":
+			case "points":
+			case "pt":
+			case "zpoi":
+			case "2054188905":
+                return (measure / 72) * ppi;
+            default:
+                alert("Measure unit not supported.");
+                return measure;
+        }
+    }
+
     ////////////
     // expose //
     ////////////
     return {
-        convert        : convert,
-        mm2pt          : mm2pt,
-        mm2inch        : mm2inch,
-        inch2mm        : inch2mm,
-        inch2pt        : inch2pt,
-        pt2inch        : pt2inch,
-        pt2mm          : pt2mm,
-        cUnit          : cUnit,
-        NaN20          : NaN20,
-        constrain      : constrain,
-        doRound        : doRound
+        convert         : convert,
+        mm2pt           : mm2pt,
+        mm2inch         : mm2inch,
+        inch2mm         : inch2mm,
+        inch2pt         : inch2pt,
+        pt2inch         : pt2inch,
+        pt2mm           : pt2mm,
+        cUnit           : cUnit,
+        NaN20           : NaN20,
+        doRound         : doRound,
+        roundToGridStep : roundToGridStep,
+        constrain       : constrain,
+        convertToPixels : convertToPixels
     };
 })();

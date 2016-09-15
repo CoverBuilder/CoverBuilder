@@ -10,7 +10,7 @@
     This code should be minified before deployment.
     See http://javascript.crockford.com/jsmin.html
 
-    // * Adjusted for CoverBuilder
+    // * Added save functions for CoverBuilder by Bruno Herfst
 
 */
 
@@ -351,7 +351,7 @@
             ok = f.close();
         }
         if (!ok) {
-            alert("Error saving JSON :( \n" + f.error);
+            alert("Error saving file: \n" + f.error);
             f.close();
         }
         return obj;

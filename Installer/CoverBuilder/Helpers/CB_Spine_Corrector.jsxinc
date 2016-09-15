@@ -33,8 +33,13 @@
             }
         }
         if(myDialog.show() == true){
+            if(myApp.Settings.break_frames_on_spine_change != breakFramesCheckbox.checkedState){
+                // Safe the updated preferences
+                myApp.Settings.break_frames_on_spine_change = breakFramesCheckbox.checkedState;
+                myApp.STools.saveUserSettings(myApp);
+            }
             // editValue returns postscript points. Which we will need to set the page height
-            return {breakFrames: breakFramesCheckbox.checkedState, newSpinePT : myApp.NumCon.doRound(parseFloat(spineField.editValue),6)}; // Round this to X decimals InDesign can crash otherwise on long floats
+            return {newSpinePT : myApp.NumCon.doRound(parseFloat(spineField.editValue),6)}; // Round this to X decimals InDesign can crash on long floats
         } else {
             myDialog.destroy();
             exit();
@@ -42,86 +47,83 @@
     }
 
     function changeSpine(myApp) {
-        var myCover = myApp.Tools.getActiveCover(myApp);
-        if(!myCover){
-            exit();
-        }
+        var myCover = myApp.Tools.getActiveCover(myApp, false);
+        
         //check if cover is build with CoverBuilder
         var myOldSpine = parseFloat(myCover.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]"));
         if(myOldSpine <= 0) {
-            alert("Can’t find a spine!");
+            alert("Can't find a spine!");
         }
+        
         var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
-        var minimumPageWidth = myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", C.measureUnit);
+        if(C.width <= 0){
+            alert("Could not load CoverBuilder object from document.");
+            return;
+        }
 
-        // set + safe original rulers
-        var myOldRulers = myApp.Tools.setRuler(myApp, myCover,C.measureUnit);
-
-        // Tidy.
-        var docBleed = myCover.documentPreferences.documentBleedTopOffset;
-        // Update data if changed
-        C.bleed = docBleed;
-
-        //ref to spinepage
-        var mSpine = myApp.Tools.getMasterPage(myApp, myCover, "CB-spine", 0);
+        var check = myApp.Tools.checkCagainstDoc(myApp, myCover, C, true);
+        if( !check.message.ok ){
+            alert("Beware!\nThis template has been changed outside CoverBuilder and data is out of date:\n\n" + check.message.text);
+        }
+        if(check.C_changed){
+            C = check.C;
+        }
 
         //let’s ask the user what the new spine should be
-        var userSettings = getnewSpineUI(myApp, C);
+        var userSpineQuery = getnewSpineUI(myApp, C);
 
-        if(userSettings == null){
+        if(userSpineQuery == null){
             //user pressed cancel
             exit();
         } else {
-            var newSpinePT = userSettings.newSpinePT;
+            var newSpinePT = userSpineQuery.newSpinePT;
         }
 
         if ( isNaN(newSpinePT) ){
             alert("That was not a Number");
-        } else if (newSpinePT < myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", "pt")){
+        } else if (newSpinePT < myApp.Tools.getMinPageWidthINDD(myApp, "pt") ){
+            var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit);
             alert("Spine-width should be at least " + myApp.NumCon.doRound(minimumPageWidth,3) + " " + myApp.STools.getMeasurementUnits(myApp, C));
             changeSpine(myApp); // Show UI to re enter new spinewidth
             exit();
         } else {
-            if(userSettings.breakFrames){
+            if(myApp.Settings.break_frames_on_spine_change){
                 myApp.Helper.BreakFrames.thisCover(myApp, myCover);
-            }
-            // Make sure facing pages is on
-            // so the spine will automaticly move the front and back cover.
-            var userFacingPages = myCover.documentPreferences.facingPages;
-            if(!userFacingPages) {
-                myCover.documentPreferences.facingPages = true;
-            }
-            try{
-                mSpine.page.resize(CoordinateSpaces.INNER_COORDINATES,
-                    AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH,
-                    //[myApp.NumCon.mm2pt(newSpinePT), myApp.NumCon.mm2pt(mSpine.h)]);
-                    [newSpinePT, myApp.NumCon.convert(myApp, mSpine.h, C.measureUnit, "pt")]);  //Width * Height in postscript points
-            } catch (err){
-                alert(err);
             }
             try{
                 // Update cover object
                 C.spine = myApp.NumCon.convert(myApp, newSpinePT, "pt", C.measureUnit, 6);
-                myApp.Slugs.updateSpineSlug(myApp,myCover,C);
-            } catch (err){
-                alert(err);
+                // Update XMP
+                myApp.XMP.safeCoverObject(myApp, myCover, C);
+                // Update Spine Page
+                updateSpinePage(myApp, myCover, C);
+            } catch (e){
+                alert("CoverBuilder Update C Object Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
             }
-            // Update XMP
-            myApp.XMP.safeCoverObject(myApp, myCover, C);
-            //set userPref back
-            if(!userFacingPages) {
-                myCover.documentPreferences.facingPages = false;
-            }
-        }
 
-        // reset original rulers
-        myApp.Tools.setRuler(myApp, myCover,myOldRulers);
+            myApp.Slugs.placeSizesInSlug(myApp, myCover, C);
+
+        }
     }
+
+    function updateSpinePage(myApp, myCover, C) {
+        //Create ref to spinepage
+        var mSpine = myApp.Tools.makePageInfoObject(myApp, myCover, myApp.Tools.getMasterPage(myApp, myCover, "CB-cover", "Spine"), C.measureUnit);
+		if(mSpine == null){
+			alert("Can't find a spine!");
+			exit();
+		}
+		
+        myApp.Tools.resizePage(myApp, myCover, mSpine.page, [myApp.NumCon.convert(myApp, C.spine, C.measureUnit, "pt"), myApp.NumCon.convert(myApp, mSpine.h, C.measureUnit, "pt")]);
+        
+    }
+    
     ////////////
     // expose //
     ////////////
     return {
-        changeSpine : changeSpine
+        changeSpine     : changeSpine,
+        updateSpinePage : updateSpinePage
     };
 
 })();
