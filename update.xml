@@ -1,34 +1,8 @@
 <ExtensionUpdateInformation>
-	<version>3.0.0</version>
+	<version>3.0.2</version>
 	<download>http://github.com/GitBruno/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
-	<description url="http://coverbuilder.brunoherfst.com">
+	<description>
 	<![CDATA[
-	    New Feautures
-        + Users now can set preferences on how the app behaves
-          - Choose output DPI when sending to Photoshop
-          - Load previous settings
-          - Font choices for slug measurements
-          - Autorun plugin after each build
-          - Remove and add the CoverBuilder menu
-        + Slug Tool:
-          - Added measurement units
-          - Custom fonts
-          - Show total trim
-          - Remembers document settings
-          - Now also works with documents not build with CoverBuilder
-        + Some more/updated localisation
-        + New preset that clears the current UI. (So it is easy to start fresh if you load last used settings automatically)
-        + Added a general cover check to make sure cover has not changed (in dimensions) since build
-        + Added Place Cover Image to the menu, which places a file on the current spread.
-        + Load documentpresets can now guess settings of covers not build with CoverBuilder.
-        + Convert units in the margins window too!
-        + No more NaN error in main UI
-        + Added option for wrap, now a printer can define the bleed as part of the wrap.
-        + Show the fold drop-down as soon as flap is selected. No need to set the flap first.
-
-		Bug fixes
-		+ Fixed issue using slug tool when layer is locked
-		+ Fixed bounds error when trying to use slug tool when the slugs are not big enough
-	]]>
+	    Set custom slug size ]]>
 	</description>
 </ExtensionUpdateInformation>
