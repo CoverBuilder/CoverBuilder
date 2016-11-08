@@ -161,7 +161,7 @@
         return myOldUnits;
     }
 
-    function setRedraw(myApp, myOriginalPrefs){
+    function setRedraw(myOriginalPrefs){
         // This function is a rewite of forceRedraw by by Jon S. Winters
         // http://extendscript.blogspot.com.au/2009/09/force-redraw-adobe-indesign.html
 
@@ -257,7 +257,7 @@
             if(returnNull){
                 return null;
             } else {
-                alert(String(myApp.Localise.UIalert['doc_not_build_with_coverBuilder']));
+                alert(String(myApp.Localise.UIalert['failed_to_retrieve_c_object']));
                 exit();
             }
         }
@@ -284,9 +284,7 @@
         var doc = app.activeDocument;
 
         if(returnAnyDoc || isBuildWithCoverBuilder(myApp, doc)){
-            // we need to check if C is matching with given C // TICKET 098767890432
-            // we already have build a function to check the doc so lets utilities that.
-            
+            // Check if doc matches Cover object
             var checkC = myApp.Tools.checkCagainstDoc(myApp, doc, C, false); // returnOBJ = { C : C, changed : false, message : {ok : true, text : "OK"} };
             
             if(checkC.message.ok){
@@ -318,15 +316,23 @@
         myApp.Slugs.placeSizesInSlug(myApp, doc, C);
     }
     
-    function setSlugs(myApp, doc, measureUnit) {
+    function setMinSlugs(myApp, doc, measureUnit) {
         // Function assumes rulers to be set correctly
-        var mySlug = myApp.NumCon.convert(myApp, myApp.Settings.mmSlug, "mm", measureUnit );
+        var mySlug = myApp.NumCon.convert(myApp, 5, "mm", measureUnit );
         doc.documentPreferences.slugTopOffset             = mySlug + doc.documentPreferences.documentBleedTopOffset;
         doc.documentPreferences.slugRightOrOutsideOffset  = mySlug + doc.documentPreferences.documentBleedOutsideOrRightOffset;
         doc.documentPreferences.slugBottomOffset          = mySlug + doc.documentPreferences.documentBleedBottomOffset;
         doc.documentPreferences.slugInsideOrLeftOffset    = mySlug + doc.documentPreferences.documentBleedInsideOrLeftOffset;
     }
-
+    
+    function setSlugs(myApp, doc, measureUnit) {
+        // Function assumes rulers to be set correctly
+        var mySlug = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, measureUnit );
+        doc.documentPreferences.slugTopOffset             = mySlug + doc.documentPreferences.documentBleedTopOffset;
+        doc.documentPreferences.slugRightOrOutsideOffset  = mySlug + doc.documentPreferences.documentBleedOutsideOrRightOffset;
+        doc.documentPreferences.slugBottomOffset          = mySlug + doc.documentPreferences.documentBleedBottomOffset;
+        doc.documentPreferences.slugInsideOrLeftOffset    = mySlug + doc.documentPreferences.documentBleedInsideOrLeftOffset;
+    }
 
     function saveJSONLabel(myApp, doc, labelName, myObject){
         // This function saves the given object as JSON string in give document under given label name
@@ -1136,6 +1142,17 @@
     //-----------------------------------------------------------------------------------
     //  PAGE TOOLS
     //-----------------------------------------------------------------------------------
+    function insideMinMaxPageSize(myApp, size, measureUnit) {
+        var minSize = myApp.Tools.getMinPageWidthINDD(myApp, measureUnit);
+        var maxSize = myApp.Tools.getMaxPageWidthINDD(myApp, measureUnit);
+        
+        if( (size > minSize) && (size < maxSize) ) {
+            return true;
+        }
+        
+        return false;
+    }
+    
     function getCMarginFromPageLabel(myApp, C, pageLabel) {
         returnObj = { top : 0, right : 0, left : 0, bottom: 0 };
         
@@ -1642,6 +1659,10 @@
         // maxDecimals is an optional parameter for rounding
         return myApp.NumCon.convert(myApp, myApp.Settings.minPageWidthINDD, "mm", myUnits, maxDecimals);
     }
+    function getMaxPageWidthINDD(myApp, myUnits, maxDecimals) {
+        // maxDecimals is an optional parameter for rounding
+        return myApp.NumCon.convert(myApp, myApp.Settings.maxPageWidthINDD, "mm", myUnits, maxDecimals);
+    }
 
     function pageTracker(myApp, C){
         var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit); // Minimum page width for indesign
@@ -2002,8 +2023,12 @@
         // This is not the most elegant solution but at least it works consistently
         app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
         myTextFrame.move(myPage, [0.05, 0.05]); //Page can’t be smaller than 0.5mm this number works in any measurement unit :)
-
-        myTextFrame.geometricBounds = [myBounds[0], myBounds[1], myBounds[2], myBounds[3]];
+        
+        try {
+            myTextFrame.geometricBounds = myBounds;
+        } catch(error) {
+            alert("Trouble setting bounding box to: " + myBounds + "\n" + error);
+        }
 
         myTextFrame.contents = myString;
         myTextFrame.textFramePreferences.verticalJustification = VerticalJustification.CENTER_ALIGN;
@@ -2234,6 +2259,7 @@
         getOrCreateActiveCover          : getOrCreateActiveCover,
         getDocBleed                     : getDocBleed,
         setDocBleed                     : setDocBleed,
+        setMinSlugs                     : setMinSlugs,
         setSlugs                        : setSlugs,
         saveJSONLabel                   : saveJSONLabel,
         retrieveJSONLabel               : retrieveJSONLabel,
@@ -2243,6 +2269,7 @@
         checkCagainstDoc                : checkCagainstDoc,
         checkCagainstSpread             : checkCagainstSpread,
         // PAGE TOOLS
+        insideMinMaxPageSize            : insideMinMaxPageSize,
         getCMarginFromPageLabel         : getCMarginFromPageLabel,
         getPageMarginDifference         : getPageMarginDifference,
         getPageMargins                  : getPageMargins,
@@ -2258,6 +2285,7 @@
         yAlignPages                     : yAlignPages,
         updatePagesWithMaster           : updatePagesWithMaster,
         getMinPageWidthINDD             : getMinPageWidthINDD,
+        getMaxPageWidthINDD             : getMaxPageWidthINDD,
         pageTracker                     : pageTracker,
         addPageInfo                     : addPageInfo,
         getMasterPage                   : getMasterPage,

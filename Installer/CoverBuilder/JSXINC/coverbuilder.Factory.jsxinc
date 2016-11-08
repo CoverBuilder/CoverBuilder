@@ -50,9 +50,6 @@
         }
         
         if(Settings.version != NewSettings.version){
-            //alert("CoverBuilder is updating to " + NewSettings.version);
-            //var updatedSettings = updateUserSettings(myApp, Settings, NewSettings);
-            //Settings = myApp.JSON.saveFile(myApp, fSettings, updatedSettings);
             Settings = updateUserSettings(myApp, Settings, NewSettings);
         }
 
@@ -93,7 +90,7 @@
 
     function getSettings(PlatformInfo){
         var NewSettings = {
-            version                        : "3.0.0",            // String
+            version                        : "3.0.3",            // String
             add_CoverBuilder_Menu          : true,               // Boolean // If set to false menu will be removed
             autoload_last_used_settings    : true,               // Boolean
             autoload_front_document        : true,               // Boolean // If set to true it will over-ride the autoload_last_used_settings
@@ -106,8 +103,9 @@
             add_drop_shadow                : false, //quicker    // Boolean //Setting is for Photoshop only
             add_margin_guides              : false, //cleaner    // Boolean //Setting is for Photoshop only
             Platform                       : PlatformInfo,       // Object
-            mmSlug                         : 5,                  // Number: in millimetres
+            Slugs                          : {measure:5,unit:0}, // Object
             minPageWidthINDD               : 0.5,                // Number: in millimetres
+            maxPageWidthINDD               : 5485,               // Number: in millimetres
             pluginfo                       : []                  // Array of pluginfo Objects {plugin_name: string, launch_on_load: boolean, add_to_menu: boolean}
         }
         return NewSettings;
@@ -217,7 +215,6 @@
     }
 
     function build4Indesign(PlatformInfo){
-        $.localize = true; // enable ExtendScript localisation engine
         
         // Build app from modules
         var myApp = new Object();
@@ -229,9 +226,9 @@
             myApp.Helper  = new Object();
 
         for (var key in myApp.Module) {
-            //alert(key); #4567890987654
             myApp[key] = $.evalFile(new File(myApp.Module[key]));
         }
+        
         for (var key in myApp.Helpers) {
             myApp.Helper[key] = $.evalFile(new File(myApp.Helpers[key]));
         }
@@ -251,8 +248,7 @@
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     
     function build4Photoshop(PlatformInfo){
-        $.localize = true; // enable ExtendScript localisation engine
-        
+
         // Build app from modules
         var myApp = new Object();
             // Create shortcuts

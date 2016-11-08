@@ -49,7 +49,7 @@
                 } else { // Not a good C object
                     C = myApp.Tools.guessC(myApp, myCover);
                     if( C == null){
-                    	alert( "CoverBuilder\n" + String(myApp.Localise.UIalert['doc_not_build_with_coverBuilder']) );
+                    	alert( "CoverBuilder\n" + String(myApp.Localise.UIalert['failed_to_retrieve_c_object']) );
                         return;
                     }
                     myApp.UI.CoverOrder(myApp, C);  //UI with C data

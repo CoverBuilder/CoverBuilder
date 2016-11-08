@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-
-<macromedia-extension name="CoverBuilder" id="com.brunoherfst.coverbuilder" requires-restart="true" version="3.0.2" icon="icon.png">
-
+<macromedia-extension name="CoverBuilder" version="3.0.3" id="com.brunoherfst.coverbuilder" requires-restart="true" icon="icon.png">
 	<author name="Bruno Herfst" />
-	<update method="directlink" url="https://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
-
+	<update url="http://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
 	<products>
-		<product familyname="InDesign" version="7" />
+		<product name="InDesign" primary="true" version="7" />
 	</products>
-
 	<files>
 		<file source="icon.png" destination="$ExtensionSpecificEMStore" />
-		<file source="CoverBuilder" destination="$indesign/Scripts/startup scripts/" file-type="ordinary" shared="true" />
+		<file source="CoverBuilder" destination="$indesign/Scripts/startup scripts/" products="InDesign" file-type="ordinary" shared="true" />
 	</files>
-
 	<description>
-		<![CDATA[The best way to build book and magazine covers.]]>
+		<![CDATA[Build solid book and magazine covers.]]>
 	</description>
-
 </macromedia-extension>

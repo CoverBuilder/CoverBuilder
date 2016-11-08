@@ -68,7 +68,17 @@
 
       var showCBmenuCheckbox = genPanel.add ("checkbox", undefined, "Show CoverBuilder Menu");
           showCBmenuCheckbox.value = myApp.Settings.add_CoverBuilder_Menu;
-
+      
+      var slugSizeGroup = genPanel.add('group');
+          slugSizeGroup.add('statictext', undefined, 'Slugs:');
+    
+      var slugText = slugSizeGroup.add('edittext');
+          slugText.characters = 5;
+          slugText.text = String(myApp.Settings.Slugs.measure);
+      
+      var slugMeasureDD = slugSizeGroup.add ("dropdownlist", undefined, myApp.STools.localisedValidMeasurementUnits(myApp));
+          slugMeasureDD.selection = myApp.Settings.Slugs.unit;
+      
       var pageSlugCheckbox = genPanel.add ("checkbox", undefined, "Add page sizes to slug area");
           pageSlugCheckbox.value = myApp.Settings.pageSizes_in_Slug;
       var spreadSlugCheckbox = genPanel.add ("checkbox", undefined, "Add total trim to slug area");
@@ -279,6 +289,10 @@
         var menuRefreshed = false;
         // General panel
         var add_CoverBuilder_Menu  = showCBmenuCheckbox.value;
+        
+        var slug_measure = parseFloat(slugText.text);
+        var slug_unit    = slugMeasureDD.selection.index;
+        
         var pageSizes_in_Slug      = pageSlugCheckbox.value;
         var totalTrim_in_Slug      = spreadSlugCheckbox.value;
 
@@ -293,11 +307,22 @@
             myApp.IDmenu.unload_CB_Menu(myApp);
           }
         }
-
+        
+        if(slug_measure != myApp.Settings.Slugs.measure){
+            settings_changed = true;
+            myApp.Settings.Slugs.measure = slug_measure;
+        }
+        
+        if(slug_unit != myApp.Settings.Slugs.unit){
+            settings_changed = true;
+            myApp.Settings.Slugs.unit = slug_unit;
+        }
+        
         if( pageSizes_in_Slug != myApp.Settings.pageSizes_in_Slug){
           settings_changed = true;
           myApp.Settings.pageSizes_in_Slug = pageSizes_in_Slug;
         }
+        
         if( totalTrim_in_Slug != myApp.Settings.totalTrim_in_Slug){
           settings_changed = true;
           myApp.Settings.totalTrim_in_Slug = totalTrim_in_Slug;

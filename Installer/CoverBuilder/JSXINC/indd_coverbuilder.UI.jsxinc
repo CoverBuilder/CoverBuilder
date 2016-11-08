@@ -7,6 +7,8 @@
     // privates //
     //////////////
     function CoverOrder(myApp, CoverObject){
+        $.localize = true; // Make sure ExtendScript localisation engine is enabled.
+
         // The Cover Object this function will return
         var C = null;
 
@@ -247,26 +249,28 @@
                 // Check for minimal page size: InDesign can't handle pages smaller then 0.5mm
                 //------
                 var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, parseFloat(mminch.selection), 4); // Minimum page width for indesign
+                var maximumPageWidth = myApp.Tools.getMaxPageWidthINDD(myApp, parseFloat(mminch.selection), 4); // Minimum page width for indesign
 
                 var thisSpine   = myApp.NumCon.NaN20( parseFloat(  mySpine.text) );
                 var thisWidth   = myApp.NumCon.NaN20( parseFloat(  myWidth.text) );
                 var thisHeight  = myApp.NumCon.NaN20( parseFloat( myHeight.text) );
 
-                if(thisWidth <= minimumPageWidth){
-                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_at_least']) + minimumPageWidth + " " + mminch.selection.text);
-                    // Set spine fiels active
-                    myWidth.active = true;
-                    return null;
-                }
-                if(thisHeight <= minimumPageWidth){
-                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_at_least']) + minimumPageWidth + " " + mminch.selection.text);
+                if( (thisHeight <= minimumPageWidth) || (thisHeight >= maximumPageWidth) ){
+                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_between']) + minimumPageWidth + " and " + maximumPageWidth + " " + mminch.selection.text);
                     // Set spine field active
                     myHeight.active = true;
                     return null;
                 }
                 
-                if(thisSpine <= minimumPageWidth){
-                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_at_least']) + minimumPageWidth + " " + mminch.selection.text);
+                if( (thisWidth <= minimumPageWidth) || (thisWidth >= maximumPageWidth) ){
+                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_between']) + minimumPageWidth + " and " + maximumPageWidth + " " + mminch.selection.text);
+                    // Set spine fiels active
+                    myWidth.active = true;
+                    return null;
+                }
+                
+                if( (thisSpine <= minimumPageWidth) || (thisSpine >= maximumPageWidth) ){
+                    alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_between']) + minimumPageWidth + " and " + maximumPageWidth + " " + mminch.selection.text);
                     // Set spine fiels active
                     mySpine.active = true;
                     return null;
@@ -310,14 +314,15 @@
                 return null;
             }
         }
+
         presetBut.onClick = function () {
             if(presetBut.text == savePS){
                 //create preset
                 var cp = add2Presets(myApp, prompt(String(myApp.Localise.UI['Name'])));
                 if( !cp.ok && !cp.user_notified ){
-                    // If the user is not notifed about an error (or did not want to overwrite a preset)
+                    // If the user is not notifed about an error, do it now.
                     alert( String(myApp.Localise.UIalert['Error_creating_presets']) );
-                } else {
+                } else if (cp.ok) {
                     //update dialog
                     presets.add('item', formatPresetName(MyPresets.presets[MyPresets.presets.length-1]) );
                     presets.items[MyPresets.presets.length].selected = true; //no need to subtract 1 as array includes --save presets-- item at 0
@@ -326,7 +331,7 @@
                     } catch(e){
                         alert(String(myApp.Localise.UIalert['Error_saving_presets']) + "\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
                     }
-                }
+                } // else user pressed cancel
             } else if(presetBut.text == clearPS){
                 //delete preset
                 var index = parseInt(presets.selection);
@@ -635,7 +640,7 @@
                 //I want to know if we receive something unexpected
                 alert(String(myApp.Localise.UIalert['encountered_error']) + "indd_coverbuilder.UI.jsxinc -> add2Presets -> Expected Boolean" );
             }
-
+            
             if(typeof newName == 'string'){
                 if( (newName != lastUsed) || overwriteLastUsed){
                     //check if newName is allready in list, if so remove the old one
@@ -652,7 +657,7 @@
                               MyPresets.presets.splice(i,1);
                               presets.remove(i+1);
                             } else {
-                              return returnRes(false, "User did not want to save message.");
+                              return returnRes(false, "User did not want to overwrite preset.", true);
                             }
                         }
                     }
@@ -669,7 +674,7 @@
                 return returnRes(returnObj.ok, returnObj.response);
 
             } //end check for string
-            return returnRes(false, "End of function, nothing happend.");
+            return returnRes(false, "End of function, nothing happend.", true); // User pressed cancel
         }
 
         function convert2(myApp, unit){
@@ -923,8 +928,9 @@
         var myButtonGroup = marginWindow.add ("group");
             myButtonGroup.margins = [20,5,20,15];
             myButtonGroup.alignment = "center";
-            myButtonGroup.add ("button", [0,0,unitWidthShort,unitHeight], String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
-            myButtonGroup.add ("button", [0,0,unitWidthShort,unitHeight], String(myApp.Localise.UI['Ok']), {name:"ok"} );
+            myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Cancel']), {name:"Cancel"} );
+            myButtonGroup.add ("button", undefined, String(myApp.Localise.UI['Ok']), {name:"OK"} )
+
         // BUTTONS ///////////////////////////////////////////////
 
         var myResult = marginWindow.show();

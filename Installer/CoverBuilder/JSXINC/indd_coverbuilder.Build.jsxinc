@@ -16,21 +16,29 @@
         ///////////////////
         C = myApp.STools.resolveSizes(myApp, C); //resolve the sizes for build
 
-        var mySlug           = myApp.NumCon.convert(myApp, myApp.Settings.mmSlug, "mm", C.measureUnit ); // For crop-marks and slug info
+        var mySlug           = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit ); // For crop-marks and slug info
         var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit); // Minimum page width for indesign
+        var maximumPageWidth = myApp.Tools.getMaxPageWidthINDD(myApp, C.measureUnit); // Maximum page width for indesign
         
         // The UI should have already made sure this can't happen.
-        if(C.height < minimumPageWidth || C.width < minimumPageWidth){
-            alert("A pagesize can’t be smaller than " + minimumPageWidth + myApp.STools.getMeasurementUnits(myApp, C.measureUnit) );
+        
+        if( !myApp.Tools.insideMinMaxPageSize(myApp, C.height, C.measureUnit) ) {
+            throw("CoverBuilder Build Error: Height needs to be between " + minimumPageWidth + " and " + maximumPageWidth + " " + myApp.STools.getMeasurementUnits(myApp, C.measureUnit) );
             return;
         }
-        if(C.spine != 0 && C.spine < minimumPageWidth) {
-            alert("A pagesize can’t be smaller than " + minimumPageWidth + myApp.STools.getMeasurementUnits(myApp, C.measureUnit) );
+        
+        if( !myApp.Tools.insideMinMaxPageSize(myApp, C.width, C.measureUnit) ) {
+            throw("CoverBuilder Build Error: Width needs to be between " + minimumPageWidth + " and " + maximumPageWidth + " " + myApp.STools.getMeasurementUnits(myApp, C.measureUnit) );
+            return;
+        }
+        
+        if( !myApp.Tools.insideMinMaxPageSize(myApp, C.spine, C.measureUnit) ) {
+            throw("CoverBuilder Build Error: Spine needs to be between " + minimumPageWidth + " and " + maximumPageWidth + " " + myApp.STools.getMeasurementUnits(myApp, C.measureUnit) );
             return;
         }
 
         if(C.binding < C.hinge && C.binding != 0){
-            alert("Quarter binding can’t be smaller than hinge.");
+            throw("CoverBuilder Build Error: Quarter binding can’t be smaller than hinge.");
             return;
         }
 
@@ -44,6 +52,9 @@
 
         //Create a new cover
         myCover = app.documents.add(true);
+        
+        //add XMP data (Save C object in doc)
+        myApp.XMP.newXMP(myApp,myCover,UIC);
 		
         //Set up the new cover.
         with(myCover.viewPreferences){
@@ -410,9 +421,6 @@
         } catch (e) {
             // do nothing
         }
-
-        //add XMP data
-        myApp.XMP.newXMP(myApp,myCover,UIC);
 
         //Set sizes in slug
         myApp.Slugs.placeSizesInSlug(myApp, myCover, C);

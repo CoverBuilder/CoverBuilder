@@ -7,7 +7,8 @@
     //////////////
     // privates //
     //////////////
-    
+    $.localize = true; // Make sure ExtendScript localisation engine is enabled.
+
     var validMeasurementUnits = ["mm", "inch", "pt"]; // In that order! This is how they appear in the dropdowns and this script saves the indexes as a preset
     
     function localisedValidMeasurementUnits(myApp){
@@ -596,6 +597,13 @@
          $.sleep(500);     // 500 ms timer
          f.remove();
          return true;
+    }
+    
+    function sendErr(CB, dataString){
+    	var app  = "CoverBuilder ";
+    	    app += String(CB.Settings.version);
+    	var data = String(dataString);
+ 		visitURL("http://coverbuilder.brunoherfst.com/errorlogger.html?app=" + encodeURI(app) + "&data=" + encodeURI(data));
     }
 
     function getHelp(){

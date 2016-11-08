@@ -18,22 +18,6 @@
             myDocXMP.setProperty(destNamespace, destContName + "[4]", String(C.flap));
             myDocXMP.setProperty(destNamespace, destContName + "[5]", String(C.JSONstring));
             myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
-
-        } catch(e){
-            alert("CoverBuilder:XMP:set:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
-        }
-        return C;
-    }
-
-    function setHandBags(myCover, C){
-        var myDocXMP = myCover.metadataPreferences;
-        try{
-            myDocXMP.setProperty(destNamespace, destContName + "[1]", String(C.width));
-            myDocXMP.setProperty(destNamespace, destContName + "[2]", String(C.height));
-            myDocXMP.setProperty(destNamespace, destContName + "[3]", String(C.spine));
-            myDocXMP.setProperty(destNamespace, destContName + "[4]", String(C.flap));
-            myDocXMP.setProperty(destNamespace, destContName + "[5]", String(C.JSONstring));
-            myDocXMP.setProperty(destNamespace, destContName + "[6]", String(C.binding));
         } catch(e){
             alert("CoverBuilder:XMP:set:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
@@ -83,14 +67,32 @@
 
     function newXMP(myApp, myCover, C){
         var myXML = new XML("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:CoverBuilder=\"http://brunoherfst.com/\"><CoverBuilder:contact>mail@brunoherfst.com</CoverBuilder:contact></rdf:Description></rdf:RDF></x:xmpmeta>");
-        var myXMLfile = File('TEMP_XMP.xml');
+        
+        try {
+            var myXMLfilePath = String(myApp.PathTo.settingsFolder + 'TEMP_XMP.xml');
+            var myXMLfile = new File(myXMLfilePath);
+        } catch (error) {
+            alert("CoverBuilder has trouble saving XML to " + myXMLfilePath + "/n" + error);
+            return;
+        }
+        
         if( myXMLfile.open('e') ){
             myXMLfile.write(myXML);
             myXMLfile.close();
             myCover.metadataPreferences.append(myXMLfile);
             myXMLfile.remove();
+        } else {
+            alert("CoverBuilder has trouble opening temporary XML file " + myXMLfile.path);
+            return;
         }
-        myCover.metadataPreferences.createContainerItem(destNamespace, destContName, undefined, ContainerType.BAG);
+        
+        try {
+            myCover.metadataPreferences.createContainerItem(destNamespace, destContName, undefined, ContainerType.BAG);
+        } catch (error) {
+            alert("CoverBuilder has trouble saving metadataPreferences.");
+            return;
+        }
+        
         safeCoverObject(myApp, myCover, C);
     }
 

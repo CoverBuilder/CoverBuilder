@@ -81,9 +81,10 @@
 
         if ( isNaN(newSpinePT) ){
             alert("That was not a Number");
-        } else if (newSpinePT < myApp.Tools.getMinPageWidthINDD(myApp, "pt") ){
+        } else if ( !myApp.Tools.insideMinMaxPageSize(myApp, newSpinePT, "pt") ){ 
             var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit);
-            alert("Spine-width should be at least " + myApp.NumCon.doRound(minimumPageWidth,3) + " " + myApp.STools.getMeasurementUnits(myApp, C));
+            var maximumPageWidth = myApp.Tools.getMaxPageWidthINDD(myApp, C.measureUnit);
+            alert("Spine-width should be between " + myApp.NumCon.doRound(minimumPageWidth,3) + " and " + myApp.NumCon.doRound(maximumPageWidth,3) + " " + myApp.STools.getMeasurementUnits(myApp, C));
             changeSpine(myApp); // Show UI to re enter new spinewidth
             exit();
         } else {

@@ -12,6 +12,7 @@
         // This functions adds the CoverBuilder plugin to the given function.
         // So the function can access the CoverBuilder plugin
         return function () {
+            $.localize = true; // Make sure ExtendScript localisation engine is enabled.
             return fun(myApp);
         }
     }
@@ -39,8 +40,7 @@
 
                 var CB_MENU_Action = app.scriptMenuActions.add("Cover...");
                 var ev;
-                for( ev in CB_MENU_Handlers )
-                    {
+                for( ev in CB_MENU_Handlers ) {
                     CB_MENU_Action.eventListeners.add(ev,CB_MENU_Handlers[ev]);
                     }
 

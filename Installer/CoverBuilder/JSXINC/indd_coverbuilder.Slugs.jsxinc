@@ -21,6 +21,9 @@
     }
     
     function _placePageSizesInSlug(myApp, myCover, myParagraphStyle, units){
+        // This function assumes ruler units are in units as given
+        var textFrameHeight = myApp.NumCon.convert(myApp, 5, "mm", units, 4);
+
         //top
         var deleteMasters = null;
         var mastersToBeDeleted = new Array();
@@ -59,7 +62,7 @@
             /////////////
             for (var j=0; mySpread.pages.length > j; j++){
                 var myIPage       = myApp.Tools.makePageInfoObject(myApp, myCover, mySpread.pages[j], units);
-                var myFrameBounds = new Array (-myCover.documentPreferences.slugTopOffset,0,-myCover.documentPreferences.documentBleedTopOffset,myIPage.w);
+                var myFrameBounds = new Array (-(textFrameHeight+myCover.documentPreferences.documentBleedTopOffset),0,-myCover.documentPreferences.documentBleedTopOffset,myIPage.w);
                 var myTextFrame   = myApp.Tools.addTextFrame(myApp, myIPage.page, myFrameBounds, myApp.NumCon.doRound(myIPage.w,3).toString(), myParagraphStyle, 0,"pageWidth");
                 checkOverset(myApp, myTextFrame, myCover.documentPreferences.documentBleedTopOffset);
                 myTextFrame.textFramePreferences.autoSizingType = AutoSizingTypeEnum.WIDTH_ONLY;
@@ -67,7 +70,7 @@
             // PAGE HEIGHT
             //////////////
             var myIPage        = myApp.Tools.makePageInfoObject(myApp, myCover, mySpread.pages.lastItem(), units);
-            var myFrameBounds = new Array (0,myIPage.w + myCover.documentPreferences.documentBleedOutsideOrRightOffset, myIPage.h, myIPage.w + myCover.documentPreferences.slugRightOrOutsideOffset);
+            var myFrameBounds = new Array (0,myIPage.w + myCover.documentPreferences.documentBleedOutsideOrRightOffset, myIPage.h, myIPage.w + myCover.documentPreferences.documentBleedOutsideOrRightOffset + textFrameHeight);
             var tf1 = myApp.Tools.addTextFrame(myApp, myIPage.page, myFrameBounds, myApp.NumCon.doRound(myIPage.h,3).toString(), myParagraphStyle, 270, "pageHeight");
                 tf1.textFramePreferences.autoSizingType = AutoSizingTypeEnum.WIDTH_ONLY;
 
@@ -115,12 +118,15 @@
     }
 
     function _placeTrimSizeInSlug(myApp, doc, myParagraphStyle, units) {
+        // This function assumes ruler units are in units as given
+        var textFrameHeight = myApp.NumCon.convert(myApp, 5, "mm", units, 4);
+        
         try{
             for (var i=0; doc.spreads.length > i; i++){
                 var mySpread = doc.spreads[i];
 				var trims    = getSpreadTrim(myApp, doc, mySpread, units);
 				myIPage      = myApp.Tools.makePageInfoObject(myApp, doc, mySpread.pages[0], units);
-				var myFrameBounds = new Array (0, -doc.documentPreferences.slugInsideOrLeftOffset, myIPage.h, -doc.documentPreferences.documentBleedInsideOrLeftOffset);
+				var myFrameBounds = new Array (0, -(textFrameHeight+doc.documentPreferences.documentBleedInsideOrLeftOffset), myIPage.h, -doc.documentPreferences.documentBleedInsideOrLeftOffset);
 				var tf1 = myApp.Tools.addTextFrame(myApp, myIPage.page, myFrameBounds, trims.txt, myParagraphStyle, 90, "trimSize");
                 tf1.textFramePreferences.autoSizingType = AutoSizingTypeEnum.WIDTH_ONLY;
             }
@@ -138,7 +144,8 @@
         var docUnits    = myApp.Tools.getShorthandDocUnits(myApp, doc).txt;
         var myRulers    = myApp.Tools.setRuler(doc, {units : docUnits});
 
-        var minSlugSize = myApp.NumCon.convert(myApp, 4, "mm", docUnits, 4);
+        var minSlugSize   = myApp.NumCon.convert(myApp, 4, "mm", docUnits, 4);
+        var idealSlugSize = myApp.NumCon.convert(myApp, 5, "mm", docUnits, 4);
 
         var testSlugs = [ doc.documentPreferences.slugTopOffset             - doc.documentPreferences.documentBleedTopOffset,
                           doc.documentPreferences.slugRightOrOutsideOffset  - doc.documentPreferences.documentBleedOutsideOrRightOffset,
@@ -148,7 +155,7 @@
         for(var i = 0; i < testSlugs.length; i++) {
             if(testSlugs[i] < minSlugSize){
                 if(tryFix) {
-                    var increaseSlug = confirm("Slugs are too narrow for measurements, would you like me to increase the slugs to " + minSlugSize + docUnits );
+                    var increaseSlug = confirm("Slugs are too narrow for measurements to show up on print, would you like me to increase the slugs to " + idealSlugSize + docUnits );
                     if(increaseSlug) {
                             myApp.Tools.setSlugs(myApp, doc, docUnits);
                     } else {
@@ -166,7 +173,9 @@
     }
 
     function placeSizesInSlug(myApp, myCover, C){
-        if (!slugSizeBigEnough(myApp, myCover, true)) return;
+        // if (!slugSizeBigEnough(myApp, myCover, true)) return;
+        // Don't bother about size of slugs just do the job
+        
         var myRulers         = myApp.Tools.setRuler(myCover, {units : C.measureUnit});
         var myParagraphStyle = getMeasureParagraphStyle(myApp, myCover, "measurements", C.registration_font);
         var regLayer         = myApp.Tools.getAndSelectLayer(  myCover, "Registration");

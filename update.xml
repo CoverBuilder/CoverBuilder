@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <ExtensionUpdateInformation>
-	<version>3.0.2</version>
+	<version>3.0.3</version>
 	<download>http://github.com/GitBruno/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
-	<description>
-	<![CDATA[
-	    Set custom slug size ]]>
-	</description>
+	<description><![CDATA[
+		Bug fixes
+		+ Use in multiple versions of InDesign at the same time
+	]]></description>
 </ExtensionUpdateInformation>

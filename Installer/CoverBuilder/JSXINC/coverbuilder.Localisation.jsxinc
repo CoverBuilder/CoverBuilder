@@ -402,10 +402,10 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                                                 nl: "Binding should cover the Hinge or Score.",
                                                 fr: "Binding should cover the Hinge or Score." },
 
-         SPINE_WIDTH_HEIGHT_should_be_at_least : { en: "SPINE, WIDTH and HEIGHT should be at least ",
-                                                   de: "SPINE, WIDTH and HEIGHT should be at least ",
-                                                   nl: "SPINE, WIDTH and HEIGHT should be at least ",
-                                                   fr: "SPINE, WIDTH and HEIGHT should be at least " },
+         SPINE_WIDTH_HEIGHT_should_be_between : { en: "SPINE, WIDTH and HEIGHT should be between ",
+                                                   de: "SPINE, WIDTH and HEIGHT should be between ",
+                                                   nl: "SPINE, WIDTH and HEIGHT should be between ",
+                                                   fr: "SPINE, WIDTH and HEIGHT should be between " },
 
         trouble_saving_settings : { en: "Sorry!\nI'm having trouble saving settings",
                                     de: "Sorry!\nI'm having trouble saving settings",
@@ -471,8 +471,8 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                                                 de: "Open a document before using this function.",
                                                 nl: "Open a document before using this function.",
                                                 fr: "Open a document before using this function." },
-		
-		Could_not_load_Cover_Details : { en: "Could not load cover details.",
+
+        Could_not_load_Cover_Details : { en: "Could not load cover details.",
                                          de: "Could not load cover details.",
                                          nl: "Could not load cover details.",
                                          fr: "Could not load cover details." },
@@ -482,10 +482,10 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                                          nl: "Beware! This template has been changed outside CoverBuilder and data is out of date.",
                                          fr: "Beware! This template has been changed outside CoverBuilder and data is out of date." },
                                                 
-        doc_not_build_with_coverBuilder : { en: "This document is not build with CoverBuilder.",
-                                            de: "This document is not build with CoverBuilder.",
-                                            nl: "This document is not build with CoverBuilder.",
-                                            fr: "This document is not build with CoverBuilder." }
+        failed_to_retrieve_c_object : { en: "Failed to find CoverBuilder data in document.",
+                                        de: "Failed to find CoverBuilder data in document.",
+                                        nl: "Failed to find CoverBuilder data in document.",
+                                        fr: "Failed to find CoverBuilder data in document." }
     };
     
     var Meta = {

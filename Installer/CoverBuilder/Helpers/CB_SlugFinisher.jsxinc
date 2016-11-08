@@ -26,7 +26,6 @@
             var CVR1PN = 1;
 
             if(C.width > 0){
-                // alert("Could not load CoverBuilder object from document.");
                 CVR1PN = myApp.Tools.getCVR1pageNo(C);
 
                 var check = myApp.Tools.checkCagainstDoc(myApp, doc, C, true);
@@ -50,10 +49,8 @@
 			
             if (swatchOBJ == undefined) return; // User canceled
 
-		    if (!myApp.Slugs.slugSizeBigEnough(myApp, doc, true)) {
-                alert("Can't place sizes in slug\nSlug size not wide enough...");
-                return;
-            }
+		    myApp.Slugs.slugSizeBigEnough(myApp, doc, true);
+            
             // Slugs have changed make sure we reset measurements
         	myApp.Slugs.placeSizesInSlug(myApp, doc, C);
         					
@@ -72,7 +69,7 @@
 			}
 			
             // This makes sure InDesign redraws the screen properly
-			var myOriginalRedraw = myApp.Tools.setRedraw(myApp);
+			var myOriginalRedraw = myApp.Tools.setRedraw();
 			setText(myApp, doc, myTextFrame, swatchOBJ);
 			
             // Save updated C data
@@ -103,7 +100,7 @@
 			}
 			
 			// Reset redraw preference
-			myApp.Tools.setRedraw(myApp, myOriginalRedraw);
+			myApp.Tools.setRedraw(myOriginalRedraw);
 			// Reset original registration layer lock
 			myApp.Tools.layerLocked(regLayer, myLock);
         } catch(e) {
@@ -112,9 +109,14 @@
     };
 
     function createFinishFrame(myApp, doc, C, thisSpread){
+                
+        var originalRulers  = myApp.Tools.setRuler(doc, {units : C.measureUnit});
+        
+        var textFrameHeight = myApp.NumCon.convert(myApp, 5, "mm", C.measureUnit, 4);
+        
         var len = thisSpread.pages.length-1;
 
-        if( C.flap > myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit) ){
+        if( myApp.Tools.insideMinMaxPageSize(myApp, C.flap, C.measureUnit) ){
             var myPage = thisSpread.pages[len-1];
         } else {
             var myPage = thisSpread.pages[len];
@@ -123,10 +125,14 @@
         var pageBounds = myPage.bounds;
         var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
         var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
-        var myFrameBounds = new Array (myPageHeight+doc.documentPreferences.documentBleedBottomOffset,0,myPageHeight+doc.documentPreferences.slugBottomOffset,myPageWidth);
+        var myFrameBounds = new Array (myPageHeight+doc.documentPreferences.documentBleedBottomOffset,0,myPageHeight+doc.documentPreferences.documentBleedBottomOffset+textFrameHeight,myPageWidth);
         var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, doc, "measurements");
- 
-        return myApp.Tools.addTextFrame(myApp, myPage, myFrameBounds, " ", myParagraphStyle, 0, "finish");
+        
+        var finishTextFrame = myApp.Tools.addTextFrame(myApp, myPage, myFrameBounds, " ", myParagraphStyle, 0, "finish");
+        
+        myApp.Tools.setRuler(doc, originalRulers);
+        
+        return finishTextFrame 
     };
 
     function getSpotSwatches(myApp, doc) {
