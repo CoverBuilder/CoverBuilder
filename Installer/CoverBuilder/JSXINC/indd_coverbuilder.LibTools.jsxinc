@@ -82,18 +82,26 @@
     }
 
     function openLib(myLibPath){
+        myLibPath     = String(myLibPath);
+        var myLib     = null;
+        var myLibName = myLibPath.replace(/^.*(\\|\/|\:)/, '');
+        
         if(File(myLibPath).exists == false){
             //Display a dialog.
-            var thisLib = myLibPath.replace(/^.*(\\|\/|\:)/, '');
-            myLibPath = File.openDialog("Where is " + thisLib + "?");
+            myLibPath = File.openDialog("Where is " + myLibName + "?");
         }
-        if(myLibPath != null){
-                //open lib
-                myTarg = File(myLibPath);
-                myLib = app.open(myTarg,false);
+
+        if(myLibPath == null) return null;
+        
+        // Check if lib is allready open
+        if(app.libraries.itemByName(myLibName).isValid) {
+            //use existing lib
+            myLib = app.libraries.itemByName(myLibName);
         } else {
-            myLib = null;
+            //open lib
+            myLib = app.open(File(myLibPath),false);
         }
+
         return myLib;
     }
 

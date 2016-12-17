@@ -126,12 +126,19 @@
         var myUnits = 0;
         // Save old rulers
         var originalRulers = myApp.Tools.setRuler(myCover, {units : myUnits});
+		
+		// get Layer
+		var myLayer = myApp.Tools.getAndSelectLayer(myCover, "Art");
+		// unlock layer
+		var originalLock = myApp.Tools.layerLocked(myLayer, false);
 
-        var myArtFrame = myApp.Tools.newRect2SpreadBleed(myApp, myCover, mySpread, "Art", myUnits);
+        var myArtFrame = myApp.Tools.newRect2SpreadBleed(myApp, myCover, mySpread, myLayer, myUnits);
         myArtFrame.place(myFile, false);
         myArtFrame.fit(FitOptions.centerContent);
         
-        // reset original rulers
+        // restore layer lock
+		myApp.Tools.layerLocked(myLayer, originalLock);
+        // restore original rulers
         myApp.Tools.setRuler(myCover, originalRulers);
     }
 

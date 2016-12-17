@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<macromedia-extension name="CoverBuilder" version="3.0.3" id="com.brunoherfst.coverbuilder" requires-restart="true" icon="icon.png">
+<macromedia-extension name="CoverBuilder" version="3.0.4" id="com.brunoherfst.coverbuilder" requires-restart="true" icon="icon.png">
 	<author name="Bruno Herfst" />
 	<update url="http://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
 	<products>
-		<product name="InDesign" primary="true" version="7" />
+		<product familyname="InDesign" primary="true" version="7" />
 	</products>
 	<files>
 		<file source="icon.png" destination="$ExtensionSpecificEMStore" />

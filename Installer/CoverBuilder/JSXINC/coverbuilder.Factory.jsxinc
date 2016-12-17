@@ -90,7 +90,7 @@
 
     function getSettings(PlatformInfo){
         var NewSettings = {
-            version                        : "3.0.3",            // String
+            version                        : "3.0.4",            // String
             add_CoverBuilder_Menu          : true,               // Boolean // If set to false menu will be removed
             autoload_last_used_settings    : true,               // Boolean
             autoload_front_document        : true,               // Boolean // If set to true it will over-ride the autoload_last_used_settings

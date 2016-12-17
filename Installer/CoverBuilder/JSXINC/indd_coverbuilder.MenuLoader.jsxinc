@@ -13,7 +13,11 @@
         // So the function can access the CoverBuilder plugin
         return function () {
             $.localize = true; // Make sure ExtendScript localisation engine is enabled.
-            return fun(myApp);
+            try {
+                fun(myApp);
+            } catch(e) {
+                alert("CoverBuilder Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")"); // Let us know what is going on.
+            }
         }
     }
 
@@ -31,7 +35,7 @@
                     	// prevent undo - our script is CS5+
                         app.doScript(fun, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.ENTIRE_SCRIPT, "Expand State Abbreviations");
                     } catch(e){
-                        alert("CoverBuilder Menu Error:" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")"); // Let us know what is going on.
+                        alert("CoverBuilder Menu Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")"); // Let us know what is going on.
                     }
                 }};
 

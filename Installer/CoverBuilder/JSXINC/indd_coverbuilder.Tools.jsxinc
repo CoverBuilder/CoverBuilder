@@ -2050,13 +2050,11 @@
         return rect;
     }
 
-    function newRect2Page(myApp, doc, myPage, myLayerName, myUnits) {
+    function newRect2Page(myApp, doc, myPage, myLayer, myUnits) {
         var rect = undefined;
         try{
             // Get page info
             var infoPage  = myApp.Tools.makePageInfoObject(myApp, doc, myPage, myUnits);
-            // get Layer
-            var myLayer = myApp.Tools.getAndSelectLayer(doc, myLayerName);
             // Place standard rectangle
             var rect = myApp.Tools.addRectangle(myApp, infoPage.page, myLayer, infoPage.bounds, {fill:"None",stroke:"None"});
         } catch (e){
@@ -2065,8 +2063,8 @@
         return rect;
     }
 
-    function newRect2SpreadBleed(myApp, doc, mySpread, myLayerName, myUnits) {
-        var rect = myApp.Tools.newRect2Page(myApp, doc, mySpread.pages[0], myLayerName, myUnits);
+    function newRect2SpreadBleed(myApp, doc, mySpread, myLayer, myUnits) {
+        var rect = myApp.Tools.newRect2Page(myApp, doc, mySpread.pages[0], myLayer, myUnits);
         myApp.Tools.pageitem_2_SpreadBleedBounds(myApp, doc, rect);
         return rect;
     }
@@ -2133,6 +2131,7 @@
             alert("CoverBuilder.Tools MoveLayer\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
     }
+
     function layerLocked(myLayer, givenLock){
         // givenLock: True:  Layer will be locked
         // givenLock: False: Layer will be unlocked
