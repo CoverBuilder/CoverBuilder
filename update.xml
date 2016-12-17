@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionUpdateInformation>
 	<version>3.0.4</version>
-	<download>http://github.com/GitBruno/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
+	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
 	<description><![CDATA[
 	+ Install in multiple versions of InDesign at the same time
 	]]>
