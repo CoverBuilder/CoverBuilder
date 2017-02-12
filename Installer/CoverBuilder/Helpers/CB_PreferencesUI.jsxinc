@@ -79,21 +79,85 @@
       var slugMeasureDD = slugSizeGroup.add ("dropdownlist", undefined, myApp.STools.localisedValidMeasurementUnits(myApp));
           slugMeasureDD.selection = myApp.Settings.Slugs.unit;
       
+      function confirmMinSlug(){
+          var minSlug  = myApp.NumCon.convert(myApp, 5, 0, slugMeasureDD.selection.index, 3);
+          var slugSize = myApp.NumCon.convert(myApp, parseFloat(slugText.text), slugMeasureDD.selection.index, 0, 3);
+          if( slugSize < minSlug ){
+              var setMinSize = confirm( String(myApp.Localise.UIalert['Set_slug_to_recommended_min']) + minSlug + myApp.STools.getLocalisedUnits(myApp,slugMeasureDD.selection.index));
+              if( setMinSize ) {
+                  slugText.text = minSlug;
+              }
+          }
+      }
+      
+      slugText.onChange = function(){
+          confirmMinSlug();
+      }
+      slugMeasureDD.onChange = function(){
+          confirmMinSlug();
+      }
+      
       var pageSlugCheckbox = genPanel.add ("checkbox", undefined, "Add page sizes to slug area");
           pageSlugCheckbox.value = myApp.Settings.pageSizes_in_Slug;
       var spreadSlugCheckbox = genPanel.add ("checkbox", undefined, "Add total trim to slug area");
           spreadSlugCheckbox.value = myApp.Settings.totalTrim_in_Slug;
       
-      var myFontsList = myApp.UI.getAvailableFontFamilies(myApp);
-          myFontsList.unshift("- " + myApp.Settings.registration_font + " -");
+      // START FONTS
+      // -------------------------------------------------
+      var regFontFamily = myApp.STools.getRegistrationFontFamilyName(myApp);
+      var regFontStyle  = myApp.STools.getRegistrationFontStyleName(myApp);
+      
+      var myFamilyList = myApp.UI.getAvailableFontFamilies();
+      var myStyleList  = [];
+      var familySelected = 0;
+      var styleSelected  = 0;
+      
+      var regFontExist = false;
+      for (var i=0; i<myFamilyList.length; i++) {
+        if(myFamilyList[i] == regFontFamily) {
+            familySelected = i;
+            regFontExist   = true;
+        }
+      }
+      
+      if( regFontExist ) { // Font is loaded
+          var sysFontAvailableStyles = myApp.STools.getAvailableFontStyles( regFontFamily );
+          if(sysFontAvailableStyles.length > 0) {
+              myStyleList = sysFontAvailableStyles;
+              for (var i=0; i<myStyleList.length; i++) {
+                if(myStyleList[i] == regFontStyle) {
+                    styleSelected = i;
+                }
+              }
+          }
+      } else { // Font is not loaded
+          myFamilyList.unshift( "- " + regFontFamily + " -");
+          if(regFontStyle != "") {
+            myStyleList.unshift ( "- " + regFontStyle  + " -");
+          } else {
+            myStyleList.unshift ( "- " + "None" + " -");
+          }
+      }
 
       var fontGroup = genPanel.add('group');
-          fontGroup.orientation =  "row";
-          
+          fontGroup.orientation =  "column";
+          fontGroup.alignChildren = "left";
           fontGroup.add('statictext', undefined, 'Registration font: ');
           
-      var fontDrop = fontGroup.add('dropdownlist',undefined,undefined,{items:myFontsList});
-          fontDrop.selection = 0; 
+      var fontFamilyNameDrop = fontGroup.add('dropdownlist',[0,0,180,30],undefined,{items:myFamilyList});
+          fontFamilyNameDrop.selection = familySelected;          
+
+      var fontStyleNameDrop = fontGroup.add('dropdownlist',[0,0,180,30],undefined,{items:myStyleList});
+          fontStyleNameDrop.selection  = styleSelected;
+
+      fontFamilyNameDrop.onChange = function() {
+          fontStyleNameDrop.removeAll();
+          var sysFontAvailableStyles = myApp.STools.getAvailableFontStyles(fontFamilyNameDrop.selection.text);
+          for ( var i = 0; i < sysFontAvailableStyles.length; i++ ) {
+              fontStyleNameDrop.add('item',sysFontAvailableStyles[i]);
+          }
+          fontStyleNameDrop.selection = 0;
+      }
 
       // End General Panel
       ////////////////////
@@ -136,6 +200,7 @@
       ////////////////////////
 
       // Add colour of preview layers here
+      // No, should be automatically set by getting UIcolour
       /*
       var dropshadowCheckbox = psPanel.add ("checkbox", undefined, "Add drop shadow to preview layers");
           dropshadowCheckbox.value = myApp.Settings.add_drop_shadow;
@@ -187,12 +252,8 @@
       function showPluginsInUI(a, z){
         var child = pluginGroup.children.length;
         while ( child--) {
-            //alert(child); // 2 1 0
             pluginGroup.remove(pluginGroup.children[child]);
         }
-        // setWin.layout.layout( true ); 
-
-        // TO DO MAKE SURE PLUG INDEX IS SRT CORRECTLY
         
         for ( var i=a; i < z; i++ ) {
 
@@ -293,8 +354,8 @@
         var slug_measure = parseFloat(slugText.text);
         var slug_unit    = slugMeasureDD.selection.index;
         
-        var pageSizes_in_Slug      = pageSlugCheckbox.value;
-        var totalTrim_in_Slug      = spreadSlugCheckbox.value;
+        var pageSizes_in_Slug = pageSlugCheckbox.value;
+        var totalTrim_in_Slug = spreadSlugCheckbox.value;
 
         if( add_CoverBuilder_Menu != myApp.Settings.add_CoverBuilder_Menu){
           myApp.Settings.add_CoverBuilder_Menu = add_CoverBuilder_Menu;
@@ -328,8 +389,8 @@
           myApp.Settings.totalTrim_in_Slug = totalTrim_in_Slug;
         }
         
-        if(fontDrop.selection.index != 0){
-            myApp.Settings.registration_font = String(fontDrop.selection);
+        if(fontFamilyNameDrop.selection.index != familySelected){
+            myApp.Settings.registration_font = String(fontFamilyNameDrop.selection.text) + '\t' + String(fontStyleNameDrop.selection.text);
             settings_changed = true;
         }
 

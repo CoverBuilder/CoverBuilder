@@ -23,41 +23,33 @@
     function loadsettings(myApp) {
         try{
             var myCover = myApp.Tools.getActiveCover(myApp, true);
-            var C       = myApp.XMP.retrieveCoverObject(myApp, myCover);
             
-            if( C == null ) {
-                C = myApp.Tools.guessC(myApp, myCover);
-            }
-            
-            if( C != null ){
+            if(myApp.Tools.isBuildWithCoverBuilder(myApp, myCover)){
+            	// Doc is build with CoverBuilder: Let's retrieve the Cover object
+            	var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+
+                // Check if C is good to go
                 if( (C.width > 0) && (!C.resolved) ){
-                    // Let's check the Doc to see if it matches up
-                    // If not alert the user
+                    // Let's check the Doc to see if it has changed
                     var check = myApp.Tools.checkCagainstDoc(myApp, myCover, C, true);
-
+                    // Update data if user updated
+                    if(check.C_changed){
+                        C = check.C;
+                    }
+                    // Alert the user if the document does not match the data
                     if( !check.message.ok ){
-                    	alert( "CoverBuilder: " + String(myApp.Localise.UIalert['Beware_Data_Out_of_Date']) + "\n" + check.message.text);
-					}
-
-					// Update data if changed
-					if(check.C_changed){
-						C = check.C;
-					}
-
-                    myApp.UI.CoverOrder(myApp, C);  //UI with C data
-
+                        alert( "CoverBuilder: " + String(myApp.Localise.UIalert['Beware_Data_Out_of_Date']) + "\n" + check.message.text);
+                    }
                 } else { // Not a good C object
                     C = myApp.Tools.guessC(myApp, myCover);
-                    if( C == null){
-                    	alert( "CoverBuilder\n" + String(myApp.Localise.UIalert['failed_to_retrieve_c_object']) );
-                        return;
-                    }
-                    myApp.UI.CoverOrder(myApp, C);  //UI with C data
                 }
-            } else {
-               alert( "CoverBuilder\n" + String(myApp.Localise.UIalert['Could_not_load_Cover_Details']) );
-               return;
-            }
+        	} else {
+        		// Doc is not build with CoverBuilder: Let's try and guess a Cover object
+        		var C = myApp.Tools.guessC(myApp, myCover);
+        	}
+
+            myApp.UI.CoverOrder(myApp, C);  //UI with C data
+		
         } catch(e) {
             alert("CoverBuilder Load Settings Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }

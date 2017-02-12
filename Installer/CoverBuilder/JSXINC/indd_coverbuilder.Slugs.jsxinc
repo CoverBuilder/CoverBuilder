@@ -198,24 +198,31 @@
         // Param psName: Name of valid Paragraph Style to be returned
         // newFontName: The name of the font we want to set the paragraph style
 		
-        function setMeasureParagraphStyleFont(myApp, myCover, measureParagraphStyle, myNewFont, saveAsStandard){
-            // This function will try and set the font style for given paragrapg style
+        function setMeasureParagraphStyleFont(myApp, myCover, measureParagraphStyle, myNewFontName, saveAsStandard){
+            // This function will try and set the font style for given paragraph style
             // User will be asked for alternate font if given font is not loaded
+            var myNewFontObj = myApp.STools.createFontObject(myNewFontName);
+
             var saveAsStandard = (saveAsStandard || false);
             try{
-                measureParagraphStyle.appliedFont = myNewFont;
+                measureParagraphStyle.appliedFont = myNewFontObj.fullName;
             } catch (e) {
                 try{
                     // Let the user pick a font
-                    var userInput = myApp.UI.getFontName(myApp);
+                    var userInput = myApp.UI.userChooseFont(myApp);
                     if(typeof userInput == 'object') {
-                        if(userInput.fontName != undefined) {
-                            var myAltFont  = userInput.fontName;
+                        var userFontObject = myApp.STools.createFontObject(userInput.fontName);
+                        if(userFontObject.familyName != undefined) {
                             saveAsStandard = userInput.savePrefs;
-                            measureParagraphStyle.appliedFont = myAltFont;
+                            try {
+                                measureParagraphStyle.appliedFont  = userFontObject.familyName;
+                                measureParagraphStyle.appliedStyle = userFontObject.styleName;
+                            } catch ( anyErr ) {
+                                // Do nothing
+                            } 
                             if(saveAsStandard){
                                 // we need to save this font in Settings, so this dialog will not come up next time
-                                myApp.Settings.registration_font = myAltFont;
+                                myApp.Settings.registration_font = userFontObject.fullName;
                                 myApp.STools.saveUserSettings(myApp);
                             }
                         }
@@ -230,14 +237,14 @@
 
         // Use standard font if create a style from scratch
         // Don't change the font if the paragraph style allready exist
-        var myNewFont = String(myApp.Settings.registration_font);
+        var myNewFontName = String(myApp.Settings.registration_font);
         var changeFont = false;
 
         if( typeof newFontName == "string" ){
             if(newFontName != "undefined"){
                 // The returned paragraph style should use the requested font 
                 // If it is not available alternate will be requested from user
-                myNewFont = newFontName;
+                myNewFontName = newFontName;
                 changeFont = true;
             }
         }
@@ -246,13 +253,13 @@
         
         if( measureParagraphStyle.isValid ) {
             if(changeFont){
-                setMeasureParagraphStyleFont(myApp, myCover, measureParagraphStyle, myNewFont, false);
+                setMeasureParagraphStyleFont(myApp, myCover, measureParagraphStyle, myNewFontName, false);
             }
         } else {
             // Create the measure style
             var measureParagraphStyle = myCover.paragraphStyles.add({name:psName});
             
-            setMeasureParagraphStyleFont(myApp, myCover, measureParagraphStyle, myNewFont, true);
+            setMeasureParagraphStyleFont(myApp, myCover, measureParagraphStyle, myNewFontName, true);
 
             measureParagraphStyle.pointSize = "8pt";
             measureParagraphStyle.fillColor = "Registration";

@@ -15,8 +15,14 @@
         // Convert Units //
         ///////////////////
         C = myApp.STools.resolveSizes(myApp, C); //resolve the sizes for build
-
-        var mySlug           = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit ); // For crop-marks and slug info
+        
+         // For crop-marks and slug info
+        if(C.slugs >= 0) {
+            var mySlug = C.slugs
+        } else {
+            var mySlug = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit ) + C.bleed;
+        }
+        
         var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit); // Minimum page width for indesign
         var maximumPageWidth = myApp.Tools.getMaxPageWidthINDD(myApp, C.measureUnit); // Maximum page width for indesign
         
@@ -52,6 +58,7 @@
 
         //Create a new cover
         myCover = app.documents.add(true);
+        myCover.insertLabel('createdByCoverBuilder', 'true');
         
         //add XMP data (Save C object in doc)
         myApp.XMP.newXMP(myApp,myCover,UIC);
@@ -90,7 +97,7 @@
 				documentBleedUniformSize = true;
 				documentSlugUniformSize  = true;
 				documentBleedTopOffset = Math.abs(C.bleed);
-				slugTopOffset = Math.abs(C.bleed+mySlug);
+				slugTopOffset = Math.abs(mySlug);
 				pagesPerDocument = 1;
 			} catch(e) {
 				alert("CoverBuilder has trouble setting document preferences :(\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");

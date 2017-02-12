@@ -1,5 +1,5 @@
 // Initialises the CoverBuilder plugin
-// Version 1.0
+// Version 1.1
 
 (function() {
     //////////////
@@ -90,23 +90,23 @@
 
     function getSettings(PlatformInfo){
         var NewSettings = {
-            version                        : "3.0.4",            // String
-            add_CoverBuilder_Menu          : true,               // Boolean // If set to false menu will be removed
-            autoload_last_used_settings    : true,               // Boolean
-            autoload_front_document        : true,               // Boolean // If set to true it will over-ride the autoload_last_used_settings
-            pageSizes_in_Slug              : true,               // Boolean // Show page sizes in slug
-            totalTrim_in_Slug              : true,               // Boolean // Show total trim in slug
-            break_frames_on_spine_change   : true,               // Boolean // Remember the Break Frames over Cover checkBox state when changing the spine
-            ask_for_PPI_on_send            : true,               // Boolean // IF set to true CoverBuilder will show PPI option when sending to PS
-            registration_font              : "Myriad",           // String  // Myriad is a sans serrif font that comes with InDesign
-            standardPPI                    : 300,                // Number
-            add_drop_shadow                : false, //quicker    // Boolean //Setting is for Photoshop only
-            add_margin_guides              : false, //cleaner    // Boolean //Setting is for Photoshop only
-            Platform                       : PlatformInfo,       // Object
-            Slugs                          : {measure:5,unit:0}, // Object
-            minPageWidthINDD               : 0.5,                // Number: in millimetres
-            maxPageWidthINDD               : 5485,               // Number: in millimetres
-            pluginfo                       : []                  // Array of pluginfo Objects {plugin_name: string, launch_on_load: boolean, add_to_menu: boolean}
+            version                        : "3.0.5",               // String
+            add_CoverBuilder_Menu          : true,                  // Boolean // If set to false menu will be removed
+            autoload_last_used_settings    : true,                  // Boolean
+            autoload_front_document        : true,                  // Boolean // If set to true it will over-ride the autoload_last_used_settings
+            pageSizes_in_Slug              : true,                  // Boolean // Show page sizes in slug
+            totalTrim_in_Slug              : true,                  // Boolean // Show total trim in slug
+            break_frames_on_spine_change   : true,                  // Boolean // Remember the Break Frames over Cover checkBox state when changing the spine
+            ask_for_PPI_on_send            : true,                  // Boolean // IF set to true CoverBuilder will show PPI option when sending to PS
+            registration_font              : "Myriad Pro\tRegular", // String  // Myriad Pro is a sans serrif font that comes with InDesign
+            standardPPI                    : 300,                   // Number
+            add_drop_shadow                : false, //quicker       // Boolean //Setting is for Photoshop only
+            add_margin_guides              : false, //cleaner       // Boolean //Setting is for Photoshop only
+            Platform                       : PlatformInfo,          // Object
+            Slugs                          : {measure:5,unit:0},    // Object
+            minPageWidthINDD               : 0.5,                   // Number: in millimetres
+            maxPageWidthINDD               : 5485,                  // Number: in millimetres
+            pluginfo                       : []                     // Array of pluginfo Objects {plugin_name: string, launch_on_load: boolean, add_to_menu: boolean}
         }
         return NewSettings;
     }

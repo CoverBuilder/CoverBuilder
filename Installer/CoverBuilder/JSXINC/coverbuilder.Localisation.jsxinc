@@ -318,6 +318,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                   nl: "Ander",
                   fr: "Autre" },
 
+        Incl : { en: "Incl. ",
+                 de: "Einschl. ",
+                 nl: "Incl. ",
+                 fr: "Incl. " },
+
         FrontPlusBackCover : { en: "Front + Back cover",
                                de: "Vorder + Rückseite",
                                nl: "Voor + Achterplat",
@@ -447,6 +452,11 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                                           nl: "Can't subtract wrap from bleed!\nBleed not wide enough...",
                                           fr: "Can't subtract wrap from bleed!\nBleed not wide enough..." },
 
+        Cant_subtract_bleed_from_wrap : { en: "Can't subtract bleed from wrap!\nWrap not wide enough...",
+                                          de: "Can't subtract bleed from wrap!\nWrap not wide enough...",
+                                          nl: "Can't subtract bleed from wrap!\nWrap not wide enough...",
+                                          fr: "Can't subtract bleed from wrap!\nWrap not wide enough..." },
+
         Cant_subtract_hinge_from_cover : { en: "Can't subtract hinge from cover!\nCover not wide enough...",
                                            de: "Can't subtract hinge from cover!\nCover not wide enough...",
                                            nl: "Can't subtract hinge from cover!\nCover not wide enough...",
@@ -485,13 +495,18 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
         failed_to_retrieve_c_object : { en: "Failed to find CoverBuilder data in document.",
                                         de: "Failed to find CoverBuilder data in document.",
                                         nl: "Failed to find CoverBuilder data in document.",
-                                        fr: "Failed to find CoverBuilder data in document." }
+                                        fr: "Failed to find CoverBuilder data in document." },
+                                        
+        Set_slug_to_recommended_min  : { en: "Slug is too small to show sizes!\nDo you want to set the slug to the recommended size of ",
+                                         de: "Slug is too small to show sizes!\nDo you want to set the slug to the recommended size of ",
+                                         nl: "Slug is too small to show sizes!\nDo you want to set the slug to the recommended size of ",
+                                         fr: "Slug is too small to show sizes!\nDo you want to set the slug to the recommended size of " }
     };
     
     var Meta = {
         WhatIsTheTitleOfThisBook : { en: "What is the title of this book?",
                                      de: "Was ist der titel dieses buches?",
-                                     nl: "Wat is de title van dit book?",
+                                     nl: "Wat is de titel van dit book?",
                                      fr: "Quel est le titre de ce livre?" },
                                      
         WhatIsTheISBNOfThisBook : { en: "What is the ISBN of this book?",

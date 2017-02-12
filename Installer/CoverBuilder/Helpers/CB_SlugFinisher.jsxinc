@@ -4,7 +4,7 @@
 
     CB_SlugFinisher.jsx             (A CoverBuilder Helper Script)
     An InDesign CS5 Javascript      (Tested in CS6)
-    Version 1.5
+    Version 2.0
 
     Bruno Herfst 2013-2016
 
@@ -48,7 +48,7 @@
 			var swatchOBJ = finischUI(myApp, doc, C, getSpotSwatches(myApp, doc));
 			
             if (swatchOBJ == undefined) return; // User canceled
-
+            
 		    myApp.Slugs.slugSizeBigEnough(myApp, doc, true);
             
             // Slugs have changed make sure we reset measurements
@@ -152,12 +152,14 @@
     };
     
     function finischUI(myApp, doc, C, mySpotSwatches) {
+        // UI elements references
         var mySpotCheckboxes = new Array();
         var myCMYKCheckboxes = new Array();
-        var myFinishRadio    = null;
+        var myFinishRadio    = new Array();
         var myNoteCheckbox   = null;
         var myNoteTextField  = null;
-
+        
+        // Data references
         var registration_font = myApp.Settings.registration_font;
 
         var myNote = {text: "", checkedState: false};
@@ -223,156 +225,216 @@
                 }
             }
             if( swatchOBJ.hasOwnProperty('note') ){
-                myNote.text = swatchOBJ.note.text;
+                myNote.text         = swatchOBJ.note.text;
                 myNote.checkedState = swatchOBJ.note.checkedState;
             }
             if( swatchOBJ.hasOwnProperty('registration_font') ){
                 registration_font = swatchOBJ.registration_font;
             }
         };
-
-        var myFontsList = myApp.UI.getAvailableFontFamilies(myApp);
-            myFontsList.unshift("- " + registration_font + " -");
-
-        var myDialog = app.dialogs.add({
-            name: "Slug Tool",
-            canCancel: true
-        });
-
-        with(myDialog) {
-            with(dialogColumns.add()) {
-                with(dialogRows.add()) {
-                    // P R O C E S S
-                    with(borderPanels.add()) {
-                        staticTexts.add({
-                            staticLabel: "PROCESS:"
-                        });
-                        with(dialogColumns.add()) {
-                            for (var myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
-                                var myCheckbox;
-                                myCMYKCheckboxes.push(myCheckbox);
-                                myCMYKCheckboxes[myCounter] = checkboxControls.add({
-                                    staticLabel:  myCMYKSwatches[myCounter].name,
-                                    checkedState: myCMYKSwatches[myCounter].checkedState
-                                });
-                            }
-                        }
-                    }
-                    // S P O T
-                    with(borderPanels.add()) {
-                        staticTexts.add({
-                            staticLabel: "SPOT:"
-                        });
-                        with(dialogColumns.add()) {
-                            for (var myCounter = 0; myCounter < mySpotSwatches.length; myCounter++) {
-                                var myCheckbox;
-                                mySpotCheckboxes.push(myCheckbox);
-                                mySpotCheckboxes[myCounter] = checkboxControls.add({
-                                    staticLabel:  mySpotSwatches[myCounter].name,
-                                    checkedState: mySpotSwatches[myCounter].checkedState
-                                });
-                            }
-                        }
-                    }
-                    // F I N I S H
-                    with(borderPanels.add()) {
-                        staticTexts.add({
-                            staticLabel: "FINISH:"
-                        });
-                        with(dialogColumns.add()) {
-                            with(myFinishRadio = radiobuttonGroups.add()) {
-                                radiobuttonControls.add({
-                                        staticLabel:  "None",
-                                        checkedState: false
-                                    });
-                                for (var myCounter = 0; myCounter < myFinishes.length; myCounter++) {
-                                    radiobuttonControls.add({
-                                        staticLabel:  myFinishes[myCounter].name,
-                                        checkedState: myFinishes[myCounter].checkedState
-                                    });
-                                }
-                            }
-                        }
-                    }
-                    // C U S T O M
-                    with(borderPanels.add()) {
-                        myNoteCheckbox = checkboxControls.add({
-                                    staticLabel: "OTHER:",
-                                    checkedState: myNote.checkedState
-                                });
-                        with(dialogColumns.add()) {
-                            myNoteTextField = textEditboxes.add();
-                            myNoteTextField.minWidth = 150;
-                            myNoteTextField.editContents = myNote.text;
-                        }
-                    }
-                }
-                with(dialogRows.add()) {
-                    staticTexts.add({staticLabel: ""});
-                }
-                with(dialogRows.add()) {
-                    // P A G E S I Z E S
-
-                    myPageSizeSlugCheckbox = checkboxControls.add({
-                                staticLabel: "Page measurements",
-                                checkedState: C.slugPageSize
-                            });
-                    mySpreadSizeSlugCheckbox = checkboxControls.add({
-                                staticLabel: "Total trim",
-                                checkedState: C.slugTrimSize
-                            });
-                    staticTexts.add({staticLabel: ":   "});
-                    var measureDropDown = dropdowns.add({stringList: myApp.STools.localisedValidMeasurementUnits(myApp), selectedIndex:C.measureUnit});
-
-                    // T Y P E F A C E
-                    staticTexts.add({staticLabel: "  :   Registration Font "});
-                    var fontDropDown = dropdowns.add({stringList: myFontsList, selectedIndex:0});
+        
+        // START FONTS
+        // -------------------------------------------------
+        var RegistrationFont = myApp.STools.createFontObject( registration_font );
+        var myFamilyList     = myApp.UI.getAvailableFontFamilies();
+        var myStyleList      = [];
+        var familySelected   = 0;
+        var styleSelected    = 0;
+  
+        var regFontExist = false;
+        for (var i=0; i<myFamilyList.length; i++) {
+          if(myFamilyList[i] == RegistrationFont.familyName) {
+              familySelected = i;
+              regFontExist   = true;
+          }
+        }
+  
+        if( regFontExist ) { // Font is loaded
+            var sysFontAvailableStyles = myApp.STools.getAvailableFontStyles( RegistrationFont.familyName );
+            if(sysFontAvailableStyles.length > 0) {
+                myStyleList = sysFontAvailableStyles;
+                for (var i=0; i<myStyleList.length; i++) {
+                  if(myStyleList[i] == RegistrationFont.styleName) {
+                      styleSelected = i;
+                  }
                 }
             }
-        };
+        } else { // Font is not loaded
+            myFamilyList.unshift( "- " + RegistrationFont.familyName + " -");
+            if(RegistrationFont.styleName != "") {
+              myStyleList.unshift ( "- " + RegistrationFont.styleName  + " -");
+            } else {
+              myStyleList.unshift ( "- " + "None" + " -");
+            }
+        }
+        // -------------------------------------------------
+        
+        
+        // -------------------------------------------------
+        // S T A R T   W I N D O W 
+        // -------------------------------------------------
+        
+        var myDialog = new Window ("dialog", "Slug Tool");
+            myDialog.orientation   = "column";
+            myDialog.alignment     = "left";
+            myDialog.alignChildren = "left";
+            myDialog.margins       = [10,10,10,15];
+            myDialog.spacing       = 0;
+
+        var mainGroup = myDialog.add ("group");
+            mainGroup.orientation   =  "row";
+            mainGroup.alignment     = "left";
+            mainGroup.alignChildren = "top";
+        
+        // P R O C E S S
+        
+        var process_panel = mainGroup.add ("panel", undefined, "PROCESS");
+            process_panel.margins       = [10,20,10,10];
+            process_panel.orientation   = "column";
+            process_panel.alignChildren = "left";
+            
+            for (var myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
+                myCMYKCheckboxes[myCounter] = process_panel.add ("checkbox", undefined, myCMYKSwatches[myCounter].name);
+                myCMYKCheckboxes[myCounter].value = myCMYKSwatches[myCounter].checkedState;
+            }
+        
+        // S P O T
+        
+        var spot_panel = mainGroup.add ("panel", undefined, "SPOT");
+            spot_panel.margins       = [10,20,10,10];
+            spot_panel.orientation   = "column";
+            spot_panel.alignChildren = "left";
+            
+            for (var myCounter = 0; myCounter < mySpotSwatches.length; myCounter++) {
+                mySpotCheckboxes[myCounter] = spot_panel.add ("checkbox", undefined, mySpotSwatches[myCounter].name);
+                mySpotCheckboxes[myCounter].value = mySpotSwatches[myCounter].checkedState;
+            }
+        
+        // F I N I S H
+        
+        var finish_panel = mainGroup.add ("panel", undefined, "FINISH");
+            finish_panel.margins       = [10,20,10,10];
+            finish_panel.orientation   = "column";
+            finish_panel.alignChildren = "left";
+            
+            for (var myCounter = 0; myCounter < myFinishes.length; myCounter++) {
+                myFinishRadio[myCounter] = finish_panel.add ("radiobutton", undefined, myFinishes[myCounter].name);
+                myFinishRadio[myCounter].value = myFinishes[myCounter].checkedState;
+            }
+        
+        // C U S T O M
+        
+        var custom_panel = mainGroup.add ("panel", undefined, "CUSTOM");
+            custom_panel.margins       = [10,20,10,10];
+            custom_panel.orientation   = "row";
+            custom_panel.alignChildren = "left";
+            
+            myNoteCheckbox = custom_panel.add ("checkbox", undefined, "Other:");
+            myNoteCheckbox.value = myNote.checkedState;
+            
+            myNoteTextField = custom_panel.add('edittext');
+            myNoteTextField.characters = 20;
+            myNoteTextField.minWidth   = 150;
+            myNoteTextField.text       = myNote.text;
+        
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - 
+        
+        // S I Z E S
+        
+        var sizesGroup = myDialog.add ("group");
+            sizesGroup.margins = [10,30,10,10];
+            sizesGroup.orientation =  "row";
+            sizesGroup.alignment = "left";
+        
+        // P A G E S I Z E S
+        
+        var myPageSizeSlugCheckbox = sizesGroup.add ("checkbox", undefined, "Sizes");
+            myPageSizeSlugCheckbox.value = C.slugPageSize;
+        var mySpreadSizeSlugCheckbox = sizesGroup.add ("checkbox", undefined, "Total trim");
+            mySpreadSizeSlugCheckbox.value = C.slugTrimSize;
+
+        sizesGroup.add('statictext', undefined, ':   ');
+        
+        var measureDropDown = sizesGroup.add('dropdownlist',[0,0,60,30], myApp.STools.localisedValidMeasurementUnits(myApp));
+            measureDropDown.selection = C.measureUnit;
+        
+        // T Y P E F A C E
+        
+        sizesGroup.add('statictext', undefined, ':   Font:');
+        
+        var fontFamilyNameDrop = sizesGroup.add('dropdownlist',[0,0,180,30], myFamilyList);
+            fontFamilyNameDrop.selection = familySelected;
+        var fontStyleNameDrop  = sizesGroup.add('dropdownlist',[0,0,180,30], myStyleList);
+            fontStyleNameDrop.selection = styleSelected;
+        
+        fontFamilyNameDrop.onChange = function() {
+            fontStyleNameDrop.removeAll();
+            var sysFontAvailableStyles = myApp.STools.getAvailableFontStyles(fontFamilyNameDrop.selection.text);
+            for ( var i = 0; i < sysFontAvailableStyles.length; i++ ) {
+                fontStyleNameDrop.add('item',sysFontAvailableStyles[i]);
+            }
+            fontStyleNameDrop.selection = 0;
+        }
+        
+        
+        //----------------------------------------------------
+        // Start button group
+        
+        var buttonGroup = myDialog.add ("group");
+            buttonGroup.margins = 10;
+            buttonGroup.orientation =  "row";
+            buttonGroup.alignment = "right";
+
+        //OK CANCEL buttons
+        var cancelBut = buttonGroup.add ("button", undefined, String(myApp.Localise.UI['Cancel']), {name:"cancel"} );
+        var saveBut   = buttonGroup.add ("button", undefined, String(myApp.Localise.UI['Ok'    ]), {name:"ok"} );
+
+        // End Button Group
+        //----------------------------------------------------
+        
+        // -------------------------------------------------
+        // E N D  W I N D O W
+        // -------------------------------------------------
+        
         //Display the dialog box.
         if (myDialog.show() == true) {
             
             //Get process
             for (var i = 0; i < myCMYKCheckboxes.length; i++) {
-                myCMYKSwatches[i].checkedState = myCMYKCheckboxes[i].checkedState;
+                myCMYKSwatches[i].checkedState = myCMYKCheckboxes[i].value;
             }
 
             //Get Spot
             var i = mySpotCheckboxes.length;
             for (var i = 0; i < mySpotCheckboxes.length; i++) {
-                mySpotSwatches[i].checkedState = mySpotCheckboxes[i].checkedState;
+                mySpotSwatches[i].checkedState = mySpotCheckboxes[i].value;
             }
             
             //Get Finish
-            // First set all to false as this is a radio
             for (var i = 0; i < myFinishes.length; i++) {
-				myFinishes[i].checkedState = false;
-			} // Now we can set the selected to true
-            if (myFinishRadio.selectedButton > 0) {
-                // Index 0 == 'None' and is not in the myFinishes array
-            	myFinishes[myFinishRadio.selectedButton-1].checkedState = true;
-            }
-
+				myFinishes[i].checkedState = myFinishRadio[i].value;
+			}
+			
             //Get  Note
-            myNote.text = myNoteTextField.editContents;
-            myNote.checkedState = myNoteCheckbox.checkedState;
+            myNote.text         = myNoteTextField.text;
+            myNote.checkedState = myNoteCheckbox.value;
 
             //Get font
-            if(fontDropDown.selectedIndex != 0){
-                registration_font = String(myFontsList[fontDropDown.selectedIndex]);
+            if( (fontFamilyNameDrop.selectedIndex != familySelected) || (fontFamilyNameDrop.selectedIndex != styleSelected) ){
+                registration_font = fontFamilyNameDrop.selection.text + '\t' + fontStyleNameDrop.selection.text;
             }
+            
+            var returnObj = {   measureUnit:       parseInt(measureDropDown.selection),
+                                process:           myCMYKSwatches,
+                                spot:              mySpotSwatches,
+                                finish:            myFinishes,
+                                note:              myNote,
+                                slugPageSize:      myPageSizeSlugCheckbox.value,
+                                slugTrimSize:      mySpreadSizeSlugCheckbox.value,
+                                registration_font: registration_font
+                            }
 
-            return {
-                measureUnit:       measureDropDown.selectedIndex,
-                process:           myCMYKSwatches,
-                spot:              mySpotSwatches,
-                finish:            myFinishes,
-                note:              myNote,
-                slugPageSize:      myPageSizeSlugCheckbox.checkedState,
-                slugTrimSize:      mySpreadSizeSlugCheckbox.checkedState,
-                registration_font: registration_font
-            }
+            return returnObj;
         };
     };
 
@@ -396,14 +458,12 @@
                         addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                                     tf.insertionPoints[-1]);
                         addonText.fillColor = "Registration";
-                        //addonText.fontStyle = "Regular";
                     };
                     insertPoint = tf.insertionPoints[-1].index;
                     tf.contents += swatchOBJ.process[i].name;
                     addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                                 tf.insertionPoints[-1]);
                     addonText.fillColor = "CB_" + swatchOBJ.process[i].name;
-                    //addonText.fontStyle = "Bold";
                     first = false;
                 }
             }
@@ -419,14 +479,12 @@
                         addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                                     tf.insertionPoints[-1]);
                         addonText.fillColor = "Registration";
-                        //addonText.fontStyle = "Regular";
                     }
                     insertPoint = tf.insertionPoints[-1].index;
                     tf.contents += swatchOBJ.spot[i].name;
                     addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                                 tf.insertionPoints[-1]);
                     addonText.fillColor = swatchOBJ.spot[i].name;
-                    //addonText.fontStyle = "Bold";
                     first = false;
                 }
             }
@@ -442,14 +500,12 @@
                         addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                             tf.insertionPoints[-1]);
                         addonText.fillColor = "Registration";
-                        //addonText.fontStyle = "Regular";
                     }
                     insertPoint = tf.insertionPoints[-1].index;
                     tf.contents += swatchOBJ.finish[i].name;
                     addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                                 tf.insertionPoints[-1]);
                     addonText.fillColor = "Registration";
-                    //addonText.fontStyle = "Regular";
                     first = false;
                 }
             }
@@ -462,17 +518,16 @@
                 addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                             tf.insertionPoints[-1]);
                 addonText.fillColor = "Registration";
-                //addonText.fontStyle = "Regular";
             }
             insertPoint = tf.insertionPoints[-1].index;
             tf.contents += swatchOBJ.note.text;
             addonText = tf.characters.itemByRange(tf.insertionPoints[insertPoint],
                         tf.insertionPoints[-1]);
             addonText.fillColor = "Registration";
-            //addonText.fontStyle = "Bold";
             first = false;
         };
     };
+
     ////////////
     // expose //
     ////////////

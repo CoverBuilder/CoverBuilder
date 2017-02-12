@@ -249,7 +249,7 @@
             }
         }
 
-        var doc = app.activeDocument;
+        var doc = app.documents[0];
 
         if(returnAnyDoc || isBuildWithCoverBuilder(myApp, doc)){
             return doc;
@@ -281,7 +281,7 @@
             return createActiveCover(myApp, C);
         }
 
-        var doc = app.activeDocument;
+        var doc = app.documents[0];
 
         if(returnAnyDoc || isBuildWithCoverBuilder(myApp, doc)){
             // Check if doc matches Cover object
@@ -305,15 +305,19 @@
                 bottom:         doc.documentPreferences.documentBleedBottomOffset};
     }
 
-    function setDocBleed(myApp, doc, C) {
+    function setDocBleed(myApp, doc, CR) {
+        // Make sure C is resolved
+        if(!CR.resolved){
+            CR = myApp.STools.resolveSizes(myApp, CR);
+        }
         // Function assumes rulers to be set correctly
-        doc.documentPreferences.documentBleedTopOffset = C.bleed;
-        doc.documentPreferences.documentBleedInsideOrLeftOffset = C.bleed;
-        doc.documentPreferences.documentBleedOutsideOrRightOffset = C.bleed;
-        doc.documentPreferences.documentBleedBottomOffset = C.bleed;
-        myApp.Tools.setSlugs(myApp, doc, C.measureUnit);
+        doc.documentPreferences.documentBleedTopOffset = CR.bleed;
+        doc.documentPreferences.documentBleedInsideOrLeftOffset = CR.bleed;
+        doc.documentPreferences.documentBleedOutsideOrRightOffset = CR.bleed;
+        doc.documentPreferences.documentBleedBottomOffset = CR.bleed;
+        myApp.Tools.setSlugs(myApp, doc, CR.measureUnit);
         // Slugs have changed make sure we reset measurements
-        myApp.Slugs.placeSizesInSlug(myApp, doc, C);
+        myApp.Slugs.placeSizesInSlug(myApp, doc, CR);
     }
     
     function setMinSlugs(myApp, doc, measureUnit) {
@@ -506,11 +510,6 @@
                         break;
                     case "CVR1":
                     case "CVR4":
-                        var myHinge = C.hinge;
-                        if(C.binding > 0){
-                            myHinge += C.binding;
-                        }
-                        
                         if( diff.left + diff.right != 0 ){
                             return {ok: false, errorcode:8, text:"Cover margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
                         }
@@ -645,44 +644,40 @@
     }
     
     function checkDocumentBleed(myApp, doc, C, tryFix){
-        
         // We don't care if uniform size is true or false
         // Only the values need to be right
         var myRulers  = myApp.Tools.setRuler(doc, {units : C.measureUnit});
         var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
 
         var returnOBJ = { C : C, C_changed : false, doc_changed : false, message: {ok : true, text : ""} };
-        var docBleed = myApp.Tools.getDocBleed(myApp, doc);
+        var docBleed = myApp.Tools.getMaxBleed(myApp, doc);
         
         var bleedOK = true;
         
         var CR = myApp.STools.resolveSizes(myApp, C);
-        
-        if(docBleed.top            != CR.bleed) bleedOK = false;
-        if(docBleed.insideOrLeft   != CR.bleed) bleedOK = false;
-        if(docBleed.outsideOrRight != CR.bleed) bleedOK = false;
-        if(docBleed.bottom         != CR.bleed) bleedOK = false;
+
+        if( myApp.NumCon.doRound( docBleed, 6 ) != myApp.NumCon.doRound( CR.bleed, 6 ) ) bleedOK = false;
         
         if( (bleedOK == false) && tryFix) {
-            var newBleed = docBleed.top - C.wrap;
+
+            var approve = confirm("Document bleed has changed, would you like me to revert the bleeds from " + docBleed + " to " + CR.bleed + unitsShorthand );
             
-            var approve = confirm("Document bleed has changed, would you like me to revert the bleeds from " + newBleed + " to " + C.bleed + unitsShorthand );
             // We need a don't ask again element in this dialog. To be created as a seperate shared functon ticket 7393640364026
             if(approve){
-                myApp.Tools.setDocBleed(myApp, doc, CR);
+                myApp.Tools.setDocBleed(myApp, doc, C);
                 returnOBJ.doc_changed = true;
             } else {
-                C.bleed = newBleed;
-                // RESOLVE WRAP
-                if(C.inExCludeWrap == 0){
-                    C.bleed += C.wrap;
-                }
                 
-                if (C.bleed < 0) {
-                    C.wrap -= Math.abs(C.bleed);
-                    C.bleed = 0;
-                    if(C.wrap < 0) {
-                        C.wrap = 0;
+                // Resolve Wrap
+                
+                if( (docBleed-C.wrap) <= 0) {
+                    C.bleed = docBleed;
+                    C.wrap  = 0;
+                } else {
+                    if(C.inExCludeWrap == 0){
+                        C.bleed = docBleed;
+                    } else {
+                        C.bleed = docBleed-C.wrap;
                     }
                 }
 
@@ -698,7 +693,50 @@
 
         // reset original rulers
         myApp.Tools.setRuler(doc, myRulers);
-        returnOBJ.C = C;
+        return returnOBJ;
+    }
+    
+    function checkDocumentSlugs(myApp, doc, C, tryFix){
+        // We don't care if uniform size is true or false
+        // Only the values need to be right
+        var myRulers       = myApp.Tools.setRuler(doc, {units : C.measureUnit});
+        var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
+        var returnOBJ      = { C : C, C_changed : false, doc_changed : false, message: {ok : true, text : ""} };
+        var docSlug        = myApp.NumCon.doRound( myApp.Tools.getMaxSlug(myApp, doc), 6);
+        
+        if(C.slugs >= 0){
+            var mySlug = C.slugs;
+        } else {
+            var mySlug = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit ) + myApp.Tools.getMaxBleed(myApp, doc);
+        }
+
+        var slugOK = true;
+        var slugErrMargin = myApp.NumCon.convert(myApp, 1, 0, C.measureUnit );
+        if( Math.abs(docSlug - mySlug) > slugErrMargin ) slugOK = false;
+        
+        if( (slugOK == false) && tryFix) {
+
+            var approve = confirm("Document slugs have changed, would you like me to revert the slugs from " + docSlug + " to " + mySlug + unitsShorthand );
+            
+            // We need a don't ask again element in this dialog. To be created as a seperate shared functon ticket 7393640364026
+            if(approve){
+                doc.documentPreferences.slugTopOffset             = Math.abs(mySlug);
+                doc.documentPreferences.slugRightOrOutsideOffset  = Math.abs(mySlug);
+                doc.documentPreferences.slugBottomOffset          = Math.abs(mySlug);
+                doc.documentPreferences.slugInsideOrLeftOffset    = Math.abs(mySlug);
+                returnOBJ.doc_changed = true;
+            } else {
+                C.slugs = docSlug;
+                returnOBJ.C_changed = true;
+                returnOBJ.C = C;
+            }
+        } else if (slugOK == false) {
+            returnOBJ.message.ok = false;
+            returnOBJ.message.text = "Document slug does not match data. ";
+        }
+
+        // reset original rulers
+        myApp.Tools.setRuler(doc, myRulers);
         return returnOBJ;
     }
 
@@ -747,19 +785,23 @@
             }
         }
 
-        // Check documentbleed
-        var bleedCheck = checkDocumentBleed(myApp, doc, C, tryFix);
-        processFeedback(bleedCheck);
-
+        // Check document bleed
+        var check = checkDocumentBleed(myApp, doc, C, tryFix);
+        processFeedback(check);
+        
+        // Check document slugs
+        var check = checkDocumentSlugs(myApp, doc, C, tryFix);
+        processFeedback(check);
+        
         // Check master page
-        var masterCheck = myApp.Tools.checkCagainstSpread(myApp, doc, doc.masterSpreads.item("CB-cover"), C, tryFix);
-        processFeedback(masterCheck);
+        var check = myApp.Tools.checkCagainstSpread(myApp, doc, doc.masterSpreads.item("CB-cover"), C, tryFix);
+        processFeedback(check);
 
         // Now check all spreads in document
         for (var s = 0; s < doc.spreads.length; s++) {
             var mySpread = doc.spreads[s];
-            var spreadCheck = myApp.Tools.checkCagainstSpread(myApp, doc, mySpread, C, tryFix);
-            processFeedback(spreadCheck);
+            var check = myApp.Tools.checkCagainstSpread(myApp, doc, mySpread, C, tryFix);
+            processFeedback(check);
         }
         
         return returnOBJ;
@@ -1041,12 +1083,26 @@
     }
 
     function isBuildWithCoverBuilder(myApp, myDoc){
+        if( myDoc.extractLabel('createdByCoverBuilder') == 'true' ) {
+            return true;
+        }
+        // Older versions of CoverBuilder
         var mySpine = myDoc.metadataPreferences.getProperty("http://brunoherfst.com/","Settings[3]");
         if(mySpine == "") {
             return false;
         } else {
             return true;
         }
+    }
+
+    function isBuildWithOther(myApp, myDoc){
+        var foundLabels = myDoc.pageItems.everyItem().label;
+        for (var i = 0; i < foundLabels.length; i++) {
+            if( foundLabels[i].substr(0,4) == 'MBJ-' ) {
+                return "Make Book Jacket";
+            }
+        }
+        return "unknown";
     }
 
     function guessMarginObj(myApp, myDoc, cUnit){
@@ -1066,77 +1122,267 @@
         }
         return MarginObj;
     }
+    
+    function sameRulers( myDoc ){
+        // Checks if both rulers are set to the same measure
+        // Return boolean
+        if(myDoc.viewPreferences.horizontalMeasurementUnits != myDoc.viewPreferences.verticalMeasurementUnits) {
+            alert("CoverBuilder sameRuler(): Expected both document rulers to be set to the same measurement units.");
+            return false;
+        }
+        return true;
+    }
+
+    function getMaxSlug( myApp, myDoc ){
+        //This function returns the maximum slug size in current measure unit
+        if( myApp.Tools.sameRulers(myDoc) ) {
+            return Math.max( myDoc.documentPreferences.slugBottomOffset,
+                             myDoc.documentPreferences.slugInsideOrLeftOffset,
+                             myDoc.documentPreferences.slugRightOrOutsideOffset,
+                             myDoc.documentPreferences.slugTopOffset);
+        }
+        return myDoc.documentPreferences.slugTopOffset;
+    }
+    
+    function getMaxBleed( myApp, myDoc ){
+        //This function returns the maximum bleed size in current measure unit
+        if( myApp.Tools.sameRulers(myDoc) ) {
+            return Math.max( myDoc.documentPreferences.documentBleedTopOffset,
+                             myDoc.documentPreferences.documentBleedBottomOffset,
+                             myDoc.documentPreferences.documentBleedInsideOrLeftOffset,
+                             myDoc.documentPreferences.documentBleedOutsideOrRightOffset);
+        }
+        return myDoc.documentPreferences.documentBleedTopOffset;
+    }
+
+    function guessCfromUnknown(myApp, myDoc, NewC){
+        // This function assumes rulers are set to NewC.measureUnit!
+        var docPrefs = myDoc.documentPreferences;
+
+        NewC.width  = myApp.NumCon.doRound( docPrefs.pageWidth  ,3);
+        NewC.height = myApp.NumCon.doRound( myApp.Tools.getSpreadSize(myApp, myDoc.spreads[0]).height ,3);
+        NewC.ppi    = myApp.Settings.standardPPI;
+        NewC.bleed  = myApp.NumCon.doRound( docPrefs.documentBleedTopOffset ,3);
+        NewC.slugs  = myApp.Tools.getMaxSlug(myApp, myDoc);
+        NewC.margin = guessMarginObj(myApp, myDoc, NewC.measureUnit);
+
+        //Let's see if the document might be a cover
+        //if(!docPrefs.facingPages){ This can still be a cover!
+        
+        if(myDoc.spreads[0].pages.length == 1) {
+            var firstPage = myDoc.pages.item(0);
+            if( firstPage.marginPreferences.columnCount == 2 ){
+                var assumeSpine  = firstPage.marginPreferences.columnGutter;
+                var assumeWidth  = (NewC.width-assumeSpine)/2;
+                NewC.width = assumeWidth;
+                NewC.spine = assumeSpine;
+            }
+        }
+        
+        if(myDoc.spreads[0].pages.length == 2) {
+            // CoverBuilder does not support building covers without a spine
+            // But we can still load what we have into the interface
+            NewC.height = myApp.NumCon.doRound( myApp.Tools.getSpreadSize(myApp, myDoc.spreads[0]).height    ,3);
+            NewC.width  = myApp.NumCon.doRound( myApp.Tools.getSpreadSize(myApp, myDoc.spreads[0]).width / 2 ,3);
+        }
+
+        else if(myDoc.spreads[0].pages.length == 3){
+            // Middle page is spine
+            var spinePage = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[1], NewC.measureUnit);
+            var cvr1 = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[2], NewC.measureUnit);
+            var cvr4 = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[0], NewC.measureUnit);
+            var assumeWidth = Math.max( cvr1.w, cvr4.w );
+
+            NewC.spine = spinePage.w;
+            NewC.width = assumeWidth;
+        }
+        
+        if(myDoc.spreads[0].pages.length == 4) {
+            // CoverBuilder does not support building covers without a spine
+            // But we can still load what we have into the interface
+            var cvr1  = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[1], NewC.measureUnit);
+            var cvr4  = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[2], NewC.measureUnit);
+            var flap1 = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[0], NewC.measureUnit);
+            var flap4 = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[3], NewC.measureUnit);
+            var assumeWidth = Math.max( cvr1.w,  cvr4.w  );
+            var assumeFlap  = Math.max( flap1.w, flap4.w );
+
+            NewC.width = assumeWidth;
+            NewC.flap  = assumeFlap;
+        }
+
+        else if(myDoc.spreads[0].pages.length == 5){
+            // Middle page is spine
+            var spinePage = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[2], NewC.measureUnit);
+            var cvr1      = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[3], NewC.measureUnit);
+            var cvr4      = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[1], NewC.measureUnit);
+            var flap1     = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[4], NewC.measureUnit);
+            var flap4     = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[0], NewC.measureUnit);
+            
+            var assumeSpine = spinePage.w;
+            var assumeWidth = Math.max( cvr1.w,  cvr4.w  );
+            var assumeFlap  = Math.max( flap1.w, flap4.w );
+
+            NewC.spine = assumeSpine;
+            NewC.width = assumeWidth;
+            NewC.flap  = assumeFlap;
+        }
+        return NewC;
+    }
+
+    function guessCfromMBJ(myApp, myDoc, NewC){
+        // this function adjusts NewC to reflect a build from Make Book Jacket
+        // it only checks the first spread
+        if(myDoc.spreads[0].pages.length != 1) {
+            return myApp.Tools.guessCfromUnknown(myApp, myDoc, NewC);
+        }
+
+        NewC.ppi    = myApp.Settings.standardPPI;
+        NewC.bleed  = myApp.Tools.getMaxBleed(myApp, myDoc);
+        NewC.slugs  = myApp.Tools.getMaxSlug(myApp, myDoc);
+        NewC.margin = guessMarginObj(myApp, myDoc, NewC.measureUnit);
+
+        var cpage    = myDoc.spreads[0].pages[0];
+        var cpBounds = myApp.Tools.getBoundsInfo(cpage.bounds);
+        //var completeCoverWidth  = pageBoundsInfo.width;
+        //var completeCoverHeight = pageBoundsInfo.height;
+
+        NewC.height = cpBounds.height;
+        NewC.width  = cpBounds.width/2;
+
+        if( cpage.marginPreferences.columnCount == 2 ){
+            var assumeSpine  = cpage.marginPreferences.columnGutter;
+            var assumeWidth  = (cpBounds.width-assumeSpine)/2;
+            NewC.width = assumeWidth;
+            NewC.spine = assumeSpine;
+        }
+
+        // Check if there are flaps
+        var lFlapMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-BackFlapLeftSafetyTop" , "MBJ-FoldMark-BackFlapLeftSafetyBottom"]);
+        var rFlapMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-FrontFlapRightSafetyTop" , "MBJ-FoldMark-FrontFlapRightSafetyBottom"]);
+        
+        var lFlap, rFlap, lFold, rFold = 0;
+
+        if( lFlapMarkers.length > 0) {
+            var lFlapMarkerInfo = myApp.Tools.getBoundsInfo(lFlapMarkers[0].geometricBounds);
+            var lFlap  = lFlapMarkerInfo.midCenter.x;
+        }
+
+        if( rFlapMarkers.length > 0) {
+            var rFlapMarkerInfo = myApp.Tools.getBoundsInfo(rFlapMarkers[0].geometricBounds);
+            var rFlap = cpBounds.width-rFlapMarkerInfo.midCenter.x;
+        }
+
+        // Note that CoverBuilder can't handle uneven flaps at the moment
+        var flaps = lFlap + rFlap;
+        if(flaps > 0) {
+            NewC.flap = flaps/2;
+            NewC.width -= NewC.flap;
+        }
+
+        // Check if there is a fold
+        var lFoldMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-BackFlapRightSafetyTop" , "MBJ-FoldMark-BackFlapRightSafetyBottom"]);
+        var rFoldMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-FrontFlapLeftSafetyTop" , "MBJ-FoldMark-FrontFlapLeftSafetyBottom"]);
+
+        if( lFoldMarkers.length > 0) {
+            var lFoldMarkerInfo = myApp.Tools.getBoundsInfo(lFoldMarkers[0].geometricBounds);
+            var lFold = lFoldMarkerInfo.midCenter.x - lFlap;
+        }
+
+        if( rFoldMarkers.length > 0) {
+            var rFoldMarkerInfo = myApp.Tools.getBoundsInfo(rFoldMarkers[0].geometricBounds);
+            var rFold = cpBounds.width-rFoldMarkerInfo.midCenter.x - rFlap;
+        }
+
+        var folds = rFold + lFold;
+        if(folds > 0){
+            NewC.fold = folds/2;
+            NewC.inExCludeFold = 1;
+        }
+
+        // Check the spine and front / back cover
+        var lSpineMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-SpineLeftBottom"  , "MBJ-FoldMark-SpineLeftTop"  , "MBJ-Guide-Spine-Left"]);
+        var rSpineMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-SpineRightBottom" , "MBJ-FoldMark-SpineRightTop" , "MBJ-Guide-Spine-Right"]);
+
+        var cvr1CentreGuides = myApp.Tools.getItemByLabel(cpage, ["MBJ-Guide-FrontCover-Centering"]);
+        var cvr4CentreGuides = myApp.Tools.getItemByLabel(cpage, ["MBJ-Guide-BackCover-Centering"]);
+
+        // Maybe we should order these om x-value and get the middle one to remove any outlyers (users could have moved these)
+        
+        if( (lSpineMarkers.length > 0) && (rSpineMarkers.length > 0) ) {
+            var lSpineMarkerInfo = myApp.Tools.getBoundsInfo(lSpineMarkers[0].geometricBounds);
+            var rSpineMarkerInfo = myApp.Tools.getBoundsInfo(rSpineMarkers[0].geometricBounds);
+            NewC.spine = rSpineMarkerInfo.midCenter.x - lSpineMarkerInfo.midCenter.x;
+            NewC.width = (cpBounds.width-NewC.spine)/2;
+            // Let's see if we can get a clearer picture of the width
+            if( (cvr1CentreGuides.length > 0) && (cvr4CentreGuides.length > 0) ) {
+                cvr1Centre = cvr1CentreGuides[0].location;
+                cvr4Centre = cvr4CentreGuides[0].location;
+                cvr1Width = myApp.NumCon.doRound( Math.abs(cvr1Centre - rSpineMarkerInfo.midCenter.x)*2, 4);
+                cvr4Width = myApp.NumCon.doRound( Math.abs(lSpineMarkerInfo.midCenter.x - cvr4Centre)*2, 4);
+                if( cvr1Width === cvr4Width || (NewC.spine === 0) ) { // Something is better then nothing :)
+                    NewC.width = cvr1Width;
+                    var leftOver = myApp.NumCon.doRound( cpBounds.width - ((NewC.flap*2)+(NewC.width*2)+NewC.spine) , 4);
+                    if(NewC.fold > 0 && NewC.inExCludeFold == 1) {
+                        leftOver -= (NewC.fold*2);
+                    }
+                    if(leftOver > 0) {
+                        NewC.flap += leftOver/2;
+                    }
+                }
+            }
+        }
+
+        return NewC;
+    }
 
     function guessC(myApp, myDoc){
         // This function expects a valid document for param myDoc
-        // It will return a valid C object or null
+        // It will return a valid C object
         // The function will try and construct a C object from a document not build with CoverBuilder
-        var C = null;
+        // Or return a new empty C object
 
         if(isBuildWithCoverBuilder(myApp, myDoc)){
             // myDoc is build with CoverBuilder: Let's retrieve the Cover object
-            C = myApp.XMP.retrieveCoverObject(myApp, myDoc);
-            if( C != null ){
-                return C;
-            }
+            return myApp.XMP.retrieveCoverObject(myApp, myDoc);
         }
 
         // myDoc is not build with CoverBuilder
         // ------------------------------------
+
+        var NewC = myApp.STools.newC(myApp);
+            NewC.name             = "Conclusion";
+
         // Check if one of the rulers is in a valid measure unit
         // Then set them both the same and safe the measuereunit
         var cUnit = myApp.NumCon.cUnit(myApp, myDoc.viewPreferences.horizontalMeasurementUnits) || myApp.NumCon.cUnit(myApp, myDoc.viewPreferences.verticalMeasurementUnits);
         if( cUnit == null ){
             cUnit = 0;
         }
+        NewC.measureUnit      = cUnit;
 
         // Safe current document rulers and set both rulers to a valid measure
         var oldRulers = myApp.Tools.setRuler(myDoc, {units : cUnit});
 
-        var docPrefs = myDoc.documentPreferences;
+        // Check if it was build by other plugin
+        var thirdParty = myApp.Tools.isBuildWithOther(myApp, myDoc);
 
-        var NewC = { name              : "PP-B",
-                     width             : myApp.NumCon.doRound( docPrefs.pageWidth  ,3),
-                     height            : myApp.NumCon.doRound( docPrefs.pageHeight ,3),
-                     spine             : 0,
-                     ppi               : myApp.Settings.standardPPI,
-                     bleed             : myApp.NumCon.doRound( docPrefs.documentBleedTopOffset ,3),
-                     hinge             : 0,
-                     inExCludeHinge    : 0,
-                     binding           : 0,
-                     inExCludeQB       : 0,
-                     flap              : 0,
-                     fold              : 0,
-                     inExCludeFold     : 0,
-                     wrap              : 0,
-                     inExCludeWrap     : 0,
-                     margin            : guessMarginObj(myApp, myDoc, cUnit),
-                     measureUnit       : cUnit }; //!! set to the right measure unit
-
-        //Now we have a cover object let's check if the document might be a cover
-        //if(!docPrefs.facingPages){ This can still be a cover!
-        if(myDoc.spreads[0].pages.length == 1) {
-            var firstPage = myDoc.pages.item(0);
-            if( firstPage.marginPreferences.columnCount == 2 ){
-                var assumeSpine = firstPage.marginPreferences.columnGutter;
-                var assumeWidth = (NewC.width-assumeSpine)/2;
-                NewC.width = assumeWidth;
-                NewC.spine = assumeSpine;
-            }
-        }
-        
-        else if(myDoc.spreads[0].pages.length == 3){
-            // Middle page is spine
-            var assumeSpine = myDoc.spreads[1].width;
-            NewC.spine = assumeSpine;
+        switch(thirdParty){
+            case "Make Book Jacket":
+                NewC = guessCfromMBJ(myApp, myDoc, NewC);
+                break;
+            default:
+                NewC = guessCfromUnknown(myApp, myDoc, NewC);
+                break;
         }
 
-        C = myApp.STools.Cparser(myApp, NewC);
+        var idealSlugSize = myApp.NumCon.convert(myApp, 5, "mm", NewC.measureUnit, 4);
+        if(NewC.slugs < idealSlugSize ) NewC.slugs = idealSlugSize;
 
         // Reset original rulers
         myApp.Tools.setRuler(myDoc, oldRulers);
 
-        return C;
+        return NewC;
     }
 
     //-----------------------------------------------------------------------------------
@@ -1268,12 +1514,13 @@
         var pageMargin = myApp.Tools.getPageMargins(myApp, myPage);
 
         myApp.Tools.setRuler(myPage.parent.parent, oldRulers);
-
+        
         var returnMargins = {   top     : pageMargin.top    - myApp.NumCon.doRound( myMargins.top    , 3), 
                                 right   : pageMargin.right  - myApp.NumCon.doRound( myMargins.right  , 3),
                                 left    : pageMargin.left   - myApp.NumCon.doRound( myMargins.left   , 3),
                                 bottom  : pageMargin.bottom - myApp.NumCon.doRound( myMargins.bottom , 3),
                                 units   : myMargins.units };
+
         // allow margins of 0 (As coverbuilder sets the margin to zero when not fitting)
         if(pageMargin.top    == 0) returnMargins.top    = 0;
         if(pageMargin.right  == 0) returnMargins.right  = 0;
@@ -1496,7 +1743,7 @@
                     MarginObj.CVR14.outside_right      = pageMargins.left   ; 
                     MarginObj.CVR14.bottom             = pageMargins.bottom ;  
                     if(cvr14Hinge > 0){
-                        MarginObj.CVR14.inside_left -= C.hinge; // No need to convert units as we are allready in the right units
+                        MarginObj.CVR14.inside_left += C.hinge; // No need to convert units as we are allready in the right units
                     }
                     MarginObj.CVR14.units              = C.measureUnit;
                     break;
@@ -1506,7 +1753,7 @@
                     MarginObj.CVR14.inside_left      = pageMargins.left   ; 
                     MarginObj.CVR14.bottom           = pageMargins.bottom ; 
                     if(cvr14Hinge > 0){
-                        MarginObj.CVR14.inside_left -= C.hinge; // No need to convert units as we are allready in the right units
+                        MarginObj.CVR14.inside_left += C.hinge; // No need to convert units as we are allready in the right units
                     }
                     MarginObj.CVR14.units           = C.measureUnit;
                     break;
@@ -1523,7 +1770,7 @@
                     MarginObj.Flaps.outside_right   = pageMargins.left   ;
                     MarginObj.Flaps.bottom          = pageMargins.bottom ;
                     // Add fold
-                    MarginObj.Flaps.outside_right  -= C.fold; // No need to convert units as we are allready in the right units
+                    MarginObj.Flaps.outside_right  += C.fold; // No need to convert units as we are allready in the right units
                     MarginObj.Flaps.units           = C.measureUnit;
                     break;
                 case "FlapR":
@@ -1532,7 +1779,7 @@
                     MarginObj.Flaps.inside_left     = pageMargins.left   ;
                     MarginObj.Flaps.bottom          = pageMargins.bottom ;
                     // Add fold
-                    MarginObj.Flaps.inside_left    -= C.fold; // No need to convert units as we are allready in the right units
+                    MarginObj.Flaps.inside_left    += C.fold; // No need to convert units as we are allready in the right units
                     MarginObj.Flaps.units           = C.measureUnit;
                     break;
                 case "BindL":
@@ -1541,7 +1788,7 @@
                     MarginObj.QB.outside_right  = pageMargins.left   ;
                     MarginObj.QB.bottom         = pageMargins.bottom ;
                     if(bindingHinge > 0){
-                        MarginObj.QB.inside_left -= C.hinge; // No need to convert units as we are allready in the right units
+                        MarginObj.QB.inside_left += C.hinge; // No need to convert units as we are allready in the right units
                     }
                     MarginObj.QB.units          = C.measureUnit;
                     break;
@@ -1551,7 +1798,7 @@
                     MarginObj.QB.inside_left    = pageMargins.left   ;
                     MarginObj.QB.bottom         = pageMargins.bottom ;
                     if(bindingHinge > 0){
-                        MarginObj.QB.inside_left -= C.hinge; // No need to convert units as we are allready in the right units
+                        MarginObj.QB.inside_left += C.hinge; // No need to convert units as we are allready in the right units
                     }
                     MarginObj.QB.units          = C.measureUnit;
                     break;
@@ -1804,7 +2051,7 @@
                 break;
         }
     }
-
+    
     function getSpreadBounds(myApp, mySpread){
         // This functions returns the bounds of the spread in current measure units
         try{
@@ -1848,7 +2095,21 @@
             return null;
         }
     }
-
+    
+    function getSpreadSize(myApp, mySpread) {
+        // This function returns the width and height of a spread
+        var spreadSize = { width: 0, height: 0 };
+        if(mySpread.isValid) {
+            var spreadBounds  = getSpreadBounds(myApp, mySpread);
+            spreadSize.height = Math.abs(spreadBounds[2] - spreadBounds[0]);
+            spreadSize.width  = Math.abs(spreadBounds[3] - spreadBounds[1]);
+        } else {
+            alert("CoverBuilder getSpreadSize():\nExpected to receive a valid spread but received " + mySpread);
+            return null;
+        }
+        return spreadSize;
+    }
+    
     function clearItemsWithLabel(myApp, myPageOrSpread, myLabel) {
         var pageItems = myApp.Tools.getItemByLabel(myPageOrSpread, myLabel);
         var len = pageItems.length;
@@ -1861,24 +2122,36 @@
         }
     }
 
-    function getItemByLabel(myPageOrSpread, myLabel){
-        // This funcion returns an array of all items found with given label
+    function getItemByLabel(myPageOrSpread, labels){
+        // This funcion returns an array of all items found with given label(s)
         // If nothing is found this function returns an empty array
+
+        if (labels instanceof Array) {
+            myLabels = labels;
+        } else {
+            myLabels = [labels];
+        }
+
+        var labelCount = myLabels.length;
         var allItems = new Array();
         if(myPageOrSpread.isValid){
             var myElements = myPageOrSpread.allPageItems;
             var len = myElements.length;
             for (var i = len-1; i >= 0; i--){
-                if(myElements[i].label == myLabel){
-                    allItems.push(myElements[i]);
+                for (var l = labelCount-1; l >= 0; l--){
+                    if(myElements[i].label == myLabels[l]){
+                        allItems.push(myElements[i]);
+                    }
                 }
             }
             // Guides are not part of pageItems but they can have labels too!
             var myGuides   = myPageOrSpread.guides;
             var len = myGuides.length;
             for (var i = len-1; i >= 0; i--){
-                if(myGuides[i].label == myLabel){
-                    allItems.push(myGuides[i]);
+                for (var l = labelCount-1; l >= 0; l--){
+                    if(myGuides[i].label == myLabels[l]){
+                        allItems.push(myGuides[i]);
+                    }
                 }
             }
         } else {
@@ -1959,24 +2232,32 @@
     function getBoundsInfo(bounds){
         // This functions receives bounds (y1, x1, y2, x2)
         // and returns an object with bounds and info as below
-        var topLeftY  = bounds[0];
-        var topLeftX  = bounds[1];
-        var botRightY = bounds[2];
-        var botRightX = bounds[3];
-        var height    = Math.abs(botRightY - topLeftY);
-        var width     = Math.abs(botRightX - topLeftX);
+        var topLeftY   = bounds[0];
+        var topLeftX   = bounds[1];
+        var botRightY  = bounds[2];
+        var botRightX  = bounds[3];
+        var height     = Math.abs(botRightY - topLeftY);
+        var width      = Math.abs(botRightX - topLeftX);
+        var halfWidth  = 0;
+        var halfHeight = 0;
+        if(width > 0) {
+            halfWidth = width/2;
+        }
+        if(height > 0) {
+            halfHeight = height/2;
+        }
 
         return {    bounds    : bounds,
                     height    : height,
                     width     : width,
                     topLeft   : {x: topLeftX                , y: topLeftY               } , 
-                    topCenter : {x: topLeftX + (width/2)    , y: topLeftY               } , 
+                    topCenter : {x: topLeftX + halfWidth    , y: topLeftY               } , 
                     topRight  : {x: botRightX               , y: topLeftY               } ,
-                    midLeft   : {x: topLeftX                , y: topLeftY  + (height/2) } , 
-                    midCenter : {x: topLeftX + (width/2)    , y: topLeftY  + (height/2) } , 
-                    midRight  : {x: botRightX               , y: topLeftY  + (height/2) } , 
+                    midLeft   : {x: topLeftX                , y: topLeftY  + halfHeight } , 
+                    midCenter : {x: topLeftX + halfWidth    , y: topLeftY  + halfHeight } , 
+                    midRight  : {x: botRightX               , y: topLeftY  + halfHeight } , 
                     botLeft   : {x: topLeftX                , y: botRightY              } , 
-                    botCenter : {x: topLeftX + (width/2)    , y: botRightY              } ,
+                    botCenter : {x: topLeftX + halfWidth    , y: botRightY              } ,
                     botRight  : {x: botRightX               , y: botRightY              } };
     }
 
@@ -2012,6 +2293,10 @@
                  botLeft   : { x: itemBounds.botLeft.x   - relBounds.botLeft.x    , y: itemBounds.botLeft.y   - relBounds.botLeft.y    } , 
                  botCenter : { x: itemBounds.botCenter.x - relBounds.botCenter.x  , y: itemBounds.botCenter.y - relBounds.botCenter.y  } ,
                  botRight  : { x: itemBounds.botRight.x  - relBounds.botRight.x   , y: itemBounds.botRight.y  - relBounds.botRight.y   } };
+    }
+
+    function zeroBounds ( bounds ) {
+        return [0, 0, bounds[2]-bounds[0], bounds[3]-bounds[1]];
     }
 
     function addTextFrame(myApp, myPage, myBounds, myString, myParagraphStyle, myRotationAngle, myLabel){
@@ -2174,6 +2459,7 @@
     //This awesome function found here: http://tomaxxi.com/2010/09/quicktip-add-custom-cmykrgbhex-colors-to-document/
     //Example: myColorAdd(myDoc, "My New Colour", ColorModel.PROCESS, [16,0,0,55]);
     function addColor(myDocument, myColorName, myColorModel, myColorValue, forceColor) {
+        // The forceColor parameter makes existing swatch with the same name update to these new values 
         if (myColorValue instanceof Array == false) {
             myColorValue = [(parseInt(myColorValue, 16) >> 16) & 0xff, (parseInt(myColorValue, 16) >> 8) & 0xff, parseInt(myColorValue, 16) & 0xff];
             myColorSpace = ColorSpace.RGB;
@@ -2201,15 +2487,185 @@
         return myColor;
     }
 
+    function addCMYKswatch(myDocument, myColorName, myColorValue, forceColor) {
+        // You can send RGB CMYK or HEX values 
+        // We convert the swatch after creation 
+        // to let InDesign handle the conversion
+
+        var forceColor = forceColor || false; // Update swatch if nececairy
+        var myColor = addColor(myDocument, String(myColorName), ColorModel.PROCESS, myColorValue, forceColor);
+
+        myColor.space = ColorSpace.CMYK; // Magic!!
+
+        if(myColorName === undefined) {
+            myColor.name = "C=" + myColor.colorValue[0] + " M=" + myColor.colorValue[1] + " Y=" + myColor.colorValue[2] + " K=" + myColor.colorValue[3];
+        }
+
+        return myColor;
+    }
+
+    function getUIcolorValue( myUIcolor ) {
+        if(myUIcolor.constructor === Array) {
+            return pColour; // custom color
+        } // else UIcolor
+        switch( String(myUIcolor) ) {
+            case "BLACK":
+                return [0,0,0];
+                break;
+            case "BLUE":
+                return [0,0,255];
+                break;
+            case "BRICK_RED":
+                return [153,0,0];
+                break;
+            case "BROWN":
+                return [153,51,0];
+                break;
+            case "BURGUNDY":
+                return [153,0,51];
+                break;
+            case "CHARCOAL":
+                return [170,163,181];
+                break;
+            case "CUTE_TEAL":
+                return [130,206,193];
+                break;
+            case "CYAN":
+                return [0,255,255];
+                break;
+            case "DARK_BLUE":
+                return [0,0,135];
+                break;
+            case "DARK_GREEN":
+                return [0,84,0];
+                break;
+            case "FIESTA":
+                return [247,89,107];
+                break;
+            case "GOLD":
+                return [255,153,0];
+                break;
+            case "GRASS_GREEN":
+                return [153,204,0];
+                break;
+            case "GRAY":
+                return [127,127,127];
+                break;
+            case "GREEN":
+                return [79,255,79];
+                break;
+            case "GRID_BLUE":
+                return [122,186,216];
+                break;
+            case "GRID_GREEN":
+                return [156,221,155];
+                break;
+            case "GRID_ORANGE":
+                return [255,181,107];
+                break;
+            case "LAVENDER":
+                return [153,153,255];
+                break;
+            case "LIGHT_BLUE":
+                return [79,153,255];
+                break;
+            case "LIGHT_GRAY":
+                return [186,186,186];
+                break;
+            case "LIGHT_OLIVE":
+                return [140,165,107];
+                break;
+            case "LIPSTICK":
+                return [206,130,181];
+                break;
+            case "MAGENTA":
+                return [255,79,255];
+                break;
+            case "OCHRE":
+                return [153,102,0];
+                break;
+            case "OLIVE_GREEN":
+                return [102,102,0];
+                break;
+            case "ORANGE":
+                return [255,102,0];
+                break;
+            case "PEACH":
+                return [255,153,153];
+                break;
+            case "PINK":
+                return [255,153,204];
+                break;
+            case "PURPLE":
+                return [102,0,102];
+                break;
+            case "RED":
+                return [255,0,0];
+                break;
+            case "SULPHUR":
+                return [206,206,130];
+                break;
+            case "TAN":
+                return [204,153,102];
+                break;
+            case "TEAL":
+                return [0,153,153];
+                break;
+            case "VIOLET":
+                return [153,51,255];
+                break;
+            case "WHITE":
+                return [255,255,255];
+                break;
+            case "YELLOW":
+                return [255,255,79];
+                break;
+            default:
+                alert("Could not find UI colour called " + String(pColor));
+                return [185,185,185]; // LIGHT_GRAY
+                break;
+        }
+    }
+
     function isLight(colour){
         // This function checks if the colour
         // is light (true) or dark (false)
+
+        // Note that with light means close to white/pale!
+
         var isLight = false;
-        var tempColour   = colour.duplicate();
-        tempColour.space = ColorSpace.LAB;
-        if(tempColour.colorValue[0] > 50){
-            isLight = true;
+        var tint    = 100;
+
+        if ( colour.hasOwnProperty('baseColor') ) {
+            tint = colour.tintValue;
+            var tempColour   = colour.baseColor.duplicate();
+        } else {
+            var tempColour   = colour.duplicate();
         }
+        
+        tempColour.space = ColorSpace.LAB;
+        
+        // HSB
+        var hue        = tempColour.colorValue[0];
+        var saturation = tempColour.colorValue[1];
+        var brightness = tempColour.colorValue[2];
+
+        // Check hue from 30 degrees orange to 210 degrees blue is the lighter side
+
+        if( hue > 30 && hue < 210 ) {
+            // Light side
+            if(tint < 4) isLight = true;
+            if( saturation < 15 && brightness > 90 ) {
+                isLight = true;
+            }
+        } else {
+            // Dark side
+            if(tint < 2) isLight = true;
+            if( saturation < 15 && brightness > 90 ) {
+                isLight = true;
+            }
+        }
+
         tempColour.remove();
         return isLight;
     }
@@ -2250,6 +2706,7 @@
         // APPLICATION TOOLS
         setRuler                        : setRuler,
         setRedraw                       : setRedraw,
+        isBuildWithOther                : isBuildWithOther,
         isBuildWithCoverBuilder         : isBuildWithCoverBuilder,
         // DOCUMENT TOOLS
         getShorthandDocUnits            : getShorthandDocUnits,
@@ -2262,11 +2719,14 @@
         setSlugs                        : setSlugs,
         saveJSONLabel                   : saveJSONLabel,
         retrieveJSONLabel               : retrieveJSONLabel,
+        getMaxSlug                      : getMaxSlug,
+        getMaxBleed                     : getMaxBleed,
         guessC                          : guessC,
         createBlueprint                 : createBlueprint,
         checkDocumentBleed              : checkDocumentBleed,
         checkCagainstDoc                : checkCagainstDoc,
         checkCagainstSpread             : checkCagainstSpread,
+        sameRulers                      : sameRulers,
         // PAGE TOOLS
         insideMinMaxPageSize            : insideMinMaxPageSize,
         getCMarginFromPageLabel         : getCMarginFromPageLabel,
@@ -2295,6 +2755,7 @@
         getSpreadBounds                 : getSpreadBounds,
         getPageMarginBounds             : getPageMarginBounds,
         getSpreadMarginBounds           : getSpreadMarginBounds,
+        getSpreadSize                   : getSpreadSize,
         clearItemsWithLabel             : clearItemsWithLabel,
         getItemByLabel                  : getItemByLabel,
         // PAGE ITEMS TOOLS
@@ -2302,6 +2763,7 @@
         getBoundsRelative2Spread        : getBoundsRelative2Spread,
         getBoundsInfo                   : getBoundsInfo,
         getBoundsOfset                  : getBoundsOfset,
+        zeroBounds                      : zeroBounds,
         addTextFrame                    : addTextFrame,
         addRectangle                    : addRectangle,
         newRect2Page                    : newRect2Page,
@@ -2318,6 +2780,8 @@
         itemsSelected                   : itemsSelected,
         // COLOUR TOOLS
         addColor                        : addColor,
+        addCMYKswatch                   : addCMYKswatch,
+        getUIcolorValue                 : getUIcolorValue,
         isLight                         : isLight,
         // UI TOOLS
         inddUnits2Shorthand             : inddUnits2Shorthand

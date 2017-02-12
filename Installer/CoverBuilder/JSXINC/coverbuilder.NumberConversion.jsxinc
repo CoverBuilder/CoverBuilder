@@ -166,8 +166,6 @@
     }
 
 	function convertToPixels(myApp, measure, unit, ppi) {
-    	// Move this to convert function? 
-    	// MAKE SURE CONVERT TO PIXELS IS SETUP PROPERLY TICKET 0987654
         switch(String(unit).toLowerCase()){
             case "0":
 			case "millimeters":

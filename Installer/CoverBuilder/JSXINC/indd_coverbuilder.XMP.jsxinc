@@ -35,6 +35,9 @@
     }
 
     function retrieveCoverObject(myApp, myCover){
+        // This function always returns valid C object
+        // And should always be called on covers build with CoverBuilder
+        // As it will alert the user if it can't find a valid C object
         try{
             // Get property results in empty string if non-existent
             var C_String = String(myCover.metadataPreferences.getProperty(destNamespace,destContName + "[5]"));
@@ -61,8 +64,7 @@
             var C = {name:"undefined"};
             alert("Could not parse original settings from document.\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
-
-        return myApp.STools.Cparser(myApp, C); // returns valid C object or null
+        return myApp.STools.Cparser(myApp, C);
     }
 
     function newXMP(myApp, myCover, C){

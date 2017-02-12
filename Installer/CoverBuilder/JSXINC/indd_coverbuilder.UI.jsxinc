@@ -16,8 +16,8 @@
         // the CoverBuilder menu after the Dialog is closed.
         var add_CoverBuilder_Menu = myApp.Settings.add_CoverBuilder_Menu;
 
-        var CURR_CBMU = 0; // Current Measurement Unit in CBMU
-
+        var CURR_CBMU      = 0;   // Current Measurement Unit in CBMU
+        var UIslugs        = -1; // Custom slug size
         var onChangeActive = true;
 
         var savePS    = String(myApp.Localise.UI['SavePreset']);
@@ -63,6 +63,7 @@
         }
 
         ///////////////////////////////////////////////////////////////////////////// START WINDOW
+        
         var globalGroup = myWindow.add ("group");
             globalGroup.orientation = "row";
             globalGroup.alignment   = "left";
@@ -132,14 +133,14 @@
 
                 var wrapDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- " + String(myApp.Localise.UI['Wrap']) + " ("  + String(myApp.Localise.UI['Bleed']) + "):",
                                                                                                                  "+ " + String(myApp.Localise.UI['Wrap']) + ":",
-                                                                                                                 "+ " + String(myApp.Localise.UI['Wrap']) + " (-" + String(myApp.Localise.UI['Bleed']) + "):"]);
+                                                                                                                 "+ " + String(myApp.Localise.UI['Wrap']) + " (" + String(myApp.Localise.UI['Incl']) + String(myApp.Localise.UI['Bleed']) + "):"]);
                 wrapDropdown.selection = 1;
                 var myWrap = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
             var optional1Group = optionalInputpanel.add ("group");
                 optional1Group.orientation =  "row";
 
-                var flapQBDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], [String(myApp.Localise.UI['Flaps'])+":",
+                var flapQBDropdown = optional1Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["+ " + String(myApp.Localise.UI['Flaps'])   + ":",
                                                                                                                    "- " + String(myApp.Localise.UI['Binding']) + ":",
                                                                                                                    "+ " + String(myApp.Localise.UI['Binding']) + ":"]);
                 flapQBDropdown.selection = 0;
@@ -225,6 +226,7 @@
         ///////////////////////////////////////////////////////////////////////////// END WINDOW
 
         ////////////// dialog functionality
+        
         cancelBut.onClick = function () {
             myWindow.close();
         }
@@ -403,9 +405,15 @@
                 presets.resetSelection();
                 presetBut.text = savePS;
                 myBleed.text = myApp.NumCon.NaN20( parseFloat(myBleed.text.replace(",", ".").replace(/[^\d.]/g, '')) );
-                if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
-                    wrapDropdown.selection = 1;
-                    alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                // Don't bother to check values if value is 0
+                if(parseFloat(myWrap.text) != 0){
+                    if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
+                        wrapDropdown.selection = 1;
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                    } else if(parseFloat(myBleed.text) >= parseFloat(myWrap.text) && wrapDropdown.selection == 2){
+                        wrapDropdown.selection = 1;
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_bleed_from_wrap']));
+                    }
                 }
             }
         }
@@ -427,9 +435,15 @@
             if( onChangeActive ){
                 presets.resetSelection();
                 presetBut.text = savePS;
-                if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
-                    wrapDropdown.selection = 1;
-                    alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                // Don't bother to check values if value is 0
+                if(parseFloat(myWrap.text) != 0){
+                    if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
+                        wrapDropdown.selection = 1;
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                    } else if(parseFloat(myBleed.text) >= parseFloat(myWrap.text) && wrapDropdown.selection == 2){
+                        wrapDropdown.selection = 1;
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_bleed_from_wrap']));
+                    }
                 }
             }
         }
@@ -496,10 +510,15 @@
                 presets.resetSelection();
                 presetBut.text = savePS;
                 myWrap.text = myApp.NumCon.NaN20( parseFloat(myWrap.text.replace(",", ".").replace(/[^\d.]/g, '')) );
-                if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
-                    //wrapDropdown.selection = 1;
-                    myWrap.text = 0;
-                    alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                // Don't bother to check values if value is 0
+                if(parseFloat(myWrap.text) != 0){
+                    if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
+                        wrapDropdown.selection = 1;
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                    } else if(parseFloat(myBleed.text) >= parseFloat(myWrap.text) && wrapDropdown.selection == 2){
+                        wrapDropdown.selection = 1;
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_bleed_from_wrap']));
+                    }
                 }
             }
         }
@@ -507,6 +526,12 @@
         function getCoverObjectFromUI(myApp, newName){
             //This function reads the dialog data and creates a cover object to inspect
             var newFlap, newFold, newQB, newInExQB = 0;
+            var newSlugs = -1; // Not set
+    
+            if(UIslugs >= 0) {
+                newSlugs = UIslugs;
+            }
+
             if(flapQBDropdown.selection == 0){
                 newFlap = myApp.NumCon.NaN20(parseFloat(myFlapQB.text));
                 if(myFold.visible){
@@ -528,7 +553,7 @@
                 //continue
                 myApp.Settings.standardPPI = 300;
             }
-
+            
             return { name: newName,
                      width: myApp.NumCon.NaN20(parseFloat(myWidth.text)),
                      height: myApp.NumCon.NaN20(parseFloat(myHeight.text)),
@@ -536,16 +561,17 @@
                      ppi: myApp.Settings.standardPPI,
                      bleed: myApp.NumCon.NaN20(parseFloat(myBleed.text)),
                      hinge: myApp.NumCon.NaN20(parseFloat(myHinge.text)),
-                     inExCludeHinge: myApp.NumCon.NaN20(parseFloat(hingeDropdown.selection)),
+                     inExCludeHinge: myApp.NumCon.NaN20(parseInt(hingeDropdown.selection)),
                      binding: newQB,
                      inExCludeQB:newInExQB,
                      flap: newFlap,
                      fold: newFold,
-                     inExCludeFold: myApp.NumCon.NaN20(parseFloat(foldDropdown.selection)),
+                     inExCludeFold: myApp.NumCon.NaN20(parseInt(foldDropdown.selection)),
                      wrap:          myApp.NumCon.NaN20(parseFloat(myWrap.text)),
-                     inExCludeWrap: myApp.NumCon.NaN20(parseFloat(wrapDropdown.selection)),
+                     inExCludeWrap: myApp.NumCon.NaN20(parseInt(wrapDropdown.selection)),
+                     slugs:         parseFloat(newSlugs),
                      margin:        MarginObj,
-                     measureUnit:   myApp.NumCon.NaN20(parseFloat(mminch.selection)),
+                     measureUnit:   myApp.NumCon.NaN20(parseInt(mminch.selection)),
                      slugPageSize:  myApp.Settings.pageSizes_in_Slug,
                      slugTrimSize:  myApp.Settings.totalTrim_in_Slug,
                      resolved:      false,
@@ -557,7 +583,8 @@
             // and sets the UI to default values
 
             onChangeActive = false; // Deactivate UI onChange
-
+            
+            UIslugs                  = -1
             mminch.selection         = 0;
             CURR_CBMU                = 0;
 
@@ -619,8 +646,10 @@
                 myFold.visible = true;
                 foldDropdown.visible = true;
             }
-
+            
+            UIslugs   = thisC.slugs;
             CURR_CBMU = thisC.measureUnit;
+            
             onChangeActive = true; // Reactivate UI onChange
         }
 
@@ -686,6 +715,7 @@
             myHinge.text    = myApp.NumCon.convert(myApp, parseFloat(myHinge.text  ), CURR_CBMU, unit, 3);
             myFold.text     = myApp.NumCon.convert(myApp, parseFloat(myFold.text   ), CURR_CBMU, unit, 3);
             myWrap.text     = myApp.NumCon.convert(myApp, parseFloat(myWrap.text   ), CURR_CBMU, unit, 3);
+            UIslugs         = myApp.NumCon.convert(myApp, parseFloat(UIslugs       ), CURR_CBMU, unit, 3);
         }
 
         // Fill the dialog with data
@@ -967,30 +997,60 @@
                 r[r.length] = this[i];}
             return r;
         }
+        // return app.fonts.everyItem().name;
         return app.fonts.everyItem().fontFamily.unique();
     }
 
-    function getFontName(myApp){
+    function getAvailableFontStyles( familyName ){
+        Array.prototype.findIn = function(search){
+            var r = Array();
+            for (var i=0; i<this.length; i++)
+                if (this[i].indexOf(search) != -1){
+                    r.push(this[i].substr(this[i].indexOf("\t") + 1, this[i].length));
+                }
+            return r;
+        }
+        return app.fonts.everyItem().name.findIn( familyName );
+    }
+
+    function userChooseFont(myApp){
         var returnObj = {fontName : undefined, savePrefs : false};
 
-        var myFontsList = getAvailableFontFamilies();
-            myFontsList.unshift("- Select Font Family -");
+        var myFamilyList = getAvailableFontFamilies();
+            myFamilyList.unshift("- Select Font Family -");
+    
+        var myStyleList = ["- Select Font Style -"];
 
         var myWin = new Window('dialog', 'My Fonts');
-        myWin.orientation = 'row';
-        with(myWin){
+            myWin.orientation = 'column';
+        with( myWin ){
             myWin.sText = add('statictext', undefined, 'Select Font for Slug:');
-            myWin.myFontDrop = add('dropdownlist', undefined, undefined, {items:myFontsList});
-            myWin.myFontDrop.selection = 0;
+            myWin.myFamilyNameDrop = add('dropdownlist', [0,0,180,30], undefined, {items:myFamilyList});
+            myWin.myFamilyNameDrop.selection = 0;
+            
+            myWin.myStyleNameDrop = add('dropdownlist', [0,0,180,30], undefined, {items:myStyleList});
+            myWin.myStyleNameDrop.selection = 0;
+            
+            myWin.myFamilyNameDrop.onChange = function() {
+              myWin.myStyleNameDrop.removeAll();
+              var sysFontAvailableStyles = myApp.STools.getAvailableFontStyles(myWin.myFamilyNameDrop.selection.text);
+              for ( var i = 0; i < sysFontAvailableStyles.length; i++ ) {
+                  myWin.myStyleNameDrop.add('item',sysFontAvailableStyles[i]);
+              }
+              myWin.myStyleNameDrop.selection = 0;
+            }
             myWin.savePrefs = add("checkbox", undefined, "Update my preferences");
             myWin.savePrefs.value = false;
             myWin.btnOK = add('button', undefined, 'OK');
-            };
+        }
+        
         myWin.center();
 
-        if(myWin.show() == true && myWin.myFontDrop.selection.index != 0){
-            returnObj.fontName   = String(myWin.myFontDrop.selection);
-            returnObj.savePrefs  = myWin.savePrefs.value;
+        if(myWin.show() == true){
+            if(myWin.myFamilyNameDrop.selection.index != 0) {
+                returnObj.fontName   = myWin.myFamilyNameDrop.selection.text + '\t' + myWin.myStyleNameDrop.selection.text;
+                returnObj.savePrefs  = myWin.savePrefs.value;
+            }
         }
 
         return returnObj;
@@ -1000,8 +1060,9 @@
     // expose //
     ////////////
       return {
-        CoverOrder  : CoverOrder,
-        getFontName : getFontName,
-        getAvailableFontFamilies : getAvailableFontFamilies
+        CoverOrder               : CoverOrder,
+        userChooseFont           : userChooseFont,
+        getAvailableFontFamilies : getAvailableFontFamilies,
+        getAvailableFontStyles   : getAvailableFontStyles
     };
 })();

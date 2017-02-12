@@ -21,6 +21,56 @@
         var localUnits = localisedValidMeasurementUnits(myApp);
         return localUnits[Cunits];
     }
+    
+    function createFontObject( myFontName ) {
+        var fontObj = { fullName: String(myFontName), familyName: "", styleName: "" };
+        var splitFont = String(myFontName).split('\t');
+        if(splitFont.length == 2) {
+            fontObj.familyName = splitFont[0];
+            fontObj.styleName  = splitFont[1];
+        } else { // CoverBuilder pre 3.0.5 did not save family name
+            fontObj.familyName = String(myFontName);
+            fontObj.styleName  = "";
+        }
+        return fontObj;
+    }
+
+    function getRegistrationFontFamilyName ( myApp ){
+        return createFontObject( myApp.Settings.registration_font ).familyName;
+    }
+
+    function getRegistrationFontStyleName ( myApp ) {
+        return createFontObject( myApp.Settings.registration_font ).styleName;
+    }
+    
+    function isSysFont( myFontName ) {
+        var fObj = createFontObject( String(myFontName) );
+        var sysFonts = app.fonts.everyItem();
+        for (var i=0; i<sysFonts.name.length; i++) {
+            var fName = sysFonts.name[i].substr(0, sysFonts.name[i].indexOf("\t"));
+            if(fName == fObj.familyName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function getAvailableFontStyles( familyName ) {
+        //search inside array
+        Array.prototype.findIn = function(search){
+          var r = Array();
+          for (var i=0; i<this.length; i++) {
+            var fName = this[i].substr(0, this[i].indexOf("\t"));
+            if(fName == search) {
+                r.push(this[i].substr(this[i].indexOf("\t") + 1, this[i].length));
+            }
+          }
+          return r;
+        };
+        var sysFonts = app.fonts.everyItem();
+        var availableStyles = sysFonts.name.findIn( familyName );
+        return availableStyles;
+    }
 
     //-----------------------------------------------------------------------------------
     //  PRESET TOOLS variables
@@ -33,8 +83,8 @@
         };
 
     var PresetObj = {"presets": [
-            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, slugPageSize:true, slugTrimSize:true, resolved:false, colorProfile:"undefined", registration_font:"undefined", extraGuides: new Array()},
-            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, margin:MarginObj, measureUnit:0, slugPageSize:true, slugTrimSize:true, resolved:false, colorProfile:"undefined", registration_font:"undefined", extraGuides: new Array()}
+            {name:"PP-B", width:129, height:198, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, slugs:-1, margin:MarginObj, measureUnit:0, slugPageSize:true, slugTrimSize:true, resolved:false, colorProfile:"undefined", registration_font:"undefined", extraGuides: new Array()},
+            {name:"PP-C", width:153, height:234, spine: 0, ppi:300, bleed:5, hinge:0, inExCludeHinge:0, binding:0, inExCludeQB:0, flap:0, fold:0.0, inExCludeFold:1, wrap:0.0, inExCludeWrap:1, slugs:-1, margin:MarginObj, measureUnit:0, slugPageSize:true, slugTrimSize:true, resolved:false, colorProfile:"undefined", registration_font:"undefined", extraGuides: new Array()}
         ]};
 
     //-----------------------------------------------------------------------------------
@@ -122,8 +172,9 @@
         }
     }   
 
-    function revertSizes(myApp, C){
-
+    function getStandardSlugSize(myApp, cUnit) {
+        // Gets the slug size from app settings
+        return myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, cUnit );
     }
 
     function resolveSizes(myApp, C){
@@ -152,7 +203,10 @@
             if(C.inExCludeWrap == 0){
                 C.bleed -= C.wrap;
             } else if(C.inExCludeWrap == 2) {
-                C.bleed = C.wrap;
+                /* Wrap (inclusive bleed) */
+                if(C.wrap >= C.bleed){
+                    C.bleed = C.wrap;
+                }
             } else {
                 C.bleed += C.wrap;
             }
@@ -201,12 +255,18 @@
         }
     }
 
+    function newC (myApp) {
+        return myApp.STools.Cparser( myApp, {name: "empty"} );
+    }
+
     function Cparser(myApp, C){
+        // ALways returns a C [Cover] object
         if( C !== null && typeof C === 'object' ){
             // This function tries to create a valid C object from a C object from an older version.
             // TODO: Make a Margin validator
             var Cool = {
                 name:               (String(     C.name)             || "undefined"),
+                version:             myApp.Settings.version,
                 width:              (parseFloat( C.width)            || 0),
                 height:             (parseFloat( C.height)           || 0),
                 spine:              (parseFloat( C.spine)            || 0),
@@ -221,6 +281,7 @@
                 inExCludeFold:      (parseInt(   C.inExCludeFold)    || 0),
                 wrap:               (parseFloat( C.wrap)             || 0),
                 inExCludeWrap:      (parseInt(   C.inExCludeWrap)    || 0),
+                slugs:              (parseFloat( C.slugs )           || -1),
                 margin:             (C.margin                        || MarginObj),
                 measureUnit:        (parseInt(   C.measureUnit)      || 0),
                 slugPageSize:        Boolean(    (typeof C.slugPageSize == "undefined") || C.slugPageSize),
@@ -234,7 +295,7 @@
             //alert(myApp.JSON.stringify(Cool));
             return Cool;
         }
-        return null
+        return myApp.STools.newC( myApp );
     }
 
     function convertMargins(myApp, coverMargins, to_unit){
@@ -259,10 +320,10 @@
             return C;
         }
 
-        var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap"];
+        var dimensions = ["width","height","spine","bleed","hinge","binding","flap","fold","wrap","slugs"];
         var dlen = dimensions.length;
         for (var i = 0; i < dlen; i++) {
-            C[dimensions[i]] = myApp.NumCon.convert(myApp, C[dimensions[i]], C.measureUnit, to_unit);
+            C[dimensions[i]] = myApp.NumCon.convert(myApp, C[dimensions[i]], C.measureUnit, to_unit, 5);
         }
 
         // Don't do margins
@@ -632,32 +693,39 @@
     return {
         validMeasurementUnits          : validMeasurementUnits,
         localisedValidMeasurementUnits : localisedValidMeasurementUnits,
-        getLocalisedUnits     : getLocalisedUnits,
-        // Preset Tools
-        getFile               : getFile,
-        MarginObj             : MarginObj,
-        PresetObj             : PresetObj,
-        getPresets            : getPresets,
-        saveUserSettings      : saveUserSettings,
-        validMeasurementUnits : validMeasurementUnits,
-        getPluginfoIndex      : getPluginfoIndex,
-        getPluginSettingsFor  : getPluginSettingsFor,
-        // Validator 
-        sameProps             : sameProps,
-        checkMeasureUnit      : checkMeasureUnit,
-        // C Tools 
-        getMeasurementUnits   : getMeasurementUnits,
-        resolveSizes          : resolveSizes,
-        Cparser               : Cparser,
-        convertUnits          : convertUnits,
-        // Array Tools 
-        getIndex              : getIndex,
-        sameKeys              : sameKeys,
-        // Link Jumpers 
-        getHelp               : getHelp,
-        createBarcode         : createBarcode,
-        visitURL              : visitURL,
-        // Other
-        niceErrorAlert        : niceErrorAlert
+        getLocalisedUnits              : getLocalisedUnits,
+        createFontObject               : createFontObject,
+        isSysFont                      : isSysFont,
+        getRegistrationFontFamilyName  : getRegistrationFontFamilyName,
+        getRegistrationFontStyleName   : getRegistrationFontStyleName,
+        getAvailableFontStyles         : getAvailableFontStyles,
+        // Preset Tools         
+        getFile                        : getFile,
+        MarginObj                      : MarginObj,
+        PresetObj                      : PresetObj,
+        getPresets                     : getPresets,
+        saveUserSettings               : saveUserSettings,
+        validMeasurementUnits          : validMeasurementUnits,
+        getPluginfoIndex               : getPluginfoIndex,
+        getPluginSettingsFor           : getPluginSettingsFor,
+        // Validator          
+        sameProps                      : sameProps,
+        checkMeasureUnit               : checkMeasureUnit,
+        // C Tools          
+        getMeasurementUnits            : getMeasurementUnits,
+        getStandardSlugSize            : getStandardSlugSize,
+        resolveSizes                   : resolveSizes,
+        newC                           : newC,
+        Cparser                        : Cparser,
+        convertUnits                   : convertUnits,
+        // Array Tools          
+        getIndex                       : getIndex,
+        sameKeys                       : sameKeys,
+        // Link Jumpers          
+        getHelp                        : getHelp,
+        createBarcode                  : createBarcode,
+        visitURL                       : visitURL,
+        // Other         
+        niceErrorAlert                 : niceErrorAlert
     };
 })();
