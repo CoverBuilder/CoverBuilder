@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/GitBruno/CoverBuilder.png?label=ready&title=Ready)](https://waffle.io/GitBruno/CoverBuilder)
 CoverBuilder
 ============
 
