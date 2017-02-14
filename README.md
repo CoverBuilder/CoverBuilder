@@ -16,7 +16,7 @@ When filing a new bug, please remember to include:
 * actual and expected results
 
 [![Stories in Ready](https://badge.waffle.io/GitBruno/CoverBuilder.png?label=ready&title=Ready)](https://waffle.io/GitBruno/CoverBuilder)
-[![Stories In Progress](https://badge.waffle.io/GitBruno/CoverBuilder.png?label=waffle%3Ain%20progress&title=In%20Progress)](https://waffle.io/GitBruno/CoverBuilder)
+[![Stories In Progress](https://badge.waffle.io/GitBruno/CoverBuilder.png?label=in%20progress&title=In%20Progress)](https://waffle.io/GitBruno/CoverBuilder)
 
 
 More info?
