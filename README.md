@@ -15,8 +15,8 @@ When filing a new bug, please remember to include:
 * reproduction steps
 * actual and expected results
 
-You can also see what I'm working on with Waffle:
 [![Stories in Ready](https://badge.waffle.io/GitBruno/CoverBuilder.png?label=ready&title=Ready)](https://waffle.io/GitBruno/CoverBuilder)
+[![Stories In Progress](https://badge.waffle.io/GitBruno/CoverBuilder.png?label=waffle%3Ain%20progress&title=In%20Progress)](https://waffle.io/GitBruno/CoverBuilder)
 
 
 More info?
