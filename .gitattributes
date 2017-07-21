@@ -1,0 +1,14 @@
+# Remove from release
+README.md export-ignore
+
+# git files
+.gitattributes export-ignore
+.gitignore export-ignore
+/Pictures export-ignore
+
+# source files
+/Installer/com.brunoherfst.coverbuilder.mxi export-ignore
+/Installer/Icon export-ignore
+/Installer/CoverBuilder export-ignore
+
+update.xml export-ignore
