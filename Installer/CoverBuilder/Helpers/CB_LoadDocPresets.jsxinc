@@ -31,7 +31,7 @@
                 // Check if C is good to go
                 if( (C.width > 0) && (!C.resolved) ){
                     // Let's check the Doc to see if it has changed
-                    var check = myApp.Tools.checkCagainstDoc(myApp, myCover, C, true);
+                    var check = myApp.Check.CagainstDoc(myApp, myCover, C, true);
                     // Update data if user updated
                     if(check.C_changed){
                         C = check.C;

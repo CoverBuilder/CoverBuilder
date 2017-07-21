@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<macromedia-extension name="CoverBuilder" version="3.0.5" id="com.brunoherfst.coverbuilder" requires-restart="true" icon="icon.png">
+<macromedia-extension name="CoverBuilder" version="3.0.6" id="com.brunoherfst.coverbuilder" requires-restart="true" icon="icon.png">
 	<author name="Bruno Herfst" />
-	<update url="http://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
+	<update url="https://raw.github.com/GitBruno/CoverBuilder/master/update.xml" />
 	<products>
 		<product familyname="InDesign" primary="true" version="7" />
 	</products>

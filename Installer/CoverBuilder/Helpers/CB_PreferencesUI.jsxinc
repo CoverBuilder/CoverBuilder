@@ -25,6 +25,8 @@
     //////////////
     // privates //
     //////////////
+    $.localize = true; // Make sure ExtendScript localisation engine is enabled.
+
     var columnWidth = 450;
 
     function load_Pref_UI(myApp) {
@@ -33,7 +35,7 @@
       var settings_changed = false;
       var plugin_changed   = false;
 
-      var setWin = new Window ("dialog", "CoverBuilder Settings");
+      var setWin = new Window ("dialog", "CoverBuilder " + String(myApp.Localise.UI['Preferences']) );
             setWin.orientation = "column";
             setWin.alignment = "left";
             setWin.justify = "left";
@@ -431,10 +433,12 @@
         }
         // END PROCESS UI
         /////////////////
+        return settings_changed;
       } else {
         // User pressed cancel. Make sure there are no changes to the settings 
         myApp.Settings = originalSettings;
       }
+      return false;
     }
 
     ////////////

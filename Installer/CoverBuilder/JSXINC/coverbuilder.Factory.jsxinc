@@ -1,5 +1,5 @@
 // Initialises the CoverBuilder plugin
-// Version 1.1
+// Version 1.2.1
 
 (function() {
     //////////////
@@ -90,7 +90,7 @@
 
     function getSettings(PlatformInfo){
         var NewSettings = {
-            version                        : "3.0.5",               // String
+            version                        : "3.0.6",               // String
             add_CoverBuilder_Menu          : true,                  // Boolean // If set to false menu will be removed
             autoload_last_used_settings    : true,                  // Boolean
             autoload_front_document        : true,                  // Boolean // If set to true it will over-ride the autoload_last_used_settings
@@ -112,7 +112,7 @@
     }
 
     function getModulePaths(PathTo) {
-        var Module = {
+        var Modules = {
             Localise   : PathTo.scriptFolder + "coverbuilder.Localisation.jsxinc",
             JSON       : PathTo.scriptFolder + "coverbuilder.JSON.jsxinc",
             STools     : PathTo.scriptFolder + "coverbuilder.SharedTools.jsxinc",
@@ -125,6 +125,7 @@
             XMP        : PathTo.scriptFolder + "indd_coverbuilder.XMP.jsxinc",
             Slugs      : PathTo.scriptFolder + "indd_coverbuilder.Slugs.jsxinc",
             Build      : PathTo.scriptFolder + "indd_coverbuilder.Build.jsxinc",
+            Check      : PathTo.scriptFolder + "indd_coverbuilder.Check.jsxinc",
             // PHOTOSHOP SPECIFIC MODULES //
             PSui       : PathTo.scriptFolder + "ps_coverbuilder.UI.jsxinc",
             PStools    : PathTo.scriptFolder + "ps_coverbuilder.Tools.jsxinc",
@@ -132,8 +133,9 @@
             PSbuild    : PathTo.scriptFolder + "ps_coverbuilder.Build.jsxinc"
         }
 
-        checkPathObj(Module);
-        return Module;
+        checkPathObj( Modules );
+
+        return Modules;
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

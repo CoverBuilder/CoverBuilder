@@ -1,0 +1,888 @@
+/*
+    Indesign helper for CoverBuilder
+
+    A collection of document testers / fixers
+
+    Bruno Herfst 2016 - 2017
+
+    Version 1.2
+
+*/
+
+(function() {
+    //////////////
+    // privates //
+    //////////////
+    
+    function QA( typeStr, questionStr, answerArr, selectedIndex ) {
+        var selectedIndex = parseInt(selectedIndex);
+
+        // Make UI look pretty
+        var multiline  = true;
+        var lineLength = 75;
+        if( questionStr.length < lineLength) {
+            multiline = false;
+        }
+
+        // Returns answer index or -1
+        var myWindow = new Window ("dialog", "CoverBuilder: " + String(typeStr) );
+            myWindow.orientation = "column";
+            myWindow.alignment = "left";
+            myWindow.alignChildren = "left";
+            myWindow.margins = [15,15,15,15];
+            myWindow.preferredSize = [350,150];
+
+        var myQuestionGroup = myWindow.add ("group");
+            myQuestionGroup.alignment = "fill";
+            myQuestionGroup.alignChildren = "fill";
+        var question = myQuestionGroup.add ("statictext", undefined, String(questionStr), {multiline:multiline, characters:lineLength} );
+
+        var answerRadio = new Array();
+
+        var myRadioGroup = myWindow.add ("group");
+            myRadioGroup.orientation = "column";
+            myRadioGroup.alignment = "fill";
+            myRadioGroup.alignChildren = "left";
+            myRadioGroup.margins = [0,10,0,10];
+
+        for (var i = 0; i < answerArr.length; i++) {
+            answerRadio.push( myRadioGroup.add("radiobutton", undefined, answerArr[i]) );
+        }
+
+        if( answerRadio.length > 0 ) {
+            try {
+                answerRadio[selectedIndex].value = true;
+            } catch ( unvalidIndex ) {
+                answerRadio[0].value = true;
+            }
+        }
+
+        var myButtonGroup = myWindow.add ("group");
+            myButtonGroup.orientation = "row";
+            myButtonGroup.alignment = "right";
+            myButtonGroup.margins = [0,5,0,5];
+        myButtonGroup.add ("button", undefined, "Cancel");
+        myButtonGroup.add ("button", undefined, "OK");
+
+        if (myWindow.show() == 1) {
+            for (var i = 0; i < answerRadio.length; i++) {
+                if(answerRadio[i].value == true) {
+                    return i;
+                }
+            }
+            // Nothing was selected.
+            return -2;
+        }
+        // User pressed cancel
+        return -1;
+    }
+
+    function getUniqueHingeValues(myApp, doc, C) {
+        
+        // This function get's all hinge values in C object measure units
+        // 1. Get all hinges from master spreads
+        // 2. Get all hinges from document spreads
+
+        var guides = [];
+
+        // Make sure C is resolved
+        var CR = myApp.STools.resolveSizes(myApp, C);
+        // Set document guides correctly
+        var originalRulers = myApp.Tools.setRuler(doc, {units : C.measureUnit, origin : RulerOrigin.pageOrigin});
+
+        // Get the guides!
+        for(var i = doc.masterSpreads.length; i--;) {
+            guides = guides.concat( myApp.Tools.getGuides(myApp, doc.masterSpreads[i]) );
+        }
+        for(var i = doc.spreads.length; i--;) {
+            guides = guides.concat( myApp.Tools.getGuides(myApp, doc.spreads[i]) );
+        }
+
+        // Clean the data
+        for(var i = guides.length; i--;) {
+            if (guides[i].horizontal) {
+                guides.splice( i, 1 );
+            } else if (guides[i].label == "frontHingeGuide") {
+                // Do nothing
+            } else if (guides[i].label == "backHingeGuide" ) {
+                guides[i].location = guides[i].parentBounds.width - guides[i].location;
+            } else {
+                guides.splice( i, 1 );
+            }
+        }
+
+        // Unique locations
+        var locations = new Array();
+        for(var i = guides.length; i--;) {
+            var location = guides[i].location;
+            if( myApp.STools.getIndex(location, locations) < 0 ) {
+                locations.push(location);
+            }
+        }
+
+        myApp.Tools.setRuler(doc, originalRulers);
+        return locations;
+    }
+
+    function checkPagesInSpread(myApp, C, Spread, bluePrint){
+        
+        // Make sure C is resolved
+        if(!C.resolved){
+            C = myApp.STools.resolveSizes(myApp, C);
+        }
+        
+        // PARAM bluePrint: Array of pages in order
+        // [{width:0, height:0, type:"Name"},{width:0, height:0, type:"Name", margin:{}, hinge:0}]
+
+        // BEWARE: This function assumes the document rulers are set correctly
+        
+        // This function does not fix anything. It only reports problems
+        
+        // ERROR CODES
+        // 0 - No problem
+        // 1 - Something unexpected went wrong (Never returned)
+        // 2 - Spread has too many pages
+        // 3 - Spread has not enough pages
+        // 4 - Page height does not match
+        // 5 - Page width does not match
+        // 6 - Hinge does not match
+        // 7 - Fold on flap does not match
+        // 8 - Page margins do not match
+
+        if(Spread.pages.length == bluePrint.length){
+            for (var i = 0; i < bluePrint.length; i++) {
+                // First check the dimensions
+                var pageHeight = myApp.NumCon.doRound( Spread.pages[i].bounds[2]-Spread.pages[i].bounds[0] , 3);
+                var pageWidth  = myApp.NumCon.doRound( Spread.pages[i].bounds[3]-Spread.pages[i].bounds[1] , 3);
+                var heightDifference = Math.abs(bluePrint[i].height - pageHeight);
+                var widthDifference  = Math.abs(bluePrint[i].width - pageWidth);
+
+                if( heightDifference > 0.01) {
+                    return {ok: false, errorcode:4, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type}, text:"Expected page " + Spread.pages[i].name + " to be " + bluePrint[i].height + " high, but is " + pageHeight};
+                }
+                if( widthDifference > 0.01) {
+                    return {ok: false, errorcode:5, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type}, text:"Expected page " + Spread.pages[i].name + " to be " + bluePrint[i].width + " wide, but is " + pageWidth};
+                }
+
+                // Then check hinge and folds (guides)
+                switch(bluePrint[i].type) {
+                    case "CVR1":
+                    case "CVR4":
+                        if( (bluePrint[i].hinge == 0) || (bluePrint[i].hinge == bluePrint[i].width) ) {
+                            break;
+                        }
+                        if(bluePrint[i].type == "CVR1") {
+                            var guideCheck = myApp.Check.guide(myApp, Spread.pages[i], "frontHingeGuide", bluePrint[i].hinge);
+                        } else if(bluePrint[i].type == "CVR4") {
+                            var guideCheck = myApp.Check.guide(myApp, Spread.pages[i], "backHingeGuide", bluePrint[i].hinge);
+                        }
+                        if( !guideCheck.ok ){
+                            if ( guideCheck.exist || Spread.pages[i].documentOffset < 0 ) {
+                                // Return error when guide is placed wrong or is non existent on masterpage
+                                return {ok: false, errorcode:6, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type, hinge: guideCheck.location }, text:"Expected hinge guide to be at " + bluePrint[i].hinge + ", but is at " + guideCheck.location};
+                            }
+                        }
+                        break;
+                    case "BindL":
+                    case "BindR":
+                        if( (bluePrint[i].hinge == 0) || (bluePrint[i].hinge == bluePrint[i].width) ) {
+                            break;
+                        }
+                        if(bluePrint[i].type == "BindL") {
+                            var guideCheck = myApp.Check.guide(myApp, Spread.pages[i], "frontHingeGuide", bluePrint[i].hinge);
+                        } else if(bluePrint[i].type == "BindR") {
+                            var guideCheck = myApp.Check.guide(myApp, Spread.pages[i], "backHingeGuide", bluePrint[i].hinge);
+                        }
+                        if( !guideCheck.ok ){
+                            if ( guideCheck.exist || Spread.pages[i].documentOffset < 0 ) {
+                                // Return error when guide is placed wrong or is non existent on masterpage
+                                return {ok: false, errorcode:6, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type, hinge: guideCheck.location }, text:"Expected hinge guide to be at " + bluePrint[i].hinge + ", but is at " + guideCheck.location};
+                            }
+                        }
+                        break;
+                    case "Flap1":
+                    case "Flap4":
+                        if( (bluePrint[i].fold == 0) || (bluePrint[i].fold == bluePrint[i].width) ) {
+                            break;
+                        }
+                        if(bluePrint[i].type == "Flap1") {
+                            var guideCheck = myApp.Check.guide(myApp, Spread.pages[i], "frontFlapFoldGuide", bluePrint[i].fold);
+                        } else if(bluePrint[i].type == "Flap4") {
+                            var guideCheck = myApp.Check.guide(myApp, Spread.pages[i], "backFlapFoldGuide",  bluePrint[i].fold);
+                        } else {
+                            // this should never happen but if it does I want to know
+                            alert("Bug found: 75849375843758943");
+                            break;
+                        }  
+                        if( !guideCheck.ok ){
+                            if ( guideCheck.exist || Spread.pages[i].documentOffset < 0 ) {
+                                // Return error when guide is placed wrong or is non existent on masterpage
+                                return {ok: false, errorcode:7, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type, fold: guideCheck.location }, text:"Expected fold guide to be at " + bluePrint[i].fold + ", but is at " + guideCheck.location};
+                            }
+                        }
+                        break;
+                    default:
+                        //default code block
+                }
+            }
+            
+            // Now we know the pages are all setup properly we can check the document margins.
+            for (var i = 0; i < bluePrint.length; i++){
+                var diff = myApp.Tools.getPageMarginDifference(myApp, Spread.pages[i], bluePrint[i].margin);
+                
+                //alert("Page Type: " + bluePrint[i].type + " Difference Top: " + diff.top + " Bot: " + diff.bottom + " Left: " + diff.left + " Right: " + diff.right);
+
+                // Make sure values are positive so we can calculate with them
+                // as positive val + negative val can equal zero;
+                diff.top    = Math.abs( diff.top );
+                diff.bottom = Math.abs( diff.bottom );
+                diff.left   = Math.abs( diff.left );
+                diff.right  = Math.abs( diff.right );
+
+                // Let's check the top and bottom margins first
+                if( diff.top + diff.bottom != 0 ){
+                    return {ok: false, errorcode:8, text:"Page margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type} };
+                }
+
+                // The side margins are a litte more complicated
+                switch(bluePrint[i].type) {
+                    case "Spine":
+                        if( diff.left + diff.right != 0 ){
+                            return {ok: false, errorcode:8, text:"Spine margins do not match", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
+                        }
+                        break;
+                    case "Binding1":
+                    case "Binding4":
+                        if( diff.left + diff.right != 0 ){
+                            return {ok: false, errorcode:8, text:"Binding margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
+                        }
+                        break;
+                    case "CVR1":
+                    case "CVR4":
+                        if( diff.left + diff.right != 0 ){
+                            return {ok: false, errorcode:8, text:"Cover margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
+                        }
+                        break;
+                    case "Flap1":
+                    case "Flap4":
+                        if( diff.left + diff.right != 0 ){
+                            return {ok: false, errorcode:8, text:"Flap margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
+                        }
+                        break;
+                    default:
+                        // This should never happen
+                        alert("Error 63739463936582\nUnknown Page Type: " + bluePrint[i].type);
+                }
+            }
+            return {ok: true, errorcode:0, text:"Pages OK. "};
+        } else {
+            if(Spread.pages.length > bluePrint.length){
+                return {ok: false, errorcode:2, text:"Spread has too many pages.", pageInfo: {spread:Spread, pagesActual:Spread.pages.length, pagesExpected:bluePrint.length} };
+            } else {
+                return {ok: false, errorcode:3, text:"Spread has not enough pages.", pageInfo: {spread:Spread, pagesActual:Spread.pages.length, pagesExpected:bluePrint.length} };
+            }
+        }
+
+        return {ok: false, errorcode:1, text:"Something is going wrong..."};
+    }
+    
+    function docBleed(myApp, doc, C, tryFix){
+        // We don't care if uniform size is true or false
+        // Only the values need to be right
+        var myRulers  = myApp.Tools.setRuler(doc, {units : C.measureUnit});
+        var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
+
+        var ReturnObj = { C : C, C_changed : false, doc_changed : false, message: {ok : true, text : ""} };
+        var docBleed = myApp.Tools.getMaxBleed(myApp, doc);
+        
+        var bleedOK = true;
+        
+        var CR = myApp.STools.resolveSizes(myApp, C);
+
+        if( myApp.NumCon.doRound( docBleed, 6 ) != myApp.NumCon.doRound( CR.bleed, 6 ) ) bleedOK = false;
+        
+        if( (bleedOK == false) && tryFix) {
+
+            var approve = confirm("Document bleed has changed, would you like me to revert the bleeds from " + docBleed + " to " + CR.bleed + unitsShorthand );
+            
+            // We need a don't ask again element in this dialog. To be created as a seperate shared functon ticket 7393640364026
+            if(approve){
+                myApp.Tools.setDocBleed(myApp, doc, C);
+                ReturnObj.doc_changed = true;
+            } else {
+                
+                // Resolve Wrap
+                
+                if( (docBleed-C.wrap) <= 0) {
+                    C.bleed = docBleed;
+                    C.wrap  = 0;
+                } else {
+                    if(C.inExCludeWrap == 0){
+                        C.bleed = docBleed;
+                    } else {
+                        C.bleed = docBleed-C.wrap;
+                    }
+                }
+
+                ReturnObj.C_changed = true;
+                ReturnObj.C = C;
+                // Make sure slugs look good in this new situation
+                myApp.Slugs.placeSizesInSlug(myApp, doc, C);
+            }
+        } else if (bleedOK == false) {
+            ReturnObj.message.ok = false;
+            ReturnObj.message.text = "Document bleed does not match data. ";
+        }
+
+        // reset original rulers
+        myApp.Tools.setRuler(doc, myRulers);
+        return ReturnObj;
+    }
+    
+    function facingPages(myApp, doc, C, tryFix) {
+        var ReturnObj = { C : C, C_changed : false, doc_changed : false, message: {ok : true, text : ""} };
+        // facing pages ruins the margins and needs to be set to false
+        if(doc.documentPreferences.facingPages) {
+            ReturnObj.message.ok = false;
+            ReturnObj.message.text = 'Facing pages is turned on. ';
+            if(tryFix) {
+                var approve = confirm("Document is using facing pages\nWould you like to turn this off? (Recommended)" );
+                if(approve){
+                    doc.documentPreferences.facingPages = false;
+                    ReturnObj.doc_changed = true;
+                    ReturnObj.message.ok  = true;
+                    ReturnObj.message.text = 'Turned facing pages off. ';
+                }
+            }
+        }
+        return ReturnObj;
+    }
+
+    function docSlugs(myApp, doc, C, tryFix){
+        // We don't care if uniform size is true or false
+        // Only the values need to be right
+        var myRulers       = myApp.Tools.setRuler(doc, {units : C.measureUnit});
+        var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
+        var ReturnObj      = { C : C, C_changed : false, doc_changed : false, message: {ok : true, text : ""} };
+        
+        var mySlug = 0; //init
+        // Get slugs from Cover object
+        // or when not defined from Settings
+        if(C.slugs >= 0) {
+            mySlug  = C.slugs;
+        } else { // Slugs == -1 if not set
+            mySlug  = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit );
+            C.slugs = mySlug;
+        }
+        
+        var docSlug = Math.abs( myApp.NumCon.doRound( myApp.Tools.getMaxSlug(  myApp, doc), 6) - 
+                                myApp.NumCon.doRound( myApp.Tools.getMaxBleed( myApp, doc), 6) );
+
+        var slugOK = true;
+        var slugErrMargin = myApp.NumCon.convert(myApp, 1, 0, C.measureUnit );
+        if( Math.abs(docSlug - mySlug) > slugErrMargin ) slugOK = false;
+        
+        if( (slugOK == false) && tryFix) {
+
+            var approve = confirm("Document slugs have changed, would you like me to revert the slugs from " + docSlug + " to " + mySlug + unitsShorthand );
+            
+            // We need a don't ask again element in this dialog. To be created as a seperate shared functon ticket 7393640364026
+            if(approve){
+                doc.documentPreferences.slugTopOffset             = Math.abs(mySlug);
+                doc.documentPreferences.slugRightOrOutsideOffset  = Math.abs(mySlug);
+                doc.documentPreferences.slugBottomOffset          = Math.abs(mySlug);
+                doc.documentPreferences.slugInsideOrLeftOffset    = Math.abs(mySlug);
+                ReturnObj.doc_changed = true;
+            } else {
+                C.slugs = docSlug;
+                ReturnObj.C_changed = true;
+                ReturnObj.C = C;
+            }
+        } else if (slugOK == false) {
+            ReturnObj.message.ok = false;
+            ReturnObj.message.text = "Document slug does not match data. ";
+        }
+
+        // reset original rulers
+        myApp.Tools.setRuler(doc, myRulers);
+        return ReturnObj;
+    }
+
+    function guide(myApp, myPage, myLabel, myLocation){
+        // BEWARE: This function assumes the document rulers are set correctly
+        var ReturnObj = {ok: false, exist: false, location: 0};
+
+        var guides = myApp.Tools.getItemByLabel(myPage, myLabel);
+        if(guides.length > 0){
+            ReturnObj.exist = true;
+            ReturnObj.location = guides[0].location;
+            
+            if ( Math.abs(guides[0].location - myLocation) < 0.01) {
+                ReturnObj.ok = true;
+            }
+        }
+        
+        return ReturnObj;
+    }
+
+    function CagainstDoc(myApp, doc, C, tryFix) {
+        var tryFix = tryFix || false;
+
+        // When tryFix is set to 'true' function will ask the user to choose between the document value or the data
+        // Set tryFix to false and  this function will return ReturnObj below without touching the document.
+        var ReturnObj = { C : C, C_changed : false, doc_changed : false, message : {ok : true, text : ""} };
+
+        function doc_changed(){
+            // All pages in doc with master "CB-cover" applied will be updated
+            myApp.Tools.updatePagesWithMaster(myApp, doc, "CB-cover");
+            // Update blueprint
+            bluePrint = myApp.Tools.createBlueprint(myApp, C);
+            ReturnObj.doc_changed = true; // Flag change
+        }
+
+        function C_changed(){
+            // Update XMP
+            myApp.XMP.safeCoverObject(myApp, doc, C);
+            ReturnObj.C = C; // Update return object
+            ReturnObj.C_changed = true; // Flag change
+        }
+        
+        function processFeedback(checkObj){
+            // And process the feedback
+            ReturnObj.message.text += checkObj.message.text;
+            if(!checkObj.message.ok){
+                ReturnObj.message.ok = false;
+            }
+            if(checkObj.C_changed){
+                ReturnObj.C_changed = true;
+                ReturnObj.C = checkObj.C;
+                C = checkObj.C; // Make sure C is updated
+                if(tryFix){
+                    C_changed();
+                }
+            }
+            if(checkObj.doc_changed){
+                ReturnObj.doc_changed = true;
+                if(tryFix){
+                    doc_changed();
+                }
+            }
+        }
+        
+        // Check facing pages
+        var check = myApp.Check.facingPages(myApp, doc, C, tryFix);
+        processFeedback(check);
+
+        // Check document bleed
+        var check = myApp.Check.docBleed(myApp, doc, C, tryFix);
+        processFeedback(check);
+        
+        // Check document slugs
+        var check = myApp.Check.docSlugs(myApp, doc, C, tryFix);
+        processFeedback(check);
+        
+        // Check master page
+        var check = myApp.Check.CagainstSpread(myApp, doc, doc.masterSpreads.item("CB-cover"), C, tryFix);
+        processFeedback(check);
+
+        // Now check all spreads in document
+        for (var s = 0; s < doc.spreads.length; s++) {
+            var mySpread = doc.spreads[s];
+            var check = myApp.Check.CagainstSpread(myApp, doc, mySpread, C, tryFix);
+            processFeedback(check);
+        }
+        
+        return ReturnObj;
+    }
+
+    function CagainstSpread(myApp, doc, mySpread, C, tryFix){
+        // This function checks the C object against the given spread 
+        var tryFix = tryFix || false;
+        // When fix is set to 'true' this function eihter updates the spread (via master spread) 
+        // or update the data, depending on user query 
+
+        // Setting fix to false will return ReturnObj below without touching the document
+
+        var ReturnObj = { C : C, C_changed : false, doc_changed : false, message : {ok : true, text : ""} };
+        
+        var bluePrint = myApp.Tools.createBlueprint(myApp, C);
+        
+        var CR = myApp.STools.resolveSizes(myApp, C);
+        
+        function doc_changed(){
+            // All pages in doc with master "CB-cover" applied will be updated
+            myApp.Tools.updatePagesWithMaster(myApp, doc, "CB-cover");
+            // Update blueprint
+            bluePrint = myApp.Tools.createBlueprint(myApp, C);
+            ReturnObj.doc_changed = true; // Flag change
+        }
+        function C_changed(){
+            // Update XMP
+            myApp.XMP.safeCoverObject(myApp, doc, C);
+            ReturnObj.C = C; // Update return object
+            ReturnObj.C_changed = true; // Flag change
+            CR = myApp.STools.resolveSizes(myApp, C); // Update resolved C
+        }
+        
+        // Set rulers to the right units
+        var oldRulers = myApp.Tools.setRuler(doc, {units : C.measureUnit});
+        var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
+        
+        function checkFile(){
+            // CHECK PAGES this will give us a problem back (or not :)
+            var feedback = checkPagesInSpread(myApp, C, mySpread, bluePrint);
+            var feedbackHistory = "";
+            
+            function updateFeedback(OKbool, Note){
+                feedback.ok      = OKbool;
+                feedback.text   += Note + ". ";
+                feedbackHistory += Note + ". ";
+            }
+            
+            if (tryFix) {
+                
+                var type = "Something changed";
+
+                switch(feedback.errorcode) {
+                    case 0: // - No problem
+                    	break;
+                    case 1: // - Something unexpected went wrong (Never returned)
+                        alert("CoverBuilder Check\n" + feedback.text);
+                        exit();
+                    case 2: // - Spread has too many pages
+                    case 3: // - Spread has not enough pages
+                        var spread   = feedback.pageInfo.spread;
+                        var question = "To continue, please update page count.";
+                        var choices  = [ "Update all spreads to " + feedback.pageInfo.pagesExpected + "pp"];
+                        var answer   = myApp.Check.QA( type, question, choices);
+                        
+                        switch ( answer ) {
+                            case 0: // All spreads
+                                myApp.Tools.updatePageCountAllSpreads( myApp, doc, feedback.pageInfo.pagesExpected, true );
+                                myApp.Tools.updatePagesWithMaster( myApp, doc, "CB-cover", true);
+                                doc_changed();
+                                updateFeedback(true, "Updated all spreads page count to " + feedback.pageInfo.pagesExpected);
+                            default: /* User pressed cancel */
+                                exit();
+                                break;
+                        }
+                        break;
+                    case 4: // - Page height does not match
+                        // FIX HEIGHT
+                        var question = "Please resolve HEIGHT conflict:";
+                        var choices  = [ myApp.NumCon.doRound(feedback.pageInfo.height,3) + " " + unitsShorthand + " (Update Data)" ,
+                                         myApp.NumCon.doRound(               CR.height,3) + " " + unitsShorthand + " (Update Document)" ]
+                        var answer   = myApp.Check.QA( type, question, choices, 0);
+
+                        switch ( answer ) {
+                        	case 0: /* Use doc */
+                                // Update data (cover object)
+                                C.height = feedback.pageInfo.height;
+                                C_changed();
+                                // We need to make sure the master reflects the changes of the spread
+                                myApp.Tools.update_coverMaster_pageHeight(myApp, doc, C);
+                                doc_changed();
+                                break;
+                            case 1: /* Use data */
+                                // Update doc
+                                myApp.Tools.update_coverMaster_pageHeight(myApp, doc, C);
+                                doc_changed();
+                                updateFeedback(true, "Updated Height");
+                                break;
+                            default: /* User pressed cancel */
+                                exit();
+                                break;
+                        }
+                        
+                        feedback = checkFile(); // See if there is anything else wrong recursively.
+                        break;
+                    case 5: // - Page width does not match
+                        // FIX WIDTH
+                        switch(feedback.pageInfo.type){
+                            case "Spine":
+                                var question = "Please resolve SPINE WIDTH conflict:";
+                                var choices  = [ myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " " + unitsShorthand + " (Update Data)" ,
+                                                 myApp.NumCon.doRound(               CR.spine, 3) + " " + unitsShorthand + " (Update Document)" ]
+                                var answer   = myApp.Check.QA( type, question, choices, 0);
+
+                                switch ( answer ) {
+                                    case 0:  // Use doc
+                                        // Update data (C object)
+                                        C.spine = feedback.pageInfo.width;
+                                        C_changed();
+                                        // We need to make sure the master reflects the changes of the spread
+                                        myApp.Helper.Spine.updateSpinePage(myApp, doc, C);
+                                        doc_changed();
+                                        break;
+                                    case 1: // Use data
+                                        // Update doc
+                                        myApp.Helper.Spine.updateSpinePage(myApp, doc, C);
+                                        doc_changed();
+                                        updateFeedback(true, "Updated Spine");
+                                        break;
+                                    default: // User pressed cancel
+                                        exit();
+                                        break;
+                                }
+
+                                feedback = checkFile(); // See if there is anything else wrong recursively.
+                                break;
+                            case "CVR1":
+                            case "CVR4":
+                                var question = "Please resolve WIDTH conflict:";
+                                var choices  = [ myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " " + unitsShorthand + " (Update Data)" ,
+                                                 myApp.NumCon.doRound(               CR.width, 3) + " " + unitsShorthand + " (Update Document)" ]
+                                var answer   = myApp.Check.QA( type, question, choices, 0);
+                                
+                                switch ( answer ) {
+                                    case 0:  // Use doc
+                                        // Update data (C object)
+                                        C.width  += ( feedback.pageInfo.width  - CR.width  );
+                                        C.height += ( feedback.pageInfo.height - CR.height );
+                                        C_changed();
+                                        // We need to make sure the master reflects the changes of the spread
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRR", CR.width);
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRL", CR.width);
+                                        doc_changed();
+                                        break;
+                                    case 1: // Use data
+                                        // Update doc
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRR", CR.width);
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRL", CR.width);
+                                        doc_changed();
+                                        updateFeedback(true, "Updated Width");
+                                        break;
+                                    default: // User pressed cancel
+                                        exit();
+                                        break;
+                                }
+
+                                feedback = checkFile(); // See if there is anything else wrong recursively.
+                                break;
+                            case "Binding1":
+                            case "Binding4":
+                                var question = "Please resolve BINDING conflict:";
+                                var choices  = [ myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " " + unitsShorthand + " (Update Data)" ,
+                                                 myApp.NumCon.doRound(             CR.binding, 3) + " " + unitsShorthand + " (Update Document)" ]
+                                var answer   = myApp.Check.QA( type, question, choices, 0);
+
+                                switch ( answer ) {
+                                    case 0:  // Use doc
+                                        // Update data (C object)
+                                        C.binding  += (feedback.pageInfo.width - CR.binding);
+                                        C_changed();
+                                        // We need to make sure the master reflects the changes of the spread
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindR", CR.binding);
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindL", CR.binding);
+                                        doc_changed();
+                                        break;
+                                    case 1: // Use data
+                                        // Update doc
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindR", CR.binding);
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindL", CR.binding);
+                                        doc_changed();
+                                        updateFeedback(true, "Updated Binding");
+                                        break;
+                                    default: // User pressed cancel
+                                        exit();
+                                        break;
+                                }
+
+                                feedback = checkFile(); // See if there is anything else wrong recursively.
+                                break;
+                            case "Flap1":
+                            case "Flap4":
+                                var question = "Please resolve FLAP WIDTH conflict:";
+                                var choices  = [ myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " " + unitsShorthand + " (Update Data)" ,
+                                                 myApp.NumCon.doRound(                CR.flap, 3) + " " + unitsShorthand + " (Update Document)" ]
+                                var answer   = myApp.Check.QA( type, question, choices, 0);
+
+                                switch ( answer ) {
+                                    case 0:  // Use doc
+                                        // Update data (C object)
+                                        C.flap  += (feedback.pageInfo.width - CR.flap);
+                                        C_changed();
+                                        
+                                        // We need to make sure the master reflects the changes of the spread
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapR", CR.flap);
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapL", CR.flap);
+                                        doc_changed();
+                                        break;
+                                    case 1: // Use data
+                                        // Update doc
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapR", CR.flap);
+                                        myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapL", CR.flap);
+                                        doc_changed();
+                                        updateFeedback(true, "Updated Flaps");
+                                        break;
+                                    default: // User pressed cancel
+                                        exit();
+                                        break;
+                                }
+
+                                feedback = checkFile(); // See if there is anything else wrong recursively.
+                                break;
+                            default:
+                                updateFeedback(false, "Unexpected page");
+                                break;
+                        }
+                        break;
+                    case 6: // - Hinge does not match
+                        var dataHinge = myApp.NumCon.doRound(CR.hinge, 3);
+                        // Get all possible hinge values
+                        var hingeOptions = getUniqueHingeValues(myApp, doc, C);
+                        // Include the expected value
+                        var correctHinge = myApp.STools.getIndex(CR.hinge, hingeOptions);
+                        if( correctHinge < 0 ) {
+                            hingeOptions.push( CR.hinge );
+                        }
+
+                        var question = "Please resolve HINGE conflict:";
+                        var choices  = [];
+
+                        for (var i = 0; i < hingeOptions.length; i++) {
+                            var hingeOption = myApp.NumCon.doRound(hingeOptions[i], 3);
+                            var where = " (Document)";
+                            if( hingeOption == dataHinge ){
+                                where = " (Data)"
+                            }
+                            choices.push( hingeOption + " " + unitsShorthand + where);
+                        }
+                        choices.push( "Remove hinge" );
+
+                        var answer = myApp.Check.QA( type, question, choices, myApp.STools.getIndex(CR.hinge, hingeOptions) );
+
+                        if(answer >= 0) {
+                            switch ( answer ) {
+                                case choices.length-1: // Remove hinge
+                                    C.hinge = 0;
+                                    C_changed();
+                                    myApp.Tools.update_coverMaster_hinge(myApp, doc, C);
+                                    doc_changed();
+                                    break;
+                                default: // User pressed cancel
+                                    C.hinge = hingeOptions[answer];
+                                    C_changed();
+                                    myApp.Tools.update_coverMaster_hinge(myApp, doc, C);
+                                    doc_changed();
+                                    break;
+                            }
+                            updateFeedback(true, "Updated Hinge");
+                        } else {
+                            // User pressed cancel
+                            exit();
+                        }
+
+                        feedback = checkFile(); // See if there is anything else wrong recursively.
+                        break;
+
+                    case 7: // - Fold on flap does not match
+                        // THIS SHOULD WORK SAME AS ABOVE. MAYBE WE CAN ADD LABEL ARRAY TO FUNCTION?
+                        switch(feedback.pageInfo.type){
+                            case "Flap1":
+                                var myCurrFold = feedback.pageInfo.fold;
+                                break;
+                            case "Flap4":
+                                var myCurrFold = Math.abs(feedback.pageInfo.width-feedback.pageInfo.fold);
+                                break;
+                            default:
+                                var myCurrFold = null;
+                                updateFeedback(false, "Fold on unexpected page");
+                                // We need to reset the hinge here!! Ticket 64732467321649312
+                                // Maybe include still in the QA below?
+                                break;
+                        }
+                        var question = "Please resolve FOLD conflict:";
+                        var choices  = [ myApp.NumCon.doRound( myCurrFold, 3) + " " + unitsShorthand + " (Update Data)" ,
+                                         myApp.NumCon.doRound(    CR.fold, 3) + " " + unitsShorthand + " (Update Document)" ]
+                        var answer   = myApp.Check.QA( type, question, choices, 0);
+
+                        if( myCurrFold != null ) {
+                            switch ( answer ) {
+                                case 0:  // Use doc
+                                    // Update data (C object)
+                                    C.fold = myCurrFold;
+                                    C_changed();
+                                    // We need to make sure the master reflects the changes of the spread
+                                    myApp.Tools.update_coverMaster_fold(myApp, doc, C);
+                                    doc_changed();
+                                    break;
+                                case 1: // Use data
+                                    // Update doc
+                                    myApp.Tools.update_coverMaster_fold(myApp, doc, C);
+                                    doc_changed();
+                                    updateFeedback(true, "Updated Fold");
+                                    break;
+                                default: // User pressed cancel
+                                    exit();
+                                    break;
+                            }
+                        }
+
+                        feedback = checkFile(); // See if there is anything else wrong recursively.
+                        break;
+                    case 8: // - Page margins do not match 
+                        var question = "Please resolve MARGIN conflict:";
+                        var choices  = [ "Use current document margins (Update Data)" ,
+                                         "Use original defined margins (Update Document)" ]
+                        var answer   = myApp.Check.QA( type, question, choices, 0);
+
+                        switch ( answer ) {
+                            case 0:  // Use doc
+                                // Update data (C object)
+                                C.margin = myApp.Tools.update_C_margins(myApp, doc, feedback.pageInfo.spread, C);
+                                C_changed();
+                                // We need to make sure the master reflects the changes of the spread
+                                myApp.Tools.update_coverMaster_margins(myApp, doc, C);
+                                doc_changed();
+                                break;
+                            case 1: // Use data
+                                // Update doc
+                                myApp.Tools.update_coverMaster_margins(myApp, doc, C);
+                                doc_changed();
+                                updateFeedback(true, "Updated Margins");
+                                break;
+                            default: // User pressed cancel
+                                exit();
+                                break;
+                        }
+
+                        feedback = checkFile(); // See if there is anything else wrong recursively.
+                        break;
+                    default:
+                        // This should never happen
+                        updateFeedback(false, "Did not get a valid error code, this is a bug, but maybe not a bad one :)");
+                }
+            }
+            return feedback;
+        }
+
+        ReturnObj.message = checkFile();
+
+        if(ReturnObj.doc_changed){
+            myApp.Tools.yAlignPages(mySpread); // In case gives spread is a master
+            myApp.Tools.updatePagesWithMaster(myApp, doc, "CB-cover");  // All pages in doc with master "CB-cover" applied will be updated
+            myApp.Slugs.placeSizesInSlug(myApp, doc, C);
+        }
+
+        // reset original rulers
+        myApp.Tools.setRuler(doc, oldRulers);
+
+        return ReturnObj;
+
+    }
+
+    ////////////
+    // expose //
+    ////////////
+    // Return an object exposed to the public
+    return {
+        QA             : QA,
+        docBleed       : docBleed,
+        docSlugs       : docSlugs,
+        facingPages    : facingPages,
+        guide          : guide,
+        CagainstDoc    : CagainstDoc,
+        CagainstSpread : CagainstSpread,
+    };
+})();

@@ -303,10 +303,15 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                         nl: "Instelling Verwijderen",
                         fr: "Désactivez Paramétre" },
 
-        overwrite_preset : { en: "There is already a preset with that name.\nDo you want to overwrite it?",
+        Overwrite_preset : { en: "There is already a preset with that name.\nDo you want to overwrite it?",
                              de: "There is already a preset with that name.\nDo you want to overwrite it?",
                              nl: "There is already a preset with that name.\nDo you want to overwrite it?",
                              fr: "There is already a preset with that name.\nDo you want to overwrite it?" },
+
+        Confirm_delete_preset : { en: "Are you sure you want to delete this preset?",
+                                  de: "Sind sie sicher, dass sie diese voreinstellung zu löschen?",
+                                  nl: "Weet je zeker dat je deze voorinstelling wilt verwijderen?",
+                                  fr: "Êtes-vous sûr de vouloir supprimer cette paramétres?" },
 
         Help : { en: "Help",
                  de: "Hilfe",
@@ -466,11 +471,6 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                                               de: "Can't subtract Fold-Over from Flaps!\nFlaps not wide enough...",
                                               nl: "Can't subtract Fold-Over from Flaps!\nFlaps not wide enough...",
                                               fr: "Can't subtract Fold-Over from Flaps!\nFlaps not wide enough..." },
-
-        Cant_subtract_wrap_from_bleed : { en: "Can't subtract wrap from bleed!\nBleed not wide enough...",
-                                          de: "Can't subtract wrap from bleed!\nBleed not wide enough...",
-                                          nl: "Can't subtract wrap from bleed!\nBleed not wide enough...",
-                                          fr: "Can't subtract wrap from bleed!\nBleed not wide enough..." },
 
         Unable_to_convert_values : { en: "Unable to convert values",
                                      de: "Unable to convert values",

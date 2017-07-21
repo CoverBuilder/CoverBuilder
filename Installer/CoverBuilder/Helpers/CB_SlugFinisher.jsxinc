@@ -16,11 +16,12 @@
     //////////////
     // privates //
     //////////////
+    var noneStr = "[None]";
 
     function go(myApp) {
 
         try{ // Let the user know if something unexpected happens
-            //  and don't kill the function on an error
+            //  don't kill the function on error
             var doc    = myApp.Tools.getActiveCover(myApp, true);
             var C      = myApp.XMP.retrieveCoverObject(myApp, doc);
             var CVR1PN = 1;
@@ -28,7 +29,7 @@
             if(C.width > 0){
                 CVR1PN = myApp.Tools.getCVR1pageNo(C);
 
-                var check = myApp.Tools.checkCagainstDoc(myApp, doc, C, true);
+                var check = myApp.Check.CagainstDoc(myApp, doc, C, true);
 
                 if( !check.message.ok ){
                     alert("Beware!\n" + check.message.text);
@@ -38,131 +39,202 @@
                     C = check.C;
                 }
             }
-            
-            var myPage = app.activeWindow.activeSpread.pages[CVR1PN-1];
-            
-            if(!myPage.isValid){
-                myPage = app.activeWindow.activeSpread.pages[app.activeWindow.activeSpread.pages.length-1];
+
+            var mySpread = app.activeWindow.activeSpread;
+
+            var swatchOBJ = finischUI(myApp, doc, C);
+
+            if (swatchOBJ == undefined) return; // User canceled
+
+            myApp.Slugs.slugSizeBigEnough(myApp, doc, true);
+
+            // Slugs have changed make sure we reset measurements
+            myApp.Slugs.placeSizesInSlug(myApp, doc, C);
+
+            // Save data in doc so we can retrieve it later
+            myApp.Tools.saveJSONLabel(myApp, doc, "swatchOBJ", swatchOBJ);
+
+            // Get select and unlock layer
+            var regLayer = myApp.Tools.getAndSelectLayer(doc, "Registration");
+            var myLock = myApp.Tools.layerLocked(regLayer, false);
+
+            function resetFinishLocation( myApp, C, mySpread, myFrame ) {
+                var myLabel     = myFrame.label;
+                var originalRulers  = myApp.Tools.setRuler( doc, {units : C.measureUnit, origin : RulerOrigin.spreadOrigin} );
+
+                var myFrameInfo = getFinishFramePageInfo( myApp, C, mySpread, myLabel );
+                
+                myFrame.geometricBounds = myFrameInfo.bounds;
+
+                // reset ruler
+                myApp.Tools.setRuler(doc, originalRulers);
             }
 
-			var swatchOBJ = finischUI(myApp, doc, C, getSpotSwatches(myApp, doc));
-			
-            if (swatchOBJ == undefined) return; // User canceled
-            
-		    myApp.Slugs.slugSizeBigEnough(myApp, doc, true);
-            
-            // Slugs have changed make sure we reset measurements
-        	myApp.Slugs.placeSizesInSlug(myApp, doc, C);
-        					
-            // Save data in doc so we can retrieve it later
-			myApp.Tools.saveJSONLabel(myApp, doc, "swatchOBJ", swatchOBJ);
-			
-            // Get select and unlock layer
-			var regLayer = myApp.Tools.getAndSelectLayer(doc, "Registration");
-			var myLock = myApp.Tools.layerLocked(regLayer, false);
-            var myTextFrames = myApp.Tools.getItemByLabel(myPage,"finish");
-			
-            if(myTextFrames.length < 1){
-				var myTextFrame = createFinishFrame(myApp, doc, C, app.activeWindow.activeSpread);
-			} else {
-			    var myTextFrame = myTextFrames[0];
-			}
-			
-            // This makes sure InDesign redraws the screen properly
-			var myOriginalRedraw = myApp.Tools.setRedraw();
-			setText(myApp, doc, myTextFrame, swatchOBJ);
-			
-            // Save updated C data
-			var C_changed = false;
+            // Do Finish Frame
+            var myFinishFrames = myApp.Tools.getItemByLabel(mySpread,"finish");
 
-			if( C.measureUnit  != swatchOBJ.measureUnit ){
+            if(myFinishFrames.length < 1){
+                var myFinishFrame = createFinishFrame(myApp, doc, C, app.activeWindow.activeSpread);
+            } else {
+                var myFinishFrame = myFinishFrames[0];
+                // Make sure it is on the right location still
+                resetFinishLocation( myApp, C, mySpread, myFinishFrame );
+            }
+
+            // Do Profile Frame
+            var myProfileFrames = myApp.Tools.getItemByLabel(mySpread,"profile");
+            if(myProfileFrames.length < 1){
+                var myProfileFrame = createFinishFrame(myApp, doc, C, app.activeWindow.activeSpread, "profile");
+            } else {
+                var myProfileFrame = myProfileFrames[0];
+                // Make sure it is on the right location still
+                resetFinishLocation( myApp, C, mySpread, myProfileFrame );
+            }
+
+            // This makes sure InDesign redraws the screen properly
+            var myOriginalRedraw = myApp.Tools.setRedraw();
+
+            setFinishText(myApp, doc, myFinishFrame, swatchOBJ);
+
+            if( swatchOBJ.colorProfile.checkedState ) {
+                myProfileFrame.contents = swatchOBJ.colorProfile.name;
+            } else {
+                myProfileFrame.remove();
+            }
+
+            // Save updated C data
+            var C_changed = false;
+
+            if( C.measureUnit != swatchOBJ.measureUnit ){
                 myApp.STools.convertUnits(myApp, C, swatchOBJ.measureUnit);
-				C_changed = true;
-			}
-			if( C.slugPageSize  != swatchOBJ.slugPageSize ){
-				C.slugPageSize   = swatchOBJ.slugPageSize;
-				C_changed  = true;
-			}
-			if( C.slugTrimSize  != swatchOBJ.slugTrimSize ){
-				C.slugTrimSize   = swatchOBJ.slugTrimSize;
-				C_changed  = true;
-			}
+                C_changed = true;
+            }
+            if( C.slugPageSize  != swatchOBJ.slugPageSize ){
+                C.slugPageSize   = swatchOBJ.slugPageSize;
+                C_changed  = true;
+            }
+            if( C.slugTrimSize  != swatchOBJ.slugTrimSize ){
+                C.slugTrimSize   = swatchOBJ.slugTrimSize;
+                C_changed  = true;
+            }
             if( C.registration_font  != swatchOBJ.registration_font ){
                 C.registration_font   = swatchOBJ.registration_font;
                 C_changed  = true;
             }
-			
+            if( C.colorProfile  != swatchOBJ.colorProfile.name ){
+                C.colorProfile   = swatchOBJ.colorProfile.name;
+                C_changed  = true;
+            }
+            // Update document profile if changed
+            if( doc.cmykProfile != swatchOBJ.colorProfile.name ) {
+                doc.cmykProfile  = swatchOBJ.colorProfile.name;
+            }
             if( C_changed ){
-				// Update XMP
-				myApp.XMP.safeCoverObject(myApp, doc, C);
-				// Update slugs
-				myApp.Slugs.placeSizesInSlug(myApp, doc, C);
-			}
-			
-			// Reset redraw preference
-			myApp.Tools.setRedraw(myOriginalRedraw);
-			// Reset original registration layer lock
-			myApp.Tools.layerLocked(regLayer, myLock);
+                // Update XMP
+                myApp.XMP.safeCoverObject(myApp, doc, C);
+                // Update slugs
+                myApp.Slugs.placeSizesInSlug(myApp, doc, C);
+            }
+
+            // Reset redraw preference
+            myApp.Tools.setRedraw(myOriginalRedraw);
+            // Reset original registration layer lock
+            myApp.Tools.layerLocked(regLayer, myLock);
         } catch(e) {
             alert("Slug Finisher found a problem:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
     };
 
-    function createFinishFrame(myApp, doc, C, thisSpread){
-                
-        var originalRulers  = myApp.Tools.setRuler(doc, {units : C.measureUnit});
-        
+    function getFinishFramePageInfo( myApp, C, thisSpread, finishLabel ) {
+        // Assumes rulers are set correctly
+        var doc = thisSpread.parent;
         var textFrameHeight = myApp.NumCon.convert(myApp, 5, "mm", C.measureUnit, 4);
-        
-        var len = thisSpread.pages.length-1;
 
-        if( myApp.Tools.insideMinMaxPageSize(myApp, C.flap, C.measureUnit) ){
-            var myPage = thisSpread.pages[len-1];
-        } else {
-            var myPage = thisSpread.pages[len];
+        // Check which side the frame should be placed
+        // Supported finishLabels are "profile" || "finish"
+        var left = false;
+        if( finishLabel == "profile") {
+            left = true;
         }
 
-        var pageBounds = myPage.bounds;
-        var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
-        var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
-        var myFrameBounds = new Array (myPageHeight+doc.documentPreferences.documentBleedBottomOffset,0,myPageHeight+doc.documentPreferences.documentBleedBottomOffset+textFrameHeight,myPageWidth);
-        var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, doc, "measurements");
-        
-        var finishTextFrame = myApp.Tools.addTextFrame(myApp, myPage, myFrameBounds, " ", myParagraphStyle, 0, "finish");
-        
-        myApp.Tools.setRuler(doc, originalRulers);
-        
-        return finishTextFrame 
-    };
+        var len = thisSpread.pages.length-1;
 
-    function getSpotSwatches(myApp, doc) {
-        var allSwatches = doc.swatches;
-        var i = allSwatches.length;
-        
-        var spotSwatches = [];
-        while (i--) {
-            if( allSwatches[i].hasOwnProperty("model") ) {
-                if (allSwatches[i].model == ColorModel.SPOT) {
-                    spotSwatches.push( {name: allSwatches[i].name, checkedState: false} );
-                }
+        if( left ) {
+            if( myApp.Tools.insideMinMaxPageSize(myApp, C.flap, C.measureUnit) ){
+                var myPage = thisSpread.pages[1];
+            } else {
+                var myPage = thisSpread.pages[0];
+            }
+        } else { // right
+            if( myApp.Tools.insideMinMaxPageSize(myApp, C.flap, C.measureUnit) ){
+                var myPage = thisSpread.pages[len-1];
+            } else {
+                var myPage = thisSpread.pages[len];
             }
         }
 
-        return spotSwatches;
+        // Bounds [y1, x1, y2, x2]
+        // Bounds [ 0,  1,  2,  3]
+        var pageBounds = myPage.bounds;
+        var myPageWidth = myApp.NumCon.doRound(pageBounds[3]-pageBounds[1], 2);
+        var myPageHeight = myApp.NumCon.doRound(pageBounds[2]-pageBounds[0], 2);
+        var myFrameBounds = new Array ( pageBounds[2]+doc.documentPreferences.documentBleedBottomOffset,
+                                        pageBounds[1],
+                                        pageBounds[2]+doc.documentPreferences.documentBleedBottomOffset+textFrameHeight,
+                                        pageBounds[3]);
+
+        return {
+            page:   myPage,
+            bounds: myFrameBounds
+        }
+    }
+
+    function createFinishFrame(myApp, doc, C, thisSpread, label){
+        var finishLabel = label || 'finish';
+        var originalRulers  = myApp.Tools.setRuler(doc, {units : C.measureUnit, origin : RulerOrigin.spreadOrigin});
+
+        var finishInfo  = getFinishFramePageInfo( myApp, C, thisSpread, label );
+
+        var myParagraphStyle = myApp.Slugs.getMeasureParagraphStyle(myApp, doc, "measurements");
+
+        var finishTextFrame = myApp.Tools.addTextFrame(myApp, finishInfo.page, finishInfo.bounds, " ", myParagraphStyle, 0, finishLabel);
+
+        // reset ruler
+        myApp.Tools.setRuler(doc, originalRulers);
+        return finishTextFrame;
     };
-    
-    function finischUI(myApp, doc, C, mySpotSwatches) {
+
+    function finischUI(myApp, doc, C) {
         // UI elements references
-        var mySpotCheckboxes = new Array();
-        var myCMYKCheckboxes = new Array();
-        var myFinishRadio    = new Array();
-        var myNoteCheckbox   = null;
-        var myNoteTextField  = null;
-        
+        var mySpotCheckboxes  = new Array();
+        var myCMYKCheckboxes  = new Array();
+        var myFinishRadio     = new Array();
+        var myNoteCheckbox    = null;
+        var myNoteTextField   = null;
+
+        function getSpotSwatches(myApp, doc) {
+            var allSwatches = doc.swatches;
+            var i = allSwatches.length;
+
+            var spotSwatches = [];
+            while (i--) {
+                if( allSwatches[i].hasOwnProperty("model") ) {
+                    if (allSwatches[i].model == ColorModel.SPOT) {
+                        spotSwatches.push( {name: allSwatches[i].name, checkedState: false} );
+                    }
+                }
+            }
+            return spotSwatches;
+        };
+
         // Data references
         var registration_font = myApp.Settings.registration_font;
+        var availableProfiles = doc.cmykProfileList;
+        var mySpotSwatches    = getSpotSwatches(myApp, doc);
 
         var myNote = {text: "", checkedState: false};
+
+        var myProfile = {name: doc.cmykProfile, checkedState: false};
 
         var myCMYKSwatches = [{
             name: "Cyan",
@@ -176,49 +248,59 @@
         }, {
             name: "Black",
             checkedState: true
-    	}];
-    	
-    	var myFinishes = [{
-			name: "Lamination (Gloss)",
-			checkedState: false
-		}, {
-			name: "Lamination (Gloss Textured)",
-			checkedState: false
-		},{
-			name: "Lamination (Matte)",
-			checkedState: false
-		},{
-			name: "Lamination (Matte Textured)",
-			checkedState: false
-		}, {
-			name: "Lamination (Silk)",
-			checkedState: false
-		}, {
-			name: "Lamination (Satin)",
-			checkedState: false
-		}, {
-			name: "Varnish (Gloss)",
-			checkedState: false
-		}, {
-			name: "Varnish (Matte)",
-			checkedState: false
-		}];
+        }];
+
+        var myFinishes = [{
+            name: noneStr,
+            checkedState: true
+        }, {
+            name: "Lamination (Gloss)",
+            checkedState: false
+        }, {
+            name: "Lamination (Gloss Textured)",
+            checkedState: false
+        }, {
+            name: "Lamination (Matte)",
+            checkedState: false
+        }, {
+            name: "Lamination (Matte Textured)",
+            checkedState: false
+        }, {
+            name: "Lamination (Silk)",
+            checkedState: false
+        }, {
+            name: "Lamination (Satin)",
+            checkedState: false
+        }, {
+            name: "Varnish (Gloss)",
+            checkedState: false
+        }, {
+            name: "Varnish (Matte)",
+            checkedState: false
+        }];
 
         // Load data from doc so we can set UI appropriately
         var swatchOBJ = myApp.Tools.retrieveJSONLabel(myApp, doc, "swatchOBJ");
-        
+
         if(swatchOBJ != null){
             if( swatchOBJ.hasOwnProperty('process') ){
                 myCMYKSwatches = swatchOBJ.process;
             }
             if( swatchOBJ.hasOwnProperty('finish') ){
-            	myFinishes = swatchOBJ.finish;
+                // Select old finishes
+                for (var i = 0; i < swatchOBJ.finish.length; i++) {
+                    for (var j = 0; j < myFinishes.length; j++) {
+                        if( myFinishes[j].name == swatchOBJ.finish[i].name){
+                            myFinishes[j].checkedState = swatchOBJ.finish[i].checkedState;
+                        }
+                    }
+                }
             }
             if( swatchOBJ.hasOwnProperty('spot') ){
                 // Select old swatches
                 for (var i = 0; i < swatchOBJ.spot.length; i++) {
                     for (var j = 0; j < mySpotSwatches.length; j++) {
-                        if(mySpotSwatches[j].name == swatchOBJ.spot[i].name){
+                        if( mySpotSwatches[j].name == swatchOBJ.spot[i].name){
                             mySpotSwatches[j].checkedState = swatchOBJ.spot[i].checkedState;
                         }
                     }
@@ -228,11 +310,16 @@
                 myNote.text         = swatchOBJ.note.text;
                 myNote.checkedState = swatchOBJ.note.checkedState;
             }
+            if( swatchOBJ.hasOwnProperty('colorProfile') ){
+                // myProfile.name         = swatchOBJ.colorProfile.name;
+                // Don't use saved data. Use whatever the curent profile is
+                myProfile.checkedState = swatchOBJ.colorProfile.checkedState;
+            }
             if( swatchOBJ.hasOwnProperty('registration_font') ){
                 registration_font = swatchOBJ.registration_font;
             }
         };
-        
+
         // START FONTS
         // -------------------------------------------------
         var RegistrationFont = myApp.STools.createFontObject( registration_font );
@@ -240,7 +327,7 @@
         var myStyleList      = [];
         var familySelected   = 0;
         var styleSelected    = 0;
-  
+
         var regFontExist = false;
         for (var i=0; i<myFamilyList.length; i++) {
           if(myFamilyList[i] == RegistrationFont.familyName) {
@@ -248,7 +335,7 @@
               regFontExist   = true;
           }
         }
-  
+
         if( regFontExist ) { // Font is loaded
             var sysFontAvailableStyles = myApp.STools.getAvailableFontStyles( RegistrationFont.familyName );
             if(sysFontAvailableStyles.length > 0) {
@@ -268,12 +355,12 @@
             }
         }
         // -------------------------------------------------
-        
-        
+
+
         // -------------------------------------------------
-        // S T A R T   W I N D O W 
+        // S T A R T   W I N D O W
         // -------------------------------------------------
-        
+
         var myDialog = new Window ("dialog", "Slug Tool");
             myDialog.orientation   = "column";
             myDialog.alignment     = "left";
@@ -285,88 +372,106 @@
             mainGroup.orientation   =  "row";
             mainGroup.alignment     = "left";
             mainGroup.alignChildren = "top";
-        
+
         // P R O C E S S
-        
+
         var process_panel = mainGroup.add ("panel", undefined, "PROCESS");
             process_panel.margins       = [10,20,10,10];
             process_panel.orientation   = "column";
             process_panel.alignChildren = "left";
-            
+
             for (var myCounter = 0; myCounter < myCMYKSwatches.length; myCounter++) {
                 myCMYKCheckboxes[myCounter] = process_panel.add ("checkbox", undefined, myCMYKSwatches[myCounter].name);
                 myCMYKCheckboxes[myCounter].value = myCMYKSwatches[myCounter].checkedState;
             }
-        
+
         // S P O T
-        
+
         var spot_panel = mainGroup.add ("panel", undefined, "SPOT");
             spot_panel.margins       = [10,20,10,10];
             spot_panel.orientation   = "column";
             spot_panel.alignChildren = "left";
-            
+
             for (var myCounter = 0; myCounter < mySpotSwatches.length; myCounter++) {
                 mySpotCheckboxes[myCounter] = spot_panel.add ("checkbox", undefined, mySpotSwatches[myCounter].name);
                 mySpotCheckboxes[myCounter].value = mySpotSwatches[myCounter].checkedState;
             }
-        
+
         // F I N I S H
-        
+
         var finish_panel = mainGroup.add ("panel", undefined, "FINISH");
             finish_panel.margins       = [10,20,10,10];
             finish_panel.orientation   = "column";
             finish_panel.alignChildren = "left";
-            
+
             for (var myCounter = 0; myCounter < myFinishes.length; myCounter++) {
                 myFinishRadio[myCounter] = finish_panel.add ("radiobutton", undefined, myFinishes[myCounter].name);
                 myFinishRadio[myCounter].value = myFinishes[myCounter].checkedState;
             }
-        
+
+        // P R O F I L E
+
+        var lastColumn = mainGroup.add ("group");
+            lastColumn.orientation   = "column";
+            lastColumn.alignment     = "top";
+
+        var profile_panel = lastColumn.add ("panel", undefined, "PROFILE");
+            profile_panel.margins       = [10,20,10,10];
+            profile_panel.orientation   = "row";
+            profile_panel.alignChildren = "left";
+
+            myProfileCheckbox = profile_panel.add ("checkbox", undefined, "Profile:");
+            myProfileCheckbox.value = myProfile.checkedState;
+
+            var profilesDrop  = profile_panel.add('dropdownlist',[0,0,180,30], availableProfiles);
+                profilesDrop.selection = myApp.STools.getIndex( myProfile.name, availableProfiles, 0);
+
         // C U S T O M
-        
-        var custom_panel = mainGroup.add ("panel", undefined, "CUSTOM");
+
+        var custom_panel = lastColumn.add ("panel", undefined, "CUSTOM");
             custom_panel.margins       = [10,20,10,10];
             custom_panel.orientation   = "row";
             custom_panel.alignChildren = "left";
-            
-            myNoteCheckbox = custom_panel.add ("checkbox", undefined, "Other:");
+            custom_panel.alignment     = "fill";
+
+            myNoteCheckbox = custom_panel.add ("checkbox", undefined, "Note:");
             myNoteCheckbox.value = myNote.checkedState;
-            
+
             myNoteTextField = custom_panel.add('edittext');
             myNoteTextField.characters = 20;
-            myNoteTextField.minWidth   = 150;
+            myNoteTextField.minWidth   = 170;
             myNoteTextField.text       = myNote.text;
-        
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - 
-        
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - -
+
         // S I Z E S
-        
+
         var sizesGroup = myDialog.add ("group");
             sizesGroup.margins = [10,30,10,10];
             sizesGroup.orientation =  "row";
             sizesGroup.alignment = "left";
-        
+
         // P A G E S I Z E S
-        
+
         var myPageSizeSlugCheckbox = sizesGroup.add ("checkbox", undefined, "Sizes");
             myPageSizeSlugCheckbox.value = C.slugPageSize;
         var mySpreadSizeSlugCheckbox = sizesGroup.add ("checkbox", undefined, "Total trim");
             mySpreadSizeSlugCheckbox.value = C.slugTrimSize;
 
         sizesGroup.add('statictext', undefined, ':   ');
-        
+
         var measureDropDown = sizesGroup.add('dropdownlist',[0,0,60,30], myApp.STools.localisedValidMeasurementUnits(myApp));
             measureDropDown.selection = C.measureUnit;
-        
+
         // T Y P E F A C E
-        
+
         sizesGroup.add('statictext', undefined, ':   Font:');
-        
+
         var fontFamilyNameDrop = sizesGroup.add('dropdownlist',[0,0,180,30], myFamilyList);
             fontFamilyNameDrop.selection = familySelected;
         var fontStyleNameDrop  = sizesGroup.add('dropdownlist',[0,0,180,30], myStyleList);
             fontStyleNameDrop.selection = styleSelected;
-        
+
         fontFamilyNameDrop.onChange = function() {
             fontStyleNameDrop.removeAll();
             var sysFontAvailableStyles = myApp.STools.getAvailableFontStyles(fontFamilyNameDrop.selection.text);
@@ -375,11 +480,10 @@
             }
             fontStyleNameDrop.selection = 0;
         }
-        
-        
+
         //----------------------------------------------------
         // Start button group
-        
+
         var buttonGroup = myDialog.add ("group");
             buttonGroup.margins = 10;
             buttonGroup.orientation =  "row";
@@ -391,14 +495,14 @@
 
         // End Button Group
         //----------------------------------------------------
-        
+
         // -------------------------------------------------
         // E N D  W I N D O W
         // -------------------------------------------------
-        
+
         //Display the dialog box.
         if (myDialog.show() == true) {
-            
+
             //Get process
             for (var i = 0; i < myCMYKCheckboxes.length; i++) {
                 myCMYKSwatches[i].checkedState = myCMYKCheckboxes[i].value;
@@ -409,25 +513,30 @@
             for (var i = 0; i < mySpotCheckboxes.length; i++) {
                 mySpotSwatches[i].checkedState = mySpotCheckboxes[i].value;
             }
-            
+
             //Get Finish
             for (var i = 0; i < myFinishes.length; i++) {
-				myFinishes[i].checkedState = myFinishRadio[i].value;
-			}
-			
+                myFinishes[i].checkedState = myFinishRadio[i].value;
+            }
+
+            //Get  Profile
+            myProfile.name         = profilesDrop.selection.text;
+            myProfile.checkedState = myProfileCheckbox.value;
+
             //Get  Note
             myNote.text         = myNoteTextField.text;
             myNote.checkedState = myNoteCheckbox.value;
 
-            //Get font
+            //Get Font
             if( (fontFamilyNameDrop.selectedIndex != familySelected) || (fontFamilyNameDrop.selectedIndex != styleSelected) ){
                 registration_font = fontFamilyNameDrop.selection.text + '\t' + fontStyleNameDrop.selection.text;
             }
-            
+
             var returnObj = {   measureUnit:       parseInt(measureDropDown.selection),
                                 process:           myCMYKSwatches,
                                 spot:              mySpotSwatches,
                                 finish:            myFinishes,
+                                colorProfile:      myProfile,
                                 note:              myNote,
                                 slugPageSize:      myPageSizeSlugCheckbox.value,
                                 slugTrimSize:      mySpreadSizeSlugCheckbox.value,
@@ -438,7 +547,7 @@
         };
     };
 
-    function setText(myApp, doc, tf, swatchOBJ) {
+    function setFinishText(myApp, doc, tf, swatchOBJ) {
         var tempString = "";
         var first = true;
         tf.contents = "";
@@ -489,11 +598,11 @@
                 }
             }
         };
-        
+
         if (swatchOBJ.finish.length > 0) {
             var i = swatchOBJ.finish.length;
             while (i--) {
-                if (swatchOBJ.finish[i].checkedState == true) {        
+                if (swatchOBJ.finish[i].checkedState == true && (swatchOBJ.finish[i].name != noneStr) ) {
                     if (!first) {
                         insertPoint = tf.insertionPoints[-1].index;
                         tf.contents += " + ";
@@ -510,7 +619,7 @@
                 }
             }
         };
-        
+
         if (swatchOBJ.note.checkedState) {
             if (!first) {
                 insertPoint = tf.insertionPoints[-1].index;
@@ -525,6 +634,10 @@
                         tf.insertionPoints[-1]);
             addonText.fillColor = "Registration";
             first = false;
+        };
+
+        if(tf.parentStory.length == 0) {
+            tf.remove();
         };
     };
 

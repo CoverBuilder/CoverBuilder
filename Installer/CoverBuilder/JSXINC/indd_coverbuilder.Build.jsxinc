@@ -1,5 +1,5 @@
 // CoverBuilder Module: Build
-// Version: 2.0
+// Version: 2.1
 
 (function () {
     //////////////
@@ -7,21 +7,24 @@
     //////////////
 
     function cover(myApp, C){
-        // Safe original settings from UI
+        var mySlug = 0; //init
+        
+        // Get slugs from Cover object
+        // or when not defined from Settings
+        if(C.slugs >= 0) {
+            mySlug  = C.slugs;
+        } else { // Slugs == -1 if not set
+            mySlug  = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit );
+            C.slugs = mySlug;
+        }
+        
         // We will save this in the document so we can always refer back to source settings
         var UIC = myApp.JSON.parse( myApp.JSON.stringify( C ) );
-
+        
         ///////////////////
         // Convert Units //
         ///////////////////
         C = myApp.STools.resolveSizes(myApp, C); //resolve the sizes for build
-        
-         // For crop-marks and slug info
-        if(C.slugs >= 0) {
-            var mySlug = C.slugs
-        } else {
-            var mySlug = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit ) + C.bleed;
-        }
         
         var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit); // Minimum page width for indesign
         var maximumPageWidth = myApp.Tools.getMaxPageWidthINDD(myApp, C.measureUnit); // Maximum page width for indesign
@@ -60,9 +63,22 @@
         myCover = app.documents.add(true);
         myCover.insertLabel('createdByCoverBuilder', 'true');
         
+        // Try and assign profile if given
+        if( UIC.colorProfile != "undefined") {
+            try {
+                myCover.cmykProfile = String(UIC.colorProfile);
+            } catch(err) {
+                // Profile not loaded?
+                alert("CoverBuilder could not load color profile " + String(UIC.colorProfile));
+            }
+        }
+
+        // This is the users working space or succesfully loaded profile
+        UIC.colorProfile = myCover.cmykProfile;
+
         //add XMP data (Save C object in doc)
         myApp.XMP.newXMP(myApp,myCover,UIC);
-		
+
         //Set up the new cover.
         with(myCover.viewPreferences){
             switch(C.measureUnit) {
@@ -84,26 +100,26 @@
             }
             rulerOrigin = RulerOrigin.pageOrigin;
         }
-		
+
         with(myCover.documentPreferences){
-        	try{
-        		facingPages = true; //so we can stuff the pages together
-				horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
-				verticalMeasurementUnits = MeasurementUnits.MILLIMETERS;
-				//Set page size
-				pageHeight = C.height;
-				pageWidth = C.width;
-				//Bleed & Slug
-				documentBleedUniformSize = true;
-				documentSlugUniformSize  = true;
-				documentBleedTopOffset = Math.abs(C.bleed);
-				slugTopOffset = Math.abs(mySlug);
-				pagesPerDocument = 1;
-			} catch(e) {
-				alert("CoverBuilder has trouble setting document preferences :(\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
-			}
+            try{
+                facingPages = true; //so we can stuff the pages together
+                horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+                verticalMeasurementUnits = MeasurementUnits.MILLIMETERS;
+                //Set page size
+                pageHeight = C.height;
+                pageWidth = C.width;
+                //Bleed & Slug
+                documentBleedUniformSize = true;
+                documentSlugUniformSize  = true;
+                documentBleedTopOffset = Math.abs(C.bleed);
+                slugTopOffset = Math.abs(mySlug) + Math.abs(C.bleed);
+                pagesPerDocument = 1;
+            } catch(e) {
+                alert("CoverBuilder has trouble setting document preferences :(\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+            }
         }
-		
+        
         //Reset the application default margin preferences to their former state.
         with (app.marginPreferences){
             top = M.Y1, left = M.X1, bottom = M.Y2, right = M.X2;
@@ -115,7 +131,7 @@
                 myCover.masterSpreads[0].pages[pg].remove();
             }
         }
-		
+        
         myCover.masterSpreads[0].namePrefix = "CB";
         myCover.masterSpreads[0].baseName = "WxH";
         if(C.height > C.margin.CVR14.top + C.margin.CVR14.bottom){
@@ -126,21 +142,21 @@
             myCover.masterSpreads[0].pages[0].marginPreferences.left  = C.margin.CVR14.inside_left;
             myCover.masterSpreads[0].pages[0].marginPreferences.right = C.margin.CVR14.outside_right;
         }
-		
-		if(C.spine > minimumPageWidth) {
+        
+        if(C.spine > minimumPageWidth) {
             //Create a new masterspread for spine
             myCover.masterSpreads.add(1,{namePrefix:"CB", baseName:"spine"});
             with(myCover.masterSpreads.item("CB-spine")){
                 with(pages.item(0)){
                     with(marginPreferences){
-                        columnCount = 1;
+                        columnCount  = 1;
                         columnGutter = 0;
-                        if(C.height > C.margin.Spine.top + C.margin.Spine.bottom){
+                        if( C.height > C.margin.Spine.top + C.margin.Spine.bottom ){
                             bottom = C.margin.Spine.bottom;
-                            top = C.margin.Spine.top;
+                            top    = C.margin.Spine.top;
                         }
-                        if(C.spine > C.margin.Spine.outside_right + C.margin.Spine.inside_left){
-                            left = C.margin.Spine.inside_left;
+                        if( C.spine > C.margin.Spine.outside_right + C.margin.Spine.inside_left ){
+                            left  = C.margin.Spine.inside_left;
                             right = C.margin.Spine.outside_right;
                         }
                     }
@@ -153,7 +169,7 @@
                 }
             }
         }
-		
+        
         //Create a new masterspread for flap
         if(C.flap > minimumPageWidth){
             myCover.masterSpreads.add(1,{namePrefix:"CB", baseName:"flap"});
@@ -432,6 +448,7 @@
         //Set sizes in slug
         myApp.Slugs.placeSizesInSlug(myApp, myCover, C);
 
+        // Check 
         // Move registration layer to top of doc
         myCover.guides.everyItem().itemLayer = myCover.layers.item("Registration");
         myCover.layers.item("Registration").move(LocationOptions.AT_BEGINNING);

@@ -61,7 +61,7 @@
             return;
         }
 
-        var check = myApp.Tools.checkCagainstDoc(myApp, myCover, C, true);
+        var check = myApp.Check.CagainstDoc(myApp, myCover, C, true);
         if( !check.message.ok ){
             alert("Beware!\nThis template has been changed outside CoverBuilder and data is out of date:\n\n" + check.message.text);
         }

@@ -16,8 +16,8 @@
         // the CoverBuilder menu after the Dialog is closed.
         var add_CoverBuilder_Menu = myApp.Settings.add_CoverBuilder_Menu;
 
-        var CURR_CBMU      = 0;   // Current Measurement Unit in CBMU
-        var UIslugs        = -1; // Custom slug size
+        var CURR_CBMU = 0;  // Current Measurement Unit in CBMU
+        var newSlugs  = -1; // Slug not specified (Build will use standard setting. Will change if we load CoverObject)
         var onChangeActive = true;
 
         var savePS    = String(myApp.Localise.UI['SavePreset']);
@@ -33,6 +33,7 @@
             // Try and load settings!
             LoadCoverObject = true;
             var Cool = myApp.STools.Cparser(myApp, CoverObject);
+            if( Cool.slugs >= 0 ) newSlugs = Cool.slugs;
         }
 
         var f = myApp.STools.getFile(myApp.PathTo.preferences);
@@ -128,7 +129,7 @@
 
                 var hingeOrScoreString = String(myApp.Localise.UI['Hinge']) + "/" + String(myApp.Localise.UI['Score']) + ":";
                 var hingeDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- "+hingeOrScoreString,"+ "+hingeOrScoreString]);
-                hingeDropdown.selection = 1;
+                hingeDropdown.selection = 0;
                 var myHinge = optional2Group.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
 
                 var wrapDropdown = optional2Group.add ("dropdownlist", [0,0,unitWidthLongShortLong,unitHeight], ["- " + String(myApp.Localise.UI['Wrap']) + " ("  + String(myApp.Localise.UI['Bleed']) + "):",
@@ -232,7 +233,11 @@
         }
 
         preferencesBut.onClick = function () {
-            myApp.Helper.PreferencesUI.load_Pref_UI(myApp);
+            var saved = myApp.Helper.PreferencesUI.load_Pref_UI(myApp);
+            if( saved ) {
+                // Update slug Settings
+                newSlugs = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, parseFloat(mminch.selection) );
+            }
         }
 
         buildBut.onClick = function () {
@@ -257,21 +262,21 @@
                 var thisWidth   = myApp.NumCon.NaN20( parseFloat(  myWidth.text) );
                 var thisHeight  = myApp.NumCon.NaN20( parseFloat( myHeight.text) );
 
-                if( (thisHeight <= minimumPageWidth) || (thisHeight >= maximumPageWidth) ){
+                if( (thisHeight < minimumPageWidth) || (thisHeight > maximumPageWidth) ){
                     alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_between']) + minimumPageWidth + " and " + maximumPageWidth + " " + mminch.selection.text);
                     // Set spine field active
                     myHeight.active = true;
                     return null;
                 }
                 
-                if( (thisWidth <= minimumPageWidth) || (thisWidth >= maximumPageWidth) ){
+                if( (thisWidth < minimumPageWidth) || (thisWidth > maximumPageWidth) ){
                     alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_between']) + minimumPageWidth + " and " + maximumPageWidth + " " + mminch.selection.text);
                     // Set spine fiels active
                     myWidth.active = true;
                     return null;
                 }
                 
-                if( (thisSpine <= minimumPageWidth) || (thisSpine >= maximumPageWidth) ){
+                if( (thisSpine < minimumPageWidth) || (thisSpine > maximumPageWidth) ){
                     alert(String(myApp.Localise.UIalert['SPINE_WIDTH_HEIGHT_should_be_between']) + minimumPageWidth + " and " + maximumPageWidth + " " + mminch.selection.text);
                     // Set spine fiels active
                     mySpine.active = true;
@@ -335,12 +340,14 @@
                     }
                 } // else user pressed cancel
             } else if(presetBut.text == clearPS){
-                //delete preset
-                var index = parseInt(presets.selection);
-                MyPresets.presets.splice(index-1,1);
-                presets.remove(presets.selection);
-                presets.selection = 0;
-                myApp.JSON.saveFile(myApp, f, MyPresets);
+                if ( confirm(String(myApp.Localise.UI['Confirm_delete_preset'])) ) {
+                    //delete preset
+                    var index = parseInt(presets.selection);
+                    MyPresets.presets.splice(index-1,1);
+                    presets.remove(presets.selection);
+                    presets.selection = 0;
+                    myApp.JSON.saveFile(myApp, f, MyPresets);
+                } // else user pressed cancel 
             } else {
                 alert(String(myApp.Localise.UIalert['Error_saving_presets']) + "presetBut.text = " + presetBut.text);
             }
@@ -350,7 +357,7 @@
             if( onChangeActive ){
                 if(presets.selection > 0){
                     //make sure user can't delete last used settings
-                    if(MyPresets.presets[presets.selection-1].name != String(myApp.Localise.UI['LastUsed']).toUpperCase() ){
+                    if(MyPresets.presets[presets.selection-1].name.charAt(0) != '-' ){
                         presetBut.text = clearPS;
                     } else {
                         presetBut.text = savePS;
@@ -418,16 +425,17 @@
             }
         }
         myFlapQB.onChange = function () {
+            myFlapQBval = myApp.NumCon.NaN20( parseFloat(myFlapQB.text.replace(",", ".").replace(/[^\d.]/g, '')) );
             if( onChangeActive ){
                 presets.resetSelection();
                 presetBut.text = savePS;
-                myFlapQB.text = myApp.NumCon.NaN20( parseFloat(myFlapQB.text.replace(",", ".").replace(/[^\d.]/g, '')) );
-                if( flapQBDropdown.selection == 0){
+                myFlapQB.text  = myFlapQBval;
+                if( (flapQBDropdown.selection == 0) && (myFlapQBval > 0) ){
                     foldDropdown.visible = true;
-                    myFold.visible = true;
+                    myFold.visible       = true;
                 } else {
                     foldDropdown.visible = false;
-                    myFold.visible = false;
+                    myFold.visible       = false;
                 }
             }
         }
@@ -460,15 +468,16 @@
         }
 
         flapQBDropdown.onChange = function () {
+            myFlapQBval = myApp.NumCon.NaN20( parseFloat(myFlapQB.text.replace(",", ".").replace(/[^\d.]/g, '')) );
             if( onChangeActive ){
                 presets.resetSelection();
                 presetBut.text = savePS;
-                if(this.selection != 0){
-                    foldDropdown.visible = false;
-                    myFold.visible = false;
-                } else {
+                if( (flapQBDropdown.selection == 0) && (myFlapQBval > 0) ){
                     foldDropdown.visible = true;
-                    myFold.visible = true;
+                    myFold.visible       = true;
+                } else {
+                    foldDropdown.visible = false;
+                    myFold.visible       = false;
                 }
             }
         }
@@ -526,11 +535,6 @@
         function getCoverObjectFromUI(myApp, newName){
             //This function reads the dialog data and creates a cover object to inspect
             var newFlap, newFold, newQB, newInExQB = 0;
-            var newSlugs = -1; // Not set
-    
-            if(UIslugs >= 0) {
-                newSlugs = UIslugs;
-            }
 
             if(flapQBDropdown.selection == 0){
                 newFlap = myApp.NumCon.NaN20(parseFloat(myFlapQB.text));
@@ -583,14 +587,13 @@
             // and sets the UI to default values
 
             onChangeActive = false; // Deactivate UI onChange
-            
-            UIslugs                  = -1
+
             mminch.selection         = 0;
             CURR_CBMU                = 0;
 
             hingeDropdown.selection  = 0;
             wrapDropdown.selection   = 1;
-            foldDropdown.selection   = 0;
+            foldDropdown.selection   = 1;
             flapQBDropdown.selection = 0;
 
             myWidth.text             = 0;
@@ -646,8 +649,7 @@
                 myFold.visible = true;
                 foldDropdown.visible = true;
             }
-            
-            UIslugs   = thisC.slugs;
+
             CURR_CBMU = thisC.measureUnit;
             
             onChangeActive = true; // Reactivate UI onChange
@@ -680,7 +682,7 @@
                             if(overwriteLastUsed){
                               var cool = true;
                             } else {
-                              var cool = confirm(String(myApp.Localise.UI['overwrite_preset']));
+                              var cool = confirm(String(myApp.Localise.UI['Overwrite_preset']));
                             }
                             if(cool){
                               MyPresets.presets.splice(i,1);
@@ -715,7 +717,6 @@
             myHinge.text    = myApp.NumCon.convert(myApp, parseFloat(myHinge.text  ), CURR_CBMU, unit, 3);
             myFold.text     = myApp.NumCon.convert(myApp, parseFloat(myFold.text   ), CURR_CBMU, unit, 3);
             myWrap.text     = myApp.NumCon.convert(myApp, parseFloat(myWrap.text   ), CURR_CBMU, unit, 3);
-            UIslugs         = myApp.NumCon.convert(myApp, parseFloat(UIslugs       ), CURR_CBMU, unit, 3);
         }
 
         // Fill the dialog with data

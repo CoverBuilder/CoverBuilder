@@ -145,6 +145,7 @@
                         break;
                     case "inchesDecimal":
                     case "inch":
+                    case "inches":
                     case "zoll":
                     case "pouce":
                     case "zind":
@@ -179,7 +180,7 @@
 
     function resolveSizes(myApp, C){
         if(typeof C["resolved"] !== "boolean") {
-            alert("Could not resolve sizes.\n " + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
+            alert("Could not resolve sizes.\nThere is no resolved boolean in Cover object.");
             return C;
         }
         if(C.resolved) {
@@ -187,7 +188,7 @@
             return C;
         }
 
-        // This function takes the C object and resolves all the sizes
+        // This function takes the C object and resolves all it's dimensions
         try {
             // First make sure all measurements are in the same measure unit
             C = myApp.JSON.parse(myApp.JSON.stringify(C)); // Make a copy
@@ -234,10 +235,10 @@
             
             // RESOLVE MARGINS
             function resolveMargin (myApp, C, margin) {
-                margin.top            = myApp.NumCon.convert(myApp, margin.top           , margin.units, C.measureUnit, 6);
-                margin.outside_right  = myApp.NumCon.convert(myApp, margin.outside_right , margin.units, C.measureUnit, 6);
-                margin.inside_left    = myApp.NumCon.convert(myApp, margin.inside_left   , margin.units, C.measureUnit, 6);
-                margin.bottom         = myApp.NumCon.convert(myApp, margin.bottom        , margin.units, C.measureUnit, 6);
+                margin.top            = myApp.NumCon.convert(myApp, margin.top           , margin.units, C.measureUnit, 8);
+                margin.outside_right  = myApp.NumCon.convert(myApp, margin.outside_right , margin.units, C.measureUnit, 8);
+                margin.inside_left    = myApp.NumCon.convert(myApp, margin.inside_left   , margin.units, C.measureUnit, 8);
+                margin.bottom         = myApp.NumCon.convert(myApp, margin.bottom        , margin.units, C.measureUnit, 8);
                 margin.units          = C.measureUnit;
                 return margin;
             }
@@ -580,6 +581,33 @@
     //-----------------------------------------------------------------------------------
     //  ARRAY TOOLS
     //-----------------------------------------------------------------------------------
+    function arraysAreIdentical(myApp, arr1, arr2){
+        // Check if given arrays are identical
+        if ( !(arr1 instanceof Array && arr2 instanceof Array) ) {
+            return false;
+        }
+
+        // compare lengths - can save a lot of time 
+        if ( arr1.length != arr2.length ) {
+            return false;
+        }
+
+        for (var i = 0, l=arr1.length; i < l; i++) {
+            // Check if we have nested arrays
+            if (arr1[i] instanceof Array && arr2[i] instanceof Array) {
+                // recurse into the nested arrays
+                if ( !myApp.STools.arraysAreIdentical(arr1[i], arr2[i]) ){
+                    return false;   
+                }
+            } 
+            else if ( arr1[i] != arr2[i] ) { 
+                // Warning - two different object instances will never be equal: {x:20} != {x:20}
+                return false;
+            }
+        }
+        return true;
+    }
+
     function sameKeys(induceArr, sampleArr){
         // This function returns an object with an response object:
         function returnRes(OK, MSG){
@@ -615,14 +643,16 @@
                 return returnRes(false, "Found an unexpected contructor in array.");
             }
         }
-        return returnRes(true, "Seems OK.");
+        return returnRes(true, "Seems OK. ");
     }
 
-    function getIndex(thisItem, thisArray){
+    function getIndex(thisItem, thisArray, returnVal){
+        if (typeof returnVal == 'undefined') returnVal = -1;
+        returnVal = parseInt(returnVal);
         for (var i = 0, j = thisArray.length; i < j; i++) {
-            if (thisArray[i] === thisItem) { return i; }
+            if (thisArray[i] == thisItem) { return i; }
         }
-        return -1;
+        return returnVal;
     }
 
     //-----------------------------------------------------------------------------------
@@ -718,7 +748,8 @@
         newC                           : newC,
         Cparser                        : Cparser,
         convertUnits                   : convertUnits,
-        // Array Tools          
+        // Array Tools
+        arraysAreIdentical             : arraysAreIdentical,
         getIndex                       : getIndex,
         sameKeys                       : sameKeys,
         // Link Jumpers          

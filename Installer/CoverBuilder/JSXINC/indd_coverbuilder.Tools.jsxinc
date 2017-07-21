@@ -11,20 +11,20 @@
     //-----------------------------------------------------------------------------------
     // APPLICATION TOOLS
     //-----------------------------------------------------------------------------------
-    
+
     function setRuler(doc, myNewUnits){
-        
+
         // This function sets the rulers to the disired measure units
         // and returns the original setting that you can send back to
         // this function to reset the rulers.
 
         var myOldUnits = {xruler : doc.viewPreferences.horizontalMeasurementUnits, yruler: doc.viewPreferences.verticalMeasurementUnits, origin: doc.viewPreferences.rulerOrigin, zeroPoint: doc.zeroPoint };
-        
+
         if (myNewUnits.hasOwnProperty('xruler') && myNewUnits.hasOwnProperty('yruler')){
             doc.viewPreferences.horizontalMeasurementUnits = myNewUnits.xruler;
             doc.viewPreferences.verticalMeasurementUnits   = myNewUnits.yruler;
         } else if( myNewUnits.hasOwnProperty('units')) {
-            // Set both rulers to the sam unit
+            // Set both rulers to the same unit
             // We will cast everything to string so it can parse a wide variaty of input including the MeasurementUnits object
             var stringUnits = String(myNewUnits.units).toLowerCase();
             with(doc.viewPreferences){
@@ -51,8 +51,8 @@
                     case "inches":
                     case "zinc":
                     case "2053729891":
-                        horizontalMeasurementUnits = MeasurementUnits.MeasurementUnits.INCHES;
-                        verticalMeasurementUnits   = MeasurementUnits.MeasurementUnits.INCHES;
+                        horizontalMeasurementUnits = MeasurementUnits.INCHES;
+                        verticalMeasurementUnits   = MeasurementUnits.INCHES;
                         break;
                     case "2":
                     case "points":
@@ -147,7 +147,7 @@
                 }
             }
         }
-        
+
         if(myNewUnits.hasOwnProperty('origin')){
             doc.viewPreferences.rulerOrigin = myNewUnits.origin;
         } else { // Use page origin if not defined
@@ -189,7 +189,7 @@
 
         return myOldRedrawPrefs;
     }
-    
+
     //-----------------------------------------------------------------------------------
     // DOCUMENT TOOLS
     //-----------------------------------------------------------------------------------
@@ -228,7 +228,7 @@
              }
              bookTitleUI.destroy();
         }
-        
+
         return String(booktitle);
     }
 
@@ -262,7 +262,7 @@
             }
         }
     }
-    
+
     function createActiveCover(myApp, C) {
         // Create cover
         var doc = myApp.Build.cover(myApp, C);
@@ -285,12 +285,12 @@
 
         if(returnAnyDoc || isBuildWithCoverBuilder(myApp, doc)){
             // Check if doc matches Cover object
-            var checkC = myApp.Tools.checkCagainstDoc(myApp, doc, C, false); // returnOBJ = { C : C, changed : false, message : {ok : true, text : "OK"} };
-            
+            var checkC = myApp.Check.CagainstDoc(myApp, doc, C, false); // returnOBJ = { C : C, changed : false, message : {ok : true, text : "Check OK."} };
+
             if(checkC.message.ok){
                 return doc;
             }
-            
+
         }
         // We haven't returned an open document
         // So let's create a new cover
@@ -319,7 +319,7 @@
         // Slugs have changed make sure we reset measurements
         myApp.Slugs.placeSizesInSlug(myApp, doc, CR);
     }
-    
+
     function setMinSlugs(myApp, doc, measureUnit) {
         // Function assumes rulers to be set correctly
         var mySlug = myApp.NumCon.convert(myApp, 5, "mm", measureUnit );
@@ -328,7 +328,7 @@
         doc.documentPreferences.slugBottomOffset          = mySlug + doc.documentPreferences.documentBleedBottomOffset;
         doc.documentPreferences.slugInsideOrLeftOffset    = mySlug + doc.documentPreferences.documentBleedInsideOrLeftOffset;
     }
-    
+
     function setSlugs(myApp, doc, measureUnit) {
         // Function assumes rulers to be set correctly
         var mySlug = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, measureUnit );
@@ -344,7 +344,7 @@
         // Return with label, this way you can check if it's all good!
         return myApp.JSON.parse(doc.extractLabel(labelName) );
     }
-    
+
     function retrieveJSONLabel(myApp, doc, labelName){
         // This function returns an object that has been saved as JSON string to spread
         // Or null if the label has no content
@@ -357,188 +357,22 @@
         }
         return null;
     }
-
-    function checkGuide(myApp, myPage, myLabel, myLocation){
-        // BEWARE: This function assumes the document rulers are set correctly
-        var returnObj = {ok: false, exist: false, location: 0};
-
-        var guides = myApp.Tools.getItemByLabel(myPage, myLabel);
-        if(guides.length > 0){
-            returnObj.exist = true;
-            returnObj.location = guides[0].location;
-            
-            if ( Math.abs(guides[0].location - myLocation) < 0.01) {
-                returnObj.ok = true;
-            }
-        }
-        
-        return returnObj;
-    }
     
-    function checkPagesInSpread(myApp, C, Spread, bluePrint){
-        
-        // Make sure C is resolved
-        if(!C.resolved){
-            C = myApp.STools.resolveSizes(myApp, C);
+    function clearOverflowMargins( myMargin, pageWidth, pageHeight ) {
+        // This function assumes all measurements are in the same units
+        if ( myMargin.top + myMargin.bottom >= pageHeight ) {
+            myMargin.top    = 0;
+            myMargin.bottom = 0;
         }
-        
-        // PARAM bluePrint: Array of pages in order
-        // [{width:0, height:0, type:"Name"},{width:0, height:0, type:"Name", margin:{}, hinge:0}]
-
-        // BEWARE: This function assumes the document rulers are set correctly
-        
-        // This function does not fix anything. It only reports problems
-        
-        // ERROR CODES
-        // 0 - No problem
-        // 1 - Something unexpected went wrong (Never returned)
-        // 2 - Spread has too many pages
-        // 3 - Spread has not enough pages
-        // 4 - Page height does not match
-        // 5 - Page width does not match
-        // 6 - Hinge does not match
-        // 7 - Fold on flap does not match
-        // 8 - Page margins do not match
-
-        if(Spread.pages.length == bluePrint.length){
-            for (var i = 0; i < bluePrint.length; i++) {
-                // First check the dimensions
-                var pageHeight = myApp.NumCon.doRound( Spread.pages[i].bounds[2]-Spread.pages[i].bounds[0] , 3);
-                var pageWidth  = myApp.NumCon.doRound( Spread.pages[i].bounds[3]-Spread.pages[i].bounds[1] , 3);
-                var heightDifference = Math.abs(bluePrint[i].height - pageHeight);
-                var widthDifference  = Math.abs(bluePrint[i].width - pageWidth);
-
-                if( heightDifference > 0.01) {
-                    return {ok: false, errorcode:4, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type}, text:"Expected page " + Spread.pages[i].name + " to be " + bluePrint[i].height + " high, but is " + pageHeight};
-                }
-                if( widthDifference > 0.01) {
-                    return {ok: false, errorcode:5, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type}, text:"Expected page " + Spread.pages[i].name + " to be " + bluePrint[i].width + " wide, but is " + pageWidth};
-                }
-
-                // Then check hinge and folds (guides)
-                switch(bluePrint[i].type) {
-                    case "CVR1":
-                    case "CVR4":
-                        if( (bluePrint[i].hinge == 0) || (bluePrint[i].hinge == bluePrint[i].width) ) {
-                            break;
-                        }
-                        if(bluePrint[i].type == "CVR1") {
-                            var guideCheck = checkGuide(myApp, Spread.pages[i], "frontHingeGuide", bluePrint[i].hinge);
-                        } else if(bluePrint[i].type == "CVR4") {
-                            var guideCheck = checkGuide(myApp, Spread.pages[i], "backHingeGuide", bluePrint[i].hinge);
-                        }
-                        if( !guideCheck.ok ){
-                            if ( guideCheck.exist || Spread.pages[i].documentOffset < 0 ) {
-                                // Return error when guide is placed wrong or is non existent on masterpage
-                                return {ok: false, errorcode:6, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type, hinge: guideCheck.location }, text:"Expected hinge guide to be at " + bluePrint[i].hinge + ", but is at " + guideCheck.location};
-                            }
-                        }
-                        break;
-                    case "BindL":
-                    case "BindR":
-                        if( (bluePrint[i].hinge == 0) || (bluePrint[i].hinge == bluePrint[i].width) ) {
-                            break;
-                        }
-                        if(bluePrint[i].type == "BindL") {
-                            var guideCheck = checkGuide(myApp, Spread.pages[i], "frontHingeGuide", bluePrint[i].hinge);
-                        } else if(bluePrint[i].type == "BindR") {
-                            var guideCheck = checkGuide(myApp, Spread.pages[i], "backHingeGuide", bluePrint[i].hinge);
-                        }
-                        if( !guideCheck.ok ){
-                            if ( guideCheck.exist || Spread.pages[i].documentOffset < 0 ) {
-                                // Return error when guide is placed wrong or is non existent on masterpage
-                                return {ok: false, errorcode:6, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type, hinge: guideCheck.location }, text:"Expected hinge guide to be at " + bluePrint[i].hinge + ", but is at " + guideCheck.location};
-                            }
-                        }
-                        break;
-                    case "Flap1":
-                    case "Flap4":
-                        if( (bluePrint[i].fold == 0) || (bluePrint[i].fold == bluePrint[i].width) ) {
-                            break;
-                        }
-                        if(bluePrint[i].type == "Flap1") {
-                            var guideCheck = checkGuide(myApp, Spread.pages[i], "frontFlapFoldGuide", bluePrint[i].fold);
-                        } else if(bluePrint[i].type == "Flap4") {
-                            var guideCheck = checkGuide(myApp, Spread.pages[i], "backFlapFoldGuide",  bluePrint[i].fold);
-                        } else {
-                            // this should never happen but if it does I want to know
-                            alert("Bug found: 75849375843758943");
-                            break;
-                        }  
-                        if( !guideCheck.ok ){
-                            if ( guideCheck.exist || Spread.pages[i].documentOffset < 0 ) {
-                                // Return error when guide is placed wrong or is non existent on masterpage
-                                return {ok: false, errorcode:7, pageInfo: {pageNo: i, width: pageWidth, height: pageHeight, type: bluePrint[i].type, fold: guideCheck.location }, text:"Expected fold guide to be at " + bluePrint[i].fold + ", but is at " + guideCheck.location};
-                            }
-                        }
-                        break;
-                    default:
-                        //default code block
-                }
-            }
-            
-            // Now we know the pages are all setup properly we can check the document margins.
-            for (var i = 0; i < bluePrint.length; i++){
-                var diff = myApp.Tools.getPageMarginDifference(myApp, Spread.pages[i], bluePrint[i].margin);
-                
-                //alert("Page Type: " + bluePrint[i].type + " Difference Top: " + diff.top + " Bot: " + diff.bottom + " Left: " + diff.left + " Right: " + diff.right);
-
-                // Make sure values are positive so we can calculate with them
-                // as positive val + negative val can equal zero;
-                diff.top    = Math.abs( diff.top );
-                diff.bottom = Math.abs( diff.bottom );
-                diff.left   = Math.abs( diff.left );
-                diff.right  = Math.abs( diff.right );
-
-                // Let's check the top and bottom margins first
-                if( diff.top + diff.bottom != 0 ){
-                    return {ok: false, errorcode:8, text:"Page margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type} };
-                }
-
-                // The side margins are a litte more complicated
-                switch(bluePrint[i].type) {
-                    case "Spine":
-                        if( diff.left + diff.right != 0 ){
-                            return {ok: false, errorcode:8, text:"Spine margins do not match", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
-                        }
-                        break;
-                    case "Binding1":
-                    case "Binding4":
-                        if( diff.left + diff.right != 0 ){
-                            return {ok: false, errorcode:8, text:"Binding margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
-                        }
-                        break;
-                    case "CVR1":
-                    case "CVR4":
-                        if( diff.left + diff.right != 0 ){
-                            return {ok: false, errorcode:8, text:"Cover margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
-                        }
-                        break;
-                    case "Flap1":
-                    case "Flap4":
-                        if( diff.left + diff.right != 0 ){
-                            return {ok: false, errorcode:8, text:"Flap margins do not match.", pageInfo: {pageNo: i, spread: Spread, expectedMargin: bluePrint[i].margin, difference: diff, type: bluePrint[i].type}};
-                        }
-                        break;
-                    default:
-                        // This should never happen
-                        alert("Error 63739463936582\nUnknown Page Type: " + bluePrint[i].type);
-                }
-            }
-            return {ok: true, errorcode:0, text:"OK"};
-        } else {
-            if(Spread.pages.length > bluePrint.length){
-                return {ok: false, errorcode:2, text:"Spread has too many pages."};
-            } else {
-                return {ok: false, errorcode:3, text:"Spread has not enough pages."};
-            }
+        if ( myMargin.left + myMargin.right >= pageWidth ) {
+            myMargin.left  = 0;
+            myMargin.right = 0;
         }
-
-        return {ok: false, errorcode:1, text:"Something is going wrong..."};
+        return myMargin;
     }
 
     function createBlueprint(myApp, C) {
-        // Make sure C is resolved
+        // Make sure C is resolved so all measurements are in the same units
         if(!C.resolved){
             C = myApp.STools.resolveSizes(myApp, C);
         }
@@ -546,15 +380,18 @@
         var bluePrint = new Array();
 
         var bindingHinge = 0;
-        var cvr14Hinge = C.hinge;
+        var cvr14Hinge   = C.hinge;
 
         if(C.spine > 0) {
             // Add spine
-            var margin = {  top:    C.margin.Spine.top, 
+            var margin = {  top:    C.margin.Spine.top,
                             bottom: C.margin.Spine.bottom,
                             left:   C.margin.Spine.inside_left,
                             right:  C.margin.Spine.outside_right,
                             units:  C.margin.Spine.units };
+            
+            margin = clearOverflowMargins( margin, C.spine, C.height );
+            
             bluePrint.push({width:C.spine, height:C.height, type:"Spine", margin:margin });
         }
 
@@ -565,521 +402,112 @@
                 cvr14Hinge = 0;
             }
             // Add binding R
-            var margin = {  top:    C.margin.QB.top, 
+            var margin = {  top:    C.margin.QB.top,
                             bottom: C.margin.QB.bottom,
                             left:   C.margin.QB.inside_left,
                             right:  C.margin.QB.outside_right,
                             units:  C.margin.QB.units };
-            
+
             if(bindingHinge > 0){
-                margin.left += myApp.NumCon.convert(myApp, C.hinge, C.measureUnit, C.margin.QB.units);
+                margin.left += C.hinge;
             }
+    
+            margin = clearOverflowMargins( margin, C.binding, C.height );
+            
+            if ( margin.left == 0 && bindingHinge > 0 ) margin.left = C.hinge;
             
             bluePrint.push(    {width:C.binding, height:C.height, type:"Binding1", margin:margin, hinge:bindingHinge} );
-            
+
             // Add binding L
             if(C.spine > 0) {
-                var margin = {  top:    C.margin.QB.top, 
+                var margin = {  top:    C.margin.QB.top,
                                 bottom: C.margin.QB.bottom,
                                 left:   C.margin.QB.outside_right,
                                 right:  C.margin.QB.inside_left,
                                 units:  C.margin.QB.units };
-                
-                if(bindingHinge > 0){    
-                    margin.right += myApp.NumCon.convert(myApp, C.hinge, C.measureUnit, C.margin.QB.units);
+
+                if(bindingHinge > 0){
+                    margin.right += C.hinge;
                 }
                 
+                margin = clearOverflowMargins( margin, C.binding, C.height );
+
+                if ( margin.right == 0 && bindingHinge > 0 ) margin.right = C.hinge;
+
                 bluePrint.unshift( {width:C.binding, height:C.height, type:"Binding4", margin:margin, hinge:C.binding-bindingHinge} );
             }
         }
 
         // Add CVR1
-        var margin = {  top:    C.margin.CVR14.top, 
+        var margin = {  top:    C.margin.CVR14.top,
                         bottom: C.margin.CVR14.bottom,
                         left:   C.margin.CVR14.inside_left,
                         right:  C.margin.CVR14.outside_right,
                         units:  C.margin.CVR14.units };
+    
         if(cvr14Hinge > 0){
-            margin.left += myApp.NumCon.convert(myApp, C.hinge, C.measureUnit, C.margin.CVR14.units);
+            margin.left += C.hinge;
         }
+        
+        margin = clearOverflowMargins( margin, C.width, C.height );
+
+        if ( margin.left == 0 && cvr14Hinge > 0 ) margin.left = C.hinge;
 
         bluePrint.push(    {width:C.width, height:C.height, type:"CVR1", margin:margin, hinge:cvr14Hinge} );
 
         // Add CVR4
         if(C.spine > 0) {
-            var margin = {  top:    C.margin.CVR14.top, 
+            var margin = {  top:    C.margin.CVR14.top,
                             bottom: C.margin.CVR14.bottom,
                             left:   C.margin.CVR14.outside_right,
                             right:  C.margin.CVR14.inside_left,
                             units:  C.margin.CVR14.units };
+    
             if(cvr14Hinge > 0){
-                margin.right += myApp.NumCon.convert(myApp, C.hinge, C.measureUnit, C.margin.CVR14.units);
+                margin.right += C.hinge;
             }
-
+            
+            margin = clearOverflowMargins( margin, C.width, C.height );
+            
+            if ( margin.right == 0 && cvr14Hinge > 0 ) margin.right = C.hinge;
+    
             bluePrint.unshift( {width:C.width, height:C.height, type:"CVR4", margin:margin, hinge:C.width-cvr14Hinge} );
         }
 
         if(C.flap > 0) {
             // Flap Front
-            var margin = {  top:    C.margin.Flaps.top, 
+            var margin = {  top:    C.margin.Flaps.top,
                             bottom: C.margin.Flaps.bottom,
                             left:   C.margin.Flaps.inside_left,
                             right:  C.margin.Flaps.outside_right,
                             units:  C.margin.Flaps.units };
-            margin.left  += myApp.NumCon.convert(myApp, C.fold, C.measureUnit, C.margin.Flaps.units);
+
+            margin.left += C.fold;
+            
+            margin = clearOverflowMargins( margin, C.flap, C.height );
+            
+            if ( margin.left == 0 ) margin.left = C.fold;
+            
             bluePrint.push( {width:C.flap, height:C.height, type:"Flap1", margin:margin, fold:C.fold} );
 
             // Flap Back
             if(C.spine > 0) {
-                var margin = {  top:    C.margin.Flaps.top, 
+                var margin = {  top:    C.margin.Flaps.top,
                                 bottom: C.margin.Flaps.bottom,
                                 left:   C.margin.Flaps.outside_right,
                                 right:  C.margin.Flaps.inside_left,
                                 units:  C.margin.Flaps.units };
-                margin.right += myApp.NumCon.convert(myApp, C.fold, C.measureUnit, C.margin.Flaps.units);
+
+                margin.right += C.fold;
+                
+                margin = clearOverflowMargins( margin, C.flap, C.height );
+                
+                if ( margin.right == 0 ) margin.right = C.fold;
+
                 bluePrint.unshift( {width:C.flap, height:C.height, type:"Flap4", margin:margin, fold:C.flap-C.fold} );
             }
         }
         return bluePrint;
-    }
-    
-    function checkDocumentBleed(myApp, doc, C, tryFix){
-        // We don't care if uniform size is true or false
-        // Only the values need to be right
-        var myRulers  = myApp.Tools.setRuler(doc, {units : C.measureUnit});
-        var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
-
-        var returnOBJ = { C : C, C_changed : false, doc_changed : false, message: {ok : true, text : ""} };
-        var docBleed = myApp.Tools.getMaxBleed(myApp, doc);
-        
-        var bleedOK = true;
-        
-        var CR = myApp.STools.resolveSizes(myApp, C);
-
-        if( myApp.NumCon.doRound( docBleed, 6 ) != myApp.NumCon.doRound( CR.bleed, 6 ) ) bleedOK = false;
-        
-        if( (bleedOK == false) && tryFix) {
-
-            var approve = confirm("Document bleed has changed, would you like me to revert the bleeds from " + docBleed + " to " + CR.bleed + unitsShorthand );
-            
-            // We need a don't ask again element in this dialog. To be created as a seperate shared functon ticket 7393640364026
-            if(approve){
-                myApp.Tools.setDocBleed(myApp, doc, C);
-                returnOBJ.doc_changed = true;
-            } else {
-                
-                // Resolve Wrap
-                
-                if( (docBleed-C.wrap) <= 0) {
-                    C.bleed = docBleed;
-                    C.wrap  = 0;
-                } else {
-                    if(C.inExCludeWrap == 0){
-                        C.bleed = docBleed;
-                    } else {
-                        C.bleed = docBleed-C.wrap;
-                    }
-                }
-
-                returnOBJ.C_changed = true;
-                returnOBJ.C = C;
-                // Make sure slugs look good in this new situation
-                myApp.Slugs.placeSizesInSlug(myApp, doc, C);
-            }
-        } else if (bleedOK == false) {
-            returnOBJ.message.ok = false;
-            returnOBJ.message.text = "Document bleed does not match data. ";
-        }
-
-        // reset original rulers
-        myApp.Tools.setRuler(doc, myRulers);
-        return returnOBJ;
-    }
-    
-    function checkDocumentSlugs(myApp, doc, C, tryFix){
-        // We don't care if uniform size is true or false
-        // Only the values need to be right
-        var myRulers       = myApp.Tools.setRuler(doc, {units : C.measureUnit});
-        var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
-        var returnOBJ      = { C : C, C_changed : false, doc_changed : false, message: {ok : true, text : ""} };
-        var docSlug        = myApp.NumCon.doRound( myApp.Tools.getMaxSlug(myApp, doc), 6);
-        
-        if(C.slugs >= 0){
-            var mySlug = C.slugs;
-        } else {
-            var mySlug = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit ) + myApp.Tools.getMaxBleed(myApp, doc);
-        }
-
-        var slugOK = true;
-        var slugErrMargin = myApp.NumCon.convert(myApp, 1, 0, C.measureUnit );
-        if( Math.abs(docSlug - mySlug) > slugErrMargin ) slugOK = false;
-        
-        if( (slugOK == false) && tryFix) {
-
-            var approve = confirm("Document slugs have changed, would you like me to revert the slugs from " + docSlug + " to " + mySlug + unitsShorthand );
-            
-            // We need a don't ask again element in this dialog. To be created as a seperate shared functon ticket 7393640364026
-            if(approve){
-                doc.documentPreferences.slugTopOffset             = Math.abs(mySlug);
-                doc.documentPreferences.slugRightOrOutsideOffset  = Math.abs(mySlug);
-                doc.documentPreferences.slugBottomOffset          = Math.abs(mySlug);
-                doc.documentPreferences.slugInsideOrLeftOffset    = Math.abs(mySlug);
-                returnOBJ.doc_changed = true;
-            } else {
-                C.slugs = docSlug;
-                returnOBJ.C_changed = true;
-                returnOBJ.C = C;
-            }
-        } else if (slugOK == false) {
-            returnOBJ.message.ok = false;
-            returnOBJ.message.text = "Document slug does not match data. ";
-        }
-
-        // reset original rulers
-        myApp.Tools.setRuler(doc, myRulers);
-        return returnOBJ;
-    }
-
-    function checkCagainstDoc(myApp, doc, C, tryFix) {
-        var tryFix = tryFix || false;
-
-        // When fix is set to 'true' function willfix the cover or the data
-        // Setting fix to false will return returnOBJ below without touching the document
-        
-        var returnOBJ = { C : C, C_changed : false, doc_changed : false, message : {ok : true, text : ""} };
-
-        function doc_changed(){
-            // All pages in doc with master "CB-cover" applied will be updated
-            myApp.Tools.updatePagesWithMaster(myApp, doc, "CB-cover");
-            // Update blueprint
-            bluePrint = myApp.Tools.createBlueprint(myApp, C);
-            returnOBJ.doc_changed = true; // Flag change
-        }
-
-        function C_changed(){
-            // Update XMP
-            myApp.XMP.safeCoverObject(myApp, doc, C);
-            returnOBJ.C = C; // Update return object
-            returnOBJ.C_changed = true; // Flag change
-        }
-        
-        function processFeedback(checkObj){
-            // And process the feedback
-            returnOBJ.message.text += checkObj.message.text;
-            if(!checkObj.message.ok){
-                returnOBJ.message.ok = false;
-            }
-            if(checkObj.C_changed){
-                returnOBJ.C_changed = true;
-                returnOBJ.C = checkObj.C;
-                C = checkObj.C; // Make sure C is updated
-                if(tryFix){
-                    C_changed();
-                }
-            }
-            if(checkObj.doc_changed){
-                returnOBJ.doc_changed = true;
-                if(tryFix){
-                    doc_changed();
-                }
-            }
-        }
-
-        // Check document bleed
-        var check = checkDocumentBleed(myApp, doc, C, tryFix);
-        processFeedback(check);
-        
-        // Check document slugs
-        var check = checkDocumentSlugs(myApp, doc, C, tryFix);
-        processFeedback(check);
-        
-        // Check master page
-        var check = myApp.Tools.checkCagainstSpread(myApp, doc, doc.masterSpreads.item("CB-cover"), C, tryFix);
-        processFeedback(check);
-
-        // Now check all spreads in document
-        for (var s = 0; s < doc.spreads.length; s++) {
-            var mySpread = doc.spreads[s];
-            var check = myApp.Tools.checkCagainstSpread(myApp, doc, mySpread, C, tryFix);
-            processFeedback(check);
-        }
-        
-        return returnOBJ;
-    }
-    
-    function checkCagainstSpread(myApp, doc, mySpread, C, tryFix){
-        // This function checks the C object against the given spread 
-        var tryFix = tryFix || false;
-        // When fix is set to 'true' this function eihter updates the spread (via master spread) 
-        // or update the data, depending on user query 
-
-        // Setting fix to false will return returnOBJ below without touching the document
-
-        var returnOBJ = { C : C, C_changed : false, doc_changed : false, message : {ok : true, text : ""} };
-        
-        var bluePrint = myApp.Tools.createBlueprint(myApp, C);
-        
-        var CR = myApp.STools.resolveSizes(myApp, C);
-        
-        function doc_changed(){
-            // All pages in doc with master "CB-cover" applied will be updated
-            myApp.Tools.updatePagesWithMaster(myApp, doc, "CB-cover");
-            // Update blueprint
-            bluePrint = myApp.Tools.createBlueprint(myApp, C);
-            returnOBJ.doc_changed = true; // Flag change
-        }
-        function C_changed(){
-            // Update XMP
-            myApp.XMP.safeCoverObject(myApp, doc, C);
-            returnOBJ.C = C; // Update return object
-            returnOBJ.C_changed = true; // Flag change
-            CR = myApp.STools.resolveSizes(myApp, C); // Update resolved C
-        }
-        
-        // Set rulers to the right units
-        var oldRulers = myApp.Tools.setRuler(doc, {units : C.measureUnit});
-        var unitsShorthand = myApp.Tools.inddUnits2Shorthand(C.measureUnit);
-        
-        function checkFile(){
-            // CHECK PAGES this will give us a problem back (or not :)
-            var feedback = checkPagesInSpread(myApp, C, mySpread, bluePrint);
-            var feedbackHistory = "";
-            
-            function updateFeedback(OKbool, Note){
-                feedback.ok      = OKbool;
-                feedback.text   += Note + ". ";
-                feedbackHistory += Note + ". ";
-            }
-            
-            if(tryFix){
-                switch(feedback.errorcode) {
-                    case 0: // - No problem
-                    case 1: // - Something unexpected went wrong (Never returned)
-                    case 2: // - Spread has too many pages
-                    case 3: // - Spread has not enough pages
-                        // Do nothing
-                        break;
-                    case 4: // - Page height does not match
-                        // FIX HEIGHT
-                        var updateHeight = confirm("The height of the cover has changed. \nWould you like to change the height from "+ myApp.NumCon.doRound(feedback.pageInfo.height,3) +" to " + C.height + unitsShorthand + "?");
-                        if( updateHeight ) {
-                            // Update doc
-                            myApp.Tools.update_coverMaster_pageHeight(myApp, doc, C);
-                            doc_changed();
-                            updateFeedback(true, "Updated Height");
-                        } else {
-                            // Update data (cover object)
-                            C.height = feedback.pageInfo.height;
-                            C_changed();
-                            // We need to make sure the master reflects the changes of the spread
-                            myApp.Tools.update_coverMaster_pageHeight(myApp, doc, C);
-                            doc_changed();
-                        }
-                        feedback = checkFile(); // See if there is anything else wrong recursively.
-                        break;
-                    case 5: // - Page width does not match
-                        // FIX WIDTH
-                        switch(feedback.pageInfo.type){
-                            case "Spine":
-                                // Ask if the user wants to update the Spine of the doc
-                                // If not adjust the data
-                                var updateSpine = confirm("The spine-width has changed. \nWould you like to change the spine from " + myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " to " + C.spine + unitsShorthand + "?");
-                                
-                                if( updateSpine) {
-                                    // Update doc
-                                    myApp.Helper.Spine.updateSpinePage(myApp, doc, C);
-                                    doc_changed();
-                                    updateFeedback(true, "Updated Spine");
-                                } else {
-                                    // Update data (cover object)
-                                    C.spine = feedback.pageInfo.width;
-                                    C_changed();
-                                    // We need to make sure the master reflects the changes of the spread
-                                    myApp.Helper.Spine.updateSpinePage(myApp, doc, C);
-                                    doc_changed();
-                                }
-                                feedback = checkFile(); // See if there is anything else wrong recursively.
-                                break;
-                            case "CVR1":
-                            case "CVR4":
-                                
-                                // Ask if the user wants to update the width of the cover
-                                // If not adjust the data
-                                var updateCVR14 = confirm("The width has changed. \nWould you like to revert the width from " + myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " to " +  CR.width + unitsShorthand + "?");
-
-                                if( updateCVR14 ) {
-                                    // Update doc
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRR", CR.width);
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRL", CR.width);
-                                    doc_changed();
-                                    updateFeedback(true, "Updated Width");
-                                } else {
-                                    // Update data (cover object)
-                                    C.width  += ( feedback.pageInfo.width  - CR.width  );
-                                    C.height += ( feedback.pageInfo.height - CR.height );
-                                    C_changed();
-                                    // We need to make sure the master reflects the changes of the spread
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRR", CR.width);
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "CVRL", CR.width);
-                                    doc_changed();
-                                }
-                                feedback = checkFile(); // See if there is anything else wrong recursively.
-                                break;
-                            case "Binding1":
-                            case "Binding4":
-                                // Ask if the user wants to update the width of the binding
-                                // If not adjust the data
-                                var updateBinding = confirm("The binding has changed. \nWould you like to revert the binding from " + myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " to " + CR.binding + unitsShorthand + "?");
-
-                                if( updateBinding ) {
-                                    // Update doc
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindR", CR.binding);
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindL", CR.binding);
-                                    doc_changed();
-                                    updateFeedback(true, "Updated Binding");
-                                } else {
-                                    // Update data (cover object)
-                                    C.binding  += (feedback.pageInfo.width - CR.binding);
-                                    C_changed();
-                                    // We need to make sure the master reflects the changes of the spread
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindR", CR.binding);
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "BindL", CR.binding);
-                                    doc_changed();
-                                }
-                                feedback = checkFile(); // See if there is anything else wrong recursively.
-                                break;
-                            case "Flap1":
-                            case "Flap4":
-                                // Ask if the user wants to update the width of the binding
-                                // If not adjust the data
-                                var updateFlaps = confirm("The flap-width has changed. \nWould you like to revert the flap-width from " + myApp.NumCon.doRound(feedback.pageInfo.width, 3) + " to " + CR.flap + unitsShorthand + "?");
-
-                                if( updateFlaps ) {
-                                    // Update doc
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapR", CR.flap);
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapL", CR.flap);
-                                    doc_changed();
-                                    updateFeedback(true, "Updated Flaps");
-                                } else {
-                                    // Update data (cover object)
-                                    C.flap  += (feedback.pageInfo.width - CR.flap);
-                                    C_changed();
-                                    
-                                    // We need to make sure the master reflects the changes of the spread
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapR", CR.flap);
-                                    myApp.Tools.update_coverMaster_pageWidth(myApp, doc, C, "FlapL", CR.flap);
-                                    doc_changed();
-                                }
-                                feedback = checkFile(); // See if there is anything else wrong recursively.
-                                break;
-                            default:
-                                updateFeedback(false, "Unexpected page");
-                                break;
-                        }
-                        break;
-                    case 6: // - Hinge does not match
-                        switch(feedback.pageInfo.type){
-                            case "BindR":
-                            case "CVR1":
-                                var myCurrHinge = feedback.pageInfo.hinge;
-                                break;
-                            case "BindL":
-                            case "CVR4":
-                                var myCurrHinge = Math.abs(feedback.pageInfo.hinge-feedback.pageInfo.width);
-                                break;
-                            default:
-                                var myCurrHinge = null;
-                                updateFeedback(false, "Hinge on unexpected page");
-                                break;
-                        }
-
-                        if( myCurrHinge != null ) {
-                            var updateHinge = confirm("The documents hinge has changed. \nWould you like to revert the hinge from " + myApp.NumCon.doRound(myCurrHinge, 3) + " to " + C.hinge + unitsShorthand + "?");
-                            if( updateHinge ){
-                                // Update doc
-                                myApp.Tools.update_coverMaster_hinge(myApp, doc, C);
-                                doc_changed();
-                                updateFeedback(true, "Updated Hinge");
-                            } else {
-                                // Update data (cover object)
-                                C.hinge = myCurrHinge;
-                                C_changed();
-                                // We need to make sure the master reflects the changes of the spread
-                                myApp.Tools.update_coverMaster_hinge(myApp, doc, C);
-                                doc_changed();
-                            }
-                            feedback = checkFile(); // See if there is anything else wrong recursively.
-                        }
-                        break;
-                    case 7: // - Fold on flap does not match
-                        switch(feedback.pageInfo.type){
-                            case "Flap1":
-                                var myCurrFold = feedback.pageInfo.fold;
-                                break;
-                            case "Flap4":
-                                var myCurrFold = Math.abs(feedback.pageInfo.width-feedback.pageInfo.fold);
-                                break;
-                            default:
-                                var myCurrFold = null;
-                                updateFeedback(false, "Fold on unexpected page");
-                                break;
-                        }
-
-                        if( myCurrFold != null ) {
-                            var updateFold = confirm("The documents flap has changed. \nWould you like to revert the fold from " + myApp.NumCon.doRound(myCurrFold, 3) + " to " + C.fold + unitsShorthand + "?");
-                            if( updateFold ){
-                                // Update doc
-                                myApp.Tools.update_coverMaster_fold(myApp, doc, C);
-                                doc_changed();
-                                updateFeedback(true, "Updated Fold");
-                            } else {
-                                // Update data (cover object)
-                                C.fold = myCurrFold;
-                                C_changed();
-                                // We need to make sure the master reflects the changes of the spread
-                                myApp.Tools.update_coverMaster_fold(myApp, doc, C);
-                                doc_changed();
-                            }
-                            feedback = checkFile(); // See if there is anything else wrong recursively.
-                        }
-                        break;
-                    case 8: // - Page margins do not match
-                        var updateMargins = confirm("The documents margins have changed. \nWould you like to revert the margins to original CoverBuilder settings?");
-                        if( updateMargins ){
-                            myApp.Tools.update_coverMaster_margins(myApp, doc, C);
-                            doc_changed();
-                            updateFeedback(true, "Updated Margins");
-                        } else {
-                            // Update data (cover object)
-                            C.margin = myApp.Tools.update_C_margins(myApp, doc, feedback.pageInfo.spread, C);
-                            C_changed();
-                            // We need to make sure the master reflects the changes of the spread
-                            myApp.Tools.update_coverMaster_margins(myApp, doc, C);
-                            doc_changed();
-                        }
-                        feedback = checkFile(); // See if there is anything else wrong recursively.
-                        break;
-                    default:
-                        // This should never happen
-                        updateFeedback(false, "Did not get a valid error code, this is a bug, but maybe not a bad one :)");
-                }
-            }
-            return feedback;
-        }
-
-        returnOBJ.message = checkFile();
-
-        if(returnOBJ.doc_changed){
-            myApp.Tools.yAlignPages(mySpread); // In case gives spread is a master
-            myApp.Tools.updatePagesWithMaster(myApp, doc, "CB-cover");  // All pages in doc with master "CB-cover" applied will be updated
-            myApp.Slugs.placeSizesInSlug(myApp, doc, C);
-        }
-
-        // reset original rulers
-        myApp.Tools.setRuler(doc, oldRulers);
-
-        return returnOBJ;
-
     }
 
     function isBuildWithCoverBuilder(myApp, myDoc){
@@ -1122,7 +550,7 @@
         }
         return MarginObj;
     }
-    
+
     function sameRulers( myDoc ){
         // Checks if both rulers are set to the same measure
         // Return boolean
@@ -1141,9 +569,22 @@
                              myDoc.documentPreferences.slugRightOrOutsideOffset,
                              myDoc.documentPreferences.slugTopOffset);
         }
+        alert("CoverBuilder getMaxSlug(): Document rulers are not set to the same measure units.");
         return myDoc.documentPreferences.slugTopOffset;
     }
-    
+
+    function getMinSlug( myApp, myDoc ){
+        //This function returns the maximum slug size in current measure unit
+        if( myApp.Tools.sameRulers(myDoc) ) {
+            return Math.min( myDoc.documentPreferences.slugBottomOffset,
+                             myDoc.documentPreferences.slugInsideOrLeftOffset,
+                             myDoc.documentPreferences.slugRightOrOutsideOffset,
+                             myDoc.documentPreferences.slugTopOffset);
+        }
+        alert("CoverBuilder getMinSlug(): Document rulers are not set to the same measure units.");
+        return myDoc.documentPreferences.slugTopOffset;
+    }
+
     function getMaxBleed( myApp, myDoc ){
         //This function returns the maximum bleed size in current measure unit
         if( myApp.Tools.sameRulers(myDoc) ) {
@@ -1163,22 +604,41 @@
         NewC.height = myApp.NumCon.doRound( myApp.Tools.getSpreadSize(myApp, myDoc.spreads[0]).height ,3);
         NewC.ppi    = myApp.Settings.standardPPI;
         NewC.bleed  = myApp.NumCon.doRound( docPrefs.documentBleedTopOffset ,3);
-        NewC.slugs  = myApp.Tools.getMaxSlug(myApp, myDoc);
+        NewC.slugs  = myApp.Tools.getMinSlug(myApp, myDoc);
         NewC.margin = guessMarginObj(myApp, myDoc, NewC.measureUnit);
 
         //Let's see if the document might be a cover
         //if(!docPrefs.facingPages){ This can still be a cover!
-        
+
         if(myDoc.spreads[0].pages.length == 1) {
-            var firstPage = myDoc.pages.item(0);
+            var firstPage = myDoc.pages[0];
+            var pageWidth = myApp.Tools.getSpreadSize(myApp, myDoc.spreads[0]).width;
+
+            NewC.width = myApp.NumCon.doRound( pageWidth, 3);
+
             if( firstPage.marginPreferences.columnCount == 2 ){
                 var assumeSpine  = firstPage.marginPreferences.columnGutter;
-                var assumeWidth  = (NewC.width-assumeSpine)/2;
-                NewC.width = assumeWidth;
-                NewC.spine = assumeSpine;
+                var assumeWidth  = (pageWidth-assumeSpine)/2;
+                NewC.width = myApp.NumCon.doRound( assumeWidth, 3);
+                NewC.spine = myApp.NumCon.doRound( assumeSpine, 3);
+            } else {
+                // Maybe Extreme Margin Technique?
+                var leftMargin  = firstPage.marginPreferences.left;
+                var rightMargin = firstPage.marginPreferences.right;
+                var assumeSpine = pageWidth - leftMargin - rightMargin;
+                var assumeWidth = (leftMargin + rightMargin)/2;
+                
+                if ( Math.abs(leftMargin-rightMargin) < 1 /* Tolerance */ ) {
+                    // Both margins are equal
+                    // Check if spine is smaller then two thirds
+                    if ( assumeSpine < pageWidth * 0.66 ) {
+                        NewC.width = myApp.NumCon.doRound( assumeWidth, 3);
+                        NewC.spine = myApp.NumCon.doRound( assumeSpine, 3);
+                    }
+                }
             }
         }
-        
+
         if(myDoc.spreads[0].pages.length == 2) {
             // CoverBuilder does not support building covers without a spine
             // But we can still load what we have into the interface
@@ -1196,7 +656,7 @@
             NewC.spine = spinePage.w;
             NewC.width = assumeWidth;
         }
-        
+
         if(myDoc.spreads[0].pages.length == 4) {
             // CoverBuilder does not support building covers without a spine
             // But we can still load what we have into the interface
@@ -1218,7 +678,7 @@
             var cvr4      = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[1], NewC.measureUnit);
             var flap1     = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[4], NewC.measureUnit);
             var flap4     = makePageInfoObject(myApp, myDoc, myDoc.spreads[0].pages[0], NewC.measureUnit);
-            
+
             var assumeSpine = spinePage.w;
             var assumeWidth = Math.max( cvr1.w,  cvr4.w  );
             var assumeFlap  = Math.max( flap1.w, flap4.w );
@@ -1257,11 +717,15 @@
             NewC.spine = assumeSpine;
         }
 
-        // Check if there are flaps
+        // - - - - - - - - - - - - - - - - - - - - - -
+        // C H E C K   F R O M   C R O P   M A R K S
+        // - - - - - - - - - - - - - - - - - - - - - - 
+        // Check if there are flaps from crop marks
         var lFlapMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-BackFlapLeftSafetyTop" , "MBJ-FoldMark-BackFlapLeftSafetyBottom"]);
         var rFlapMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-FrontFlapRightSafetyTop" , "MBJ-FoldMark-FrontFlapRightSafetyBottom"]);
-        
-        var lFlap, rFlap, lFold, rFold = 0;
+
+        var lFlap,  rFlap,  lFold,  rFold;
+            lFlap = rFlap = lFold = rFold = 0;
 
         if( lFlapMarkers.length > 0) {
             var lFlapMarkerInfo = myApp.Tools.getBoundsInfo(lFlapMarkers[0].geometricBounds);
@@ -1274,13 +738,18 @@
         }
 
         // Note that CoverBuilder can't handle uneven flaps at the moment
+
+        // This ensures document keeps the same width
+        // Needs a user alert
+
         var flaps = lFlap + rFlap;
+        
         if(flaps > 0) {
             NewC.flap = flaps/2;
             NewC.width -= NewC.flap;
         }
 
-        // Check if there is a fold
+        // Check if there is a fold from crop marks
         var lFoldMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-BackFlapRightSafetyTop" , "MBJ-FoldMark-BackFlapRightSafetyBottom"]);
         var rFoldMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-FrontFlapLeftSafetyTop" , "MBJ-FoldMark-FrontFlapLeftSafetyBottom"]);
 
@@ -1297,8 +766,19 @@
         var folds = rFold + lFold;
         if(folds > 0){
             NewC.fold = folds/2;
-            NewC.inExCludeFold = 1;
+            NewC.inExCludeFold = 1; // Add to fold
         }
+
+        // - - - - - - - - - - - - - - - - - - - - - -
+        // C H E C K   F R O M   G U I D E S
+        // - - - - - - - - - - - - - - - - - - - - - - 
+        /*
+        if( NewC.flap == 0 ) {
+            // Front flaps
+            // MBJ-Guide-FrontFlap-Inside
+            // MBJ-Guide-FrontFlap-Outside-TurnaroundAffectsDocSize
+
+        } */
 
         // Check the spine and front / back cover
         var lSpineMarkers = myApp.Tools.getItemByLabel(cpage, ["MBJ-FoldMark-SpineLeftBottom"  , "MBJ-FoldMark-SpineLeftTop"  , "MBJ-Guide-Spine-Left"]);
@@ -1308,7 +788,7 @@
         var cvr4CentreGuides = myApp.Tools.getItemByLabel(cpage, ["MBJ-Guide-BackCover-Centering"]);
 
         // Maybe we should order these om x-value and get the middle one to remove any outlyers (users could have moved these)
-        
+
         if( (lSpineMarkers.length > 0) && (rSpineMarkers.length > 0) ) {
             var lSpineMarkerInfo = myApp.Tools.getBoundsInfo(lSpineMarkers[0].geometricBounds);
             var rSpineMarkerInfo = myApp.Tools.getBoundsInfo(rSpineMarkers[0].geometricBounds);
@@ -1391,24 +871,24 @@
     function insideMinMaxPageSize(myApp, size, measureUnit) {
         var minSize = myApp.Tools.getMinPageWidthINDD(myApp, measureUnit);
         var maxSize = myApp.Tools.getMaxPageWidthINDD(myApp, measureUnit);
-        
+
         if( (size > minSize) && (size < maxSize) ) {
             return true;
         }
-        
+
         return false;
     }
-    
+
     function getCMarginFromPageLabel(myApp, C, pageLabel) {
         returnObj = { top : 0, right : 0, left : 0, bottom: 0 };
-        
+
         var bindingHinge = 0;
         var cvr14Hinge = C.hinge;
         if(C.binding > C.hinge){
             cvr14Hinge = 0;
             bindingHinge = C.hinge;
         }
-        
+
         switch (pageLabel) {
             case "CVRL":
                 returnObj.top    = C.margin.CVR14.top;
@@ -1500,7 +980,7 @@
                 left    : myApp.NumCon.doRound( page.marginPreferences.left   , 3),
                 bottom  : myApp.NumCon.doRound( page.marginPreferences.bottom , 3)};
     }
-    
+
     function getPageMarginDifference(myApp, myPage, myMargins) {
         // returns margin object like this:
         // {top : 0, outside_right : 0, inside_left : 0, bottom : 0, units: myMargins.units}
@@ -1514,8 +994,8 @@
         var pageMargin = myApp.Tools.getPageMargins(myApp, myPage);
 
         myApp.Tools.setRuler(myPage.parent.parent, oldRulers);
-        
-        var returnMargins = {   top     : pageMargin.top    - myApp.NumCon.doRound( myMargins.top    , 3), 
+
+        var returnMargins = {   top     : pageMargin.top    - myApp.NumCon.doRound( myMargins.top    , 3),
                                 right   : pageMargin.right  - myApp.NumCon.doRound( myMargins.right  , 3),
                                 left    : pageMargin.left   - myApp.NumCon.doRound( myMargins.left   , 3),
                                 bottom  : pageMargin.bottom - myApp.NumCon.doRound( myMargins.bottom , 3),
@@ -1531,19 +1011,20 @@
     }
 
     function getGuides(myApp, myPageOrSpread){
-        // This function returns all guides on the given spread (including master)
+        // This function returns all guides on the given spread
         // BEWARE: This function assumes the document rulers are set correctly
-        var myGuides = new Array();
-        var guides = myPageOrSpread.guides; // This does not include masterpage elements
+        var myGuides   = new Array();
+        var guides     = myPageOrSpread.guides; // This does not include masterpage elements
 
         for (var g = 0; g < guides.length; g++) {
             var horizontal = false;
             if(String(guides[g].orientation) === "HORIZONTAL"){
                 horizontal = true;
             }
-            myGuides.push({horizontal: horizontal, location: guides[g].location, label: guides[g].label});
+            var boundsInfo = myApp.Tools.getBoundsInfo(guides[g].parentPage.bounds);
+            myGuides.push({horizontal: horizontal, location: guides[g].location, label: String(guides[g].label), parentBounds: boundsInfo });
         }
-        alert("Horizontal: " + myGuides[0].horizontal + " location: " + myGuides[0].location);
+        //alert("Horizontal: " + myGuides[0].horizontal + " location: " + myGuides[0].location + " label: " + myGuides[0].label);
         return myGuides;
     }
 
@@ -1584,11 +1065,11 @@
     }
 
     function update_coverMaster_hinge(myApp, doc, C) {
-        
+
         // Keep in mind that the margins might need updating after this update
-        
+
         var CR = myApp.STools.resolveSizes(myApp, C);
-        
+
         var myMaster = doc.masterSpreads.item("CB-cover");
 
         var myLayer = getAndSelectLayer(doc, "Registration");
@@ -1606,18 +1087,18 @@
             myApp.Tools.clearItemsWithLabel(myApp, mySpread, "backHingeGuide");
             myApp.Tools.clearItemsWithLabel(myApp, mySpread, "frontHingeGuide");
         }
-        
+
         if(CR.hinge > 0){
             var leftPageName  = "CVRL";
             var rightPageName = "CVRR";
             var pageWidth     = CR.width;
-        
+
             if(CR.binding  > 0){
                 leftPageName  = "BindL";
                 rightPageName = "BindR";
                 pageWidth     = CR.binding;
             }
-            
+
             var leftPage = myApp.Tools.getMasterPage(myApp, doc, "CB-cover", leftPageName  );
             var rightPage = myApp.Tools.getMasterPage(myApp, doc, "CB-cover", rightPageName );
 
@@ -1664,7 +1145,7 @@
         if(!myMasterSpread.isValid){
             return "No master CB-cover found";
         }
-        
+
         var originalRulers = myApp.Tools.setRuler(doc, { units : 0 } );
 
         for (var p = 0; p < myMasterSpread.pages.length; p++) {
@@ -1705,7 +1186,7 @@
         // Returns an updated clone of C.margin
         // Keep in mind that CoverBuilder does not handle different margins on the same type of page.
         // For example CVR1 will override the settings of CVR1 inside CVR14
-        
+
         if(!mySpread.isValid){
             return "Expected a valid spread.";
         }
@@ -1717,7 +1198,7 @@
             alert("Error cloning margins.\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
             return "Error cloning margins.";
         }
-        
+
         // For simplicity sake I will set all margins in same units as C units
         var originalRulers = myApp.Tools.setRuler(doc, { units : C.measureUnit } );
 
@@ -1739,19 +1220,19 @@
             switch (currLabel) {
                 case "CVRL":
                     MarginObj.CVR14.top                = pageMargins.top    ;
-                    MarginObj.CVR14.inside_left        = pageMargins.right  ; 
-                    MarginObj.CVR14.outside_right      = pageMargins.left   ; 
-                    MarginObj.CVR14.bottom             = pageMargins.bottom ;  
+                    MarginObj.CVR14.inside_left        = pageMargins.right  ;
+                    MarginObj.CVR14.outside_right      = pageMargins.left   ;
+                    MarginObj.CVR14.bottom             = pageMargins.bottom ;
                     if(cvr14Hinge > 0){
                         MarginObj.CVR14.inside_left += C.hinge; // No need to convert units as we are allready in the right units
                     }
                     MarginObj.CVR14.units              = C.measureUnit;
                     break;
                 case "CVRR":
-                    MarginObj.CVR14.top              = pageMargins.top    ; 
-                    MarginObj.CVR14.outside_right    = pageMargins.right  ; 
-                    MarginObj.CVR14.inside_left      = pageMargins.left   ; 
-                    MarginObj.CVR14.bottom           = pageMargins.bottom ; 
+                    MarginObj.CVR14.top              = pageMargins.top    ;
+                    MarginObj.CVR14.outside_right    = pageMargins.right  ;
+                    MarginObj.CVR14.inside_left      = pageMargins.left   ;
+                    MarginObj.CVR14.bottom           = pageMargins.bottom ;
                     if(cvr14Hinge > 0){
                         MarginObj.CVR14.inside_left += C.hinge; // No need to convert units as we are allready in the right units
                     }
@@ -1813,8 +1294,8 @@
     }
 
     function resizePage(myApp, doc, myPage, myPointSize) {
-        // param myPointSize: Width * Height in postscript points -> Array [int Width, int Height] 
-        
+        // param myPointSize: Width * Height in postscript points -> Array [int Width, int Height]
+
         // Make sure facing pages is on
         // so the pages will automatically stay connected
         var userFacingPages = doc.documentPreferences.facingPages;
@@ -1839,66 +1320,146 @@
     function yAlignPages(/*Spread*/spd,/*'top'|'center'|'bottom'*/vRef,/*uint=0*/refPageIndex,  pgs,a,t,i,yRef,dy)
     // This function is written by Marc Autret, thanks!
     // Source: https://forums.adobe.com/thread/2134539
-    // -----------------------------------------------    
-    // spd           ::  any Spread or MasterSpread.    
-    // vRef          ::  the y-anchor ref relative to which pages are realigned (def:'center')  
-    // refPageIndex  ::  index (in spread) of a properly aligned page (def: 0.)    
-    {    
-        // Validate and reformat vRef.  
-        // ---  
-        vRef = vRef && /^top|bottom$/i.test(vRef) ?  
-            (vRef+'_').toUpperCase() :  
-            '';  
-  
-        // Boring constants    
-        // ---    
-        const CS_PARENT = +CoordinateSpaces.parentCoordinates,    
-              ANY_ORIG  = [0,0],    
-              YTRANS_MX = [1,0,0,1,0,NaN],  
-              REF_ANCHOR = [  
-                +AnchorPoint[vRef+'CENTER_ANCHOR'],  
-                +BoundingBoxLimits.GEOMETRIC_PATH_BOUNDS,  
-                CS_PARENT  
-                ];  
-       
-        pgs = spd.pages.everyItem().getElements();  
-      
-        // Compute the Y-values relative to the spread (parent.)    
-        // ---    
-        for( i=pgs.length, a=[] ; i-- ; a[i]=pgs[i].resolve(REF_ANCHOR,CS_PARENT)[0][1] );  
-    
-        // What is the Y to be used as a reference?    
-        // ---    
-        if( (i=a.length) > (refPageIndex>>>=0) ) refPageIndex = 0;    
-        yRef = a[refPageIndex];    
-       
-        // Reposition mis-aligned pages.    
-        // ---    
-        while( i-- )    
-        {    
-            if( i==refPageIndex || yRef==a[i] ) continue;    
-    
-            YTRANS_MX[5] = yRef - a[i]; // dy    
-    
-            pgs[i].transform( CS_PARENT, ANY_ORIG, YTRANS_MX );    
-        }  
-    }    
+    // -----------------------------------------------
+    // spd           ::  any Spread or MasterSpread.
+    // vRef          ::  the y-anchor ref relative to which pages are realigned (def:'center')
+    // refPageIndex  ::  index (in spread) of a properly aligned page (def: 0.)
+    {
+        // Validate and reformat vRef.
+        // ---
+        vRef = vRef && /^top|bottom$/i.test(vRef) ?
+            (vRef+'_').toUpperCase() :
+            '';
 
-    function updatePagesWithMaster(myApp, doc, myFullMasterName){
-        for (var s = 0; s < doc.spreads.length; s++) {
-            var mySpread = doc.spreads[s];
-            var mySpreadIsCover = false;
-            for (var p = 0; p < mySpread.pages.length; p++) {
-                var myPage = mySpread.pages[p];
+        // Boring constants
+        // ---
+        const CS_PARENT = +CoordinateSpaces.parentCoordinates,
+              ANY_ORIG  = [0,0],
+              YTRANS_MX = [1,0,0,1,0,NaN],
+              REF_ANCHOR = [
+                +AnchorPoint[vRef+'CENTER_ANCHOR'],
+                +BoundingBoxLimits.GEOMETRIC_PATH_BOUNDS,
+                CS_PARENT
+                ];
+
+        pgs = spd.pages.everyItem().getElements();
+
+        // Compute the Y-values relative to the spread (parent.)
+        // ---
+        for( i=pgs.length, a=[] ; i-- ; a[i]=pgs[i].resolve(REF_ANCHOR,CS_PARENT)[0][1] );
+
+        // What is the Y to be used as a reference?
+        // ---
+        if( (i=a.length) > (refPageIndex>>>=0) ) refPageIndex = 0;
+        yRef = a[refPageIndex];
+
+        // Reposition mis-aligned pages.
+        // ---
+        while( i-- )
+        {
+            if( i==refPageIndex || yRef==a[i] ) continue;
+
+            YTRANS_MX[5] = yRef - a[i]; // dy
+
+            pgs[i].transform( CS_PARENT, ANY_ORIG, YTRANS_MX );
+        }
+    }
+
+    function updateSpreadWithMaster( myApp, mySpread, myFullMasterName, force ) {
+        var updatedPages = [];
+        var force = Boolean(force);
+        
+        var doc = mySpread.parent;
+        doc.documentPreferences.facingPages = true;
+
+        for (var p = 0; p < mySpread.pages.length; p++) {
+            var myPage = mySpread.pages[p];
+            if(force) {
+                updatedPages.push(myPage);
+                myPage.appliedMaster = doc.masterSpreads.item(myFullMasterName);
+            } else {
                 var activeMaster = myPage.appliedMaster;
-                if(activeMaster.name == myFullMasterName){
-                    mySpreadIsCover = true;
-                    myPage.appliedMaster = doc.masterSpreads.item(myFullMasterName);
+                if( activeMaster ) {
+                    if(activeMaster.name == myFullMasterName){
+                        updatedPages.push(myPage);
+                        myPage.appliedMaster = doc.masterSpreads.item(myFullMasterName);
+                    }
                 }
             }
-            if(mySpreadIsCover) {
-                myApp.Tools.yAlignPages(mySpread);
+        }
+
+        if( updatedPages.length > 0 ) {
+            myApp.Tools.yAlignPages(mySpread);
+        }
+
+        doc.documentPreferences.facingPages = false;
+
+        return updatedPages;
+    }
+
+    function updatePagesWithMaster(myApp, doc, myFullMasterName, force){
+        for (var s = 0; s < doc.spreads.length; s++) {
+            var mySpread = doc.spreads[s];
+            myApp.Tools.updateSpreadWithMaster( myApp, mySpread, myFullMasterName, force );
+        }
+    }
+
+    function updatePageCountSpread( spread, count ) {
+        try {
+            
+            // Make sure facing pages is on
+            // so the pages will automatically stay connected
+            var doc = spread.parent;
+            doc.documentPreferences.allowPageShuffle = false;
+            doc.documentPreferences.facingPages = true;
+            
+            try {
+                spread.allowPageShuffle = false;
+            } catch ( isMaster ) { }
+            
+            var spreadCount = spread.pages.length;
+
+            if(spreadCount > count) {
+                // Remove excess pages
+                var last = false;
+                while ( spread.pages.length > count ) {
+                    if( last ) {
+                        spread.pages.lastItem().remove();
+                    } else {
+                        spread.pages.firstItem().remove();
+                    }
+                    last = !last;
+                }
+            } else if(spreadCount < count) {
+                // Add more pages
+                var last = false;
+                while ( spread.pages.length < count ) {
+                    if( last ) {
+                        spread.pages.add(LocationOptions.AT_END);
+                    } else {
+                        spread.pages.add(LocationOptions.AT_BEGINNING);
+                    }
+                    last = !last;
+                }
             }
+
+            doc.documentPreferences.facingPages = false;
+
+        } catch( err ) {
+            alert( err );
+        }
+    }
+
+    function updatePageCountAllSpreads( myApp, doc, count, includeMasters ) {
+        if ( includeMasters ) {
+            for(var s = 0; s < doc.masterSpreads.length; s++) {
+                var spread = doc.masterSpreads[s];
+                myApp.Tools.updatePageCountSpread( spread, count );
+            }
+        }
+        for(var s = 0; s < doc.spreads.length; s++) {
+            var spread = doc.spreads[s];
+            myApp.Tools.updatePageCountSpread( spread, count );
         }
     }
 
@@ -1920,7 +1481,7 @@
                     L_flapbind : { pp: 0, label: "FlapL", master: "CB-flap"  },
                     R_flapbind : { pp: 4, label: "FlapR", master: "CB-flap"  },
                     pageCount  : 3 };
-        
+
         if(C.flap  > minimumPageWidth || C.binding  > minimumPageWidth){
             pt.pageCount  += 2;
             pt.L_cover.pp  = 1;
@@ -1941,7 +1502,7 @@
                 pt.R_flapbind.pp = 3;
             }
         }
-        
+
         // If spine is 0, build front cover only
         if(C.spine == 0) {
             pt.pageCount  = 1;
@@ -1952,11 +1513,11 @@
                 if(C.binding  > minimumPageWidth){
                     pt.R_flapbind.pp  = 0;
                     pt.R_cover.pp = 1;
-                }           
+                }
 
             }
         }
-        
+
         return pt;
     }
 
@@ -2051,7 +1612,7 @@
                 break;
         }
     }
-    
+
     function getSpreadBounds(myApp, mySpread){
         // This functions returns the bounds of the spread in current measure units
         try{
@@ -2095,7 +1656,7 @@
             return null;
         }
     }
-    
+
     function getSpreadSize(myApp, mySpread) {
         // This function returns the width and height of a spread
         var spreadSize = { width: 0, height: 0 };
@@ -2109,7 +1670,7 @@
         }
         return spreadSize;
     }
-    
+
     function clearItemsWithLabel(myApp, myPageOrSpread, myLabel) {
         var pageItems = myApp.Tools.getItemByLabel(myPageOrSpread, myLabel);
         var len = pageItems.length;
@@ -2122,10 +1683,13 @@
         }
     }
 
-    function getItemByLabel(myPageOrSpread, labels){
+    function getItemByLabel(myPageOrSpread, labels, includeMasters){
         // This funcion returns an array of all items found with given label(s)
         // If nothing is found this function returns an empty array
 
+        var inclMaster = Boolean( includeMasters );
+        
+        // So we can pass a single label too
         if (labels instanceof Array) {
             myLabels = labels;
         } else {
@@ -2134,29 +1698,31 @@
 
         var labelCount = myLabels.length;
         var allItems = new Array();
-        if(myPageOrSpread.isValid){
-            var myElements = myPageOrSpread.allPageItems;
-            var len = myElements.length;
+
+        function addToItems( foundElements ) {
+            var len = foundElements.length;
             for (var i = len-1; i >= 0; i--){
                 for (var l = labelCount-1; l >= 0; l--){
-                    if(myElements[i].label == myLabels[l]){
-                        allItems.push(myElements[i]);
+                    if(foundElements[i].label == myLabels[l]){
+                        allItems.push(foundElements[i]);
                     }
                 }
             }
+        }
+
+        if(myPageOrSpread.isValid){
+            addToItems( myPageOrSpread.allPageItems );
             // Guides are not part of pageItems but they can have labels too!
-            var myGuides   = myPageOrSpread.guides;
-            var len = myGuides.length;
-            for (var i = len-1; i >= 0; i--){
-                for (var l = labelCount-1; l >= 0; l--){
-                    if(myGuides[i].label == myLabels[l]){
-                        allItems.push(myGuides[i]);
-                    }
-                }
+            addToItems( myPageOrSpread.guides );
+
+            if(inclMaster && myPageOrSpread.appliedMaster) {
+                addToItems( myPageOrSpread.appliedMaster.allPageItems );
+                addToItems( myPageOrSpread.appliedMaster.guides );
             }
         } else {
             alert("ERROR 759403253473: Expected a valid page or spread.");
-        }     
+        }
+
         return allItems;
     }
 
@@ -2167,16 +1733,16 @@
         // This function returns the geometric bounds relative
         // to parent page of given pageItem
         // ONLY HANDLES X VALUES FOR SPREAD! (IT IGNORES Y VALUES)
-        
+
         if(pageItem.parentPage==null) return pageItem.visibleBounds;
-        
+
         var lastX = 0;
         var parentSpread = pageItem.parentPage.parent;
-        
+
         // switch to spread rulers per page
         var originalRulers = myApp.Tools.setRuler(parentSpread.parent, {origin: RulerOrigin.pageOrigin} );
 
-        for (var p = 0; p < parentSpread.pages.length; p++) { 
+        for (var p = 0; p < parentSpread.pages.length; p++) {
             if(parentSpread.pages[p] == pageItem.parentPage){
                 break;
             }
@@ -2184,7 +1750,7 @@
                 lastX += parentSpread.pages[p].bounds[1];
             }
         }
-        
+
         var ppBounds = pageItem.parentPage.bounds;
         var itBounds = pageItem.visibleBounds;
 
@@ -2192,7 +1758,7 @@
         myApp.Tools.setRuler(parentSpread.parent, {origin: RulerOrigin.spreadOrigin} );
 
         var it2Bounds = pageItem.visibleBounds;
-        
+
         // reset original rulers
         myApp.Tools.setRuler(parentSpread.parent, originalRulers);
 
@@ -2205,7 +1771,7 @@
             var relX1 = itBounds[1];
             var relX3 = itBounds[3];
         }
-        
+
         return [itBounds[0], relX1, itBounds[2], relX3];
     }
 
@@ -2213,19 +1779,19 @@
         // This function returns the geometric bounds relative
         // to parent spread of given pageItem
         // ONLY HANDLES X VALUES FOR SPREAD! (IT IGNORES Y VALUES)
-        
+
         if(pageItem.parentPage==null) return pageItem.visibleBounds;
-        
+
         var parentSpread = pageItem.parentPage.parent;
-        
+
         // switch to spread rulers per page
         var originalRulers = myApp.Tools.setRuler(parentSpread.parent, {origin: RulerOrigin.spreadOrigin} );
-        
+
         var itBounds = pageItem.visibleBounds;
 
         // reset original rulers
         myApp.Tools.setRuler(parentSpread.parent, originalRulers);
-        
+
         return itBounds;
     }
 
@@ -2250,13 +1816,13 @@
         return {    bounds    : bounds,
                     height    : height,
                     width     : width,
-                    topLeft   : {x: topLeftX                , y: topLeftY               } , 
-                    topCenter : {x: topLeftX + halfWidth    , y: topLeftY               } , 
+                    topLeft   : {x: topLeftX                , y: topLeftY               } ,
+                    topCenter : {x: topLeftX + halfWidth    , y: topLeftY               } ,
                     topRight  : {x: botRightX               , y: topLeftY               } ,
-                    midLeft   : {x: topLeftX                , y: topLeftY  + halfHeight } , 
-                    midCenter : {x: topLeftX + halfWidth    , y: topLeftY  + halfHeight } , 
-                    midRight  : {x: botRightX               , y: topLeftY  + halfHeight } , 
-                    botLeft   : {x: topLeftX                , y: botRightY              } , 
+                    midLeft   : {x: topLeftX                , y: topLeftY  + halfHeight } ,
+                    midCenter : {x: topLeftX + halfWidth    , y: topLeftY  + halfHeight } ,
+                    midRight  : {x: botRightX               , y: topLeftY  + halfHeight } ,
+                    botLeft   : {x: topLeftX                , y: botRightY              } ,
                     botCenter : {x: topLeftX + halfWidth    , y: botRightY              } ,
                     botRight  : {x: botRightX               , y: botRightY              } };
     }
@@ -2280,17 +1846,17 @@
         // Fetch Bounds Info
         var relBounds  = myApp.Tools.getBoundsInfo(relativeToBounds);
         var itemBounds = myApp.Tools.getBoundsInfo(itemBounds);
-        
+
         return { bounds    : itemBounds.bounds,
                  height    : itemBounds.height,
                  width     : itemBounds.width,
                  topLeft   : { x: itemBounds.topLeft.x   - relBounds.topLeft.x    , y: itemBounds.topLeft.y   - relBounds.topLeft.y    } ,
-                 topCenter : { x: itemBounds.topCenter.x - relBounds.topCenter.x  , y: itemBounds.topCenter.y - relBounds.topCenter.y  } , 
+                 topCenter : { x: itemBounds.topCenter.x - relBounds.topCenter.x  , y: itemBounds.topCenter.y - relBounds.topCenter.y  } ,
                  topRight  : { x: itemBounds.topRight.x  - relBounds.topRight.x   , y: itemBounds.topRight.y  - relBounds.topRight.y   } ,
-                 midLeft   : { x: itemBounds.midLeft.x   - relBounds.midLeft.x    , y: itemBounds.midLeft.y   - relBounds.midLeft.y    } , 
-                 midCenter : { x: itemBounds.midCenter.x - relBounds.midCenter.x  , y: itemBounds.midCenter.y - relBounds.midCenter.y  } , 
-                 midRight  : { x: itemBounds.midRight.x  - relBounds.midRight.x   , y: itemBounds.midRight.y  - relBounds.midRight.y   } , 
-                 botLeft   : { x: itemBounds.botLeft.x   - relBounds.botLeft.x    , y: itemBounds.botLeft.y   - relBounds.botLeft.y    } , 
+                 midLeft   : { x: itemBounds.midLeft.x   - relBounds.midLeft.x    , y: itemBounds.midLeft.y   - relBounds.midLeft.y    } ,
+                 midCenter : { x: itemBounds.midCenter.x - relBounds.midCenter.x  , y: itemBounds.midCenter.y - relBounds.midCenter.y  } ,
+                 midRight  : { x: itemBounds.midRight.x  - relBounds.midRight.x   , y: itemBounds.midRight.y  - relBounds.midRight.y   } ,
+                 botLeft   : { x: itemBounds.botLeft.x   - relBounds.botLeft.x    , y: itemBounds.botLeft.y   - relBounds.botLeft.y    } ,
                  botCenter : { x: itemBounds.botCenter.x - relBounds.botCenter.x  , y: itemBounds.botCenter.y - relBounds.botCenter.y  } ,
                  botRight  : { x: itemBounds.botRight.x  - relBounds.botRight.x   , y: itemBounds.botRight.y  - relBounds.botRight.y   } };
     }
@@ -2308,7 +1874,7 @@
         // This is not the most elegant solution but at least it works consistently
         app.activeWindow.transformReferencePoint = AnchorPoint.BOTTOM_LEFT_ANCHOR;
         myTextFrame.move(myPage, [0.05, 0.05]); //Page can’t be smaller than 0.5mm this number works in any measurement unit :)
-        
+
         try {
             myTextFrame.geometricBounds = myBounds;
         } catch(error) {
@@ -2421,12 +1987,12 @@
         // givenLock: True:  Layer will be locked
         // givenLock: False: Layer will be unlocked
         originalLock = myLayer.locked;
-        
+
         if(givenLock == undefined){
             // Toggle!
             var givenLock = !originalLock;
         }
-        
+
         if(givenLock){
             myLayer.locked = true;
             return originalLock;
@@ -2459,7 +2025,7 @@
     //This awesome function found here: http://tomaxxi.com/2010/09/quicktip-add-custom-cmykrgbhex-colors-to-document/
     //Example: myColorAdd(myDoc, "My New Colour", ColorModel.PROCESS, [16,0,0,55]);
     function addColor(myDocument, myColorName, myColorModel, myColorValue, forceColor) {
-        // The forceColor parameter makes existing swatch with the same name update to these new values 
+        // The forceColor parameter makes existing swatch with the same name update to these new values
         if (myColorValue instanceof Array == false) {
             myColorValue = [(parseInt(myColorValue, 16) >> 16) & 0xff, (parseInt(myColorValue, 16) >> 8) & 0xff, parseInt(myColorValue, 16) & 0xff];
             myColorSpace = ColorSpace.RGB;
@@ -2488,8 +2054,8 @@
     }
 
     function addCMYKswatch(myDocument, myColorName, myColorValue, forceColor) {
-        // You can send RGB CMYK or HEX values 
-        // We convert the swatch after creation 
+        // You can send RGB CMYK or HEX values
+        // We convert the swatch after creation
         // to let InDesign handle the conversion
 
         var forceColor = forceColor || false; // Update swatch if nececairy
@@ -2642,9 +2208,9 @@
         } else {
             var tempColour   = colour.duplicate();
         }
-        
+
         tempColour.space = ColorSpace.LAB;
-        
+
         // HSB
         var hue        = tempColour.colorValue[0];
         var saturation = tempColour.colorValue[1];
@@ -2720,12 +2286,11 @@
         saveJSONLabel                   : saveJSONLabel,
         retrieveJSONLabel               : retrieveJSONLabel,
         getMaxSlug                      : getMaxSlug,
+        getMinSlug                      : getMinSlug,
         getMaxBleed                     : getMaxBleed,
         guessC                          : guessC,
+        guessCfromUnknown               : guessCfromUnknown,
         createBlueprint                 : createBlueprint,
-        checkDocumentBleed              : checkDocumentBleed,
-        checkCagainstDoc                : checkCagainstDoc,
-        checkCagainstSpread             : checkCagainstSpread,
         sameRulers                      : sameRulers,
         // PAGE TOOLS
         insideMinMaxPageSize            : insideMinMaxPageSize,
@@ -2742,7 +2307,10 @@
         update_C_margins                : update_C_margins,
         resizePage                      : resizePage,
         yAlignPages                     : yAlignPages,
+        updateSpreadWithMaster          : updateSpreadWithMaster,
         updatePagesWithMaster           : updatePagesWithMaster,
+        updatePageCountSpread           : updatePageCountSpread,
+        updatePageCountAllSpreads       : updatePageCountAllSpreads,
         getMinPageWidthINDD             : getMinPageWidthINDD,
         getMaxPageWidthINDD             : getMaxPageWidthINDD,
         pageTracker                     : pageTracker,
