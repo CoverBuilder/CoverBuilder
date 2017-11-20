@@ -3,6 +3,7 @@ CoverBuilder
 
 Setting up a cover was always a tedious job. As you needed to calculate with the measurements of a wide variety of templates supplied by the printer. The goal of the interface is to eliminate calculating with these values yourself. Therefore you can include(+) or exclude(-) measurements within reading direction and common sense. CoverBuilder makes the most awkward templates a no-brainer.
 
+![Interface](Pictures/ss_ui_main_307.png?raw=true "UI")
 
 I found a bug/missing feature!
 ------------------------------

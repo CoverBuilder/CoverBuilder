@@ -63,7 +63,7 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
         NewCover : { en: "New Cover...",
                      de: "Neue Buchhülle...",
                      nl: "Nieuwe Omslag...",
-                     fr: "Nouveau Couverture" },
+                     fr: "Nouveau Couverture..." },
 
         SaveAs : { en: "Save As...",
                    de: "Speichern Unter...",
@@ -88,12 +88,12 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
         SlugTool : { en: "Slug Tool...",
                      de: "Infobereich Werkzeug...",
                      nl: "Witruimte Gereedschap...",
-                     fr: "Ligne-bloc Outils..." },
+                     fr: "Slug Tool..." },
                      
-    	PlaceImage : { en: "Place Cover Image...",
-                     de: "Platz Buchhülle Bild...",
-                     nl: "Plaats Omslag Beeld...",
-                     fr: "Importer Couverture Image..." },
+        PlaceImage : { en: "Place Cover Image...",
+                       de: "Platz Buchhülle Bild...",
+                       nl: "Plaats Omslag Beeld...",
+                       fr: "Importer Couverture Image..." },
 
         LoadDocPresets : { en: "Load Document Presets...",
                            de: "Load Dokument Vorgaben...",
@@ -342,7 +342,87 @@ For example, en_US identifies U.S. English, while en_GB identifies British Engli
                  de: "Name:",
                  nl: "Naam:",
                  fr: "Nom:" },
-                 
+        
+        General : { en: "General:",
+                    de: "General:",
+                    nl: "Algemeen:",
+                    fr: "Général:" },
+
+        Show_CoverBuilder_Menu : { en: "Show CoverBuilder Menu",
+                                   de: "Show CoverBuilder Menu",
+                                   nl: "Show CoverBuilder Menu",
+                                   fr: "Show CoverBuilder Menu" },
+
+        Slugs : { en: "Slugs:",
+                  de: "Infobereiche:",
+                  nl: "Witruimte:",
+                  fr: "Slugs:" },
+
+        Add_page_size_info_to_slug_area : { en: "Add page size info to slug area",
+                                            de: "Add page size info to slug area",
+                                            nl: "Add page size info to slug area",
+                                            fr: "Add page size info to slug area" },
+
+        Add_total_trim_info_to_slug_area : { en: "Add total trim info to slug area",
+                                             de: "Add total trim info to slug area",
+                                             nl: "Add total trim info to slug area",
+                                             fr: "Add total trim info to slug area" },
+
+        Registration_font : { en: "Registration font",
+                              de: "Registration font",
+                              nl: "Registration font",
+                              fr: "Registration font" },
+
+        New_Cover : { en: "New Cover",
+                      de: "Neue Buchhülle",
+                      nl: "Nieuwe Omslag",
+                      fr: "Nouveau Couverture" },
+
+        Autoload_foremost_document : { en: "Autoload foremost document",
+                                       de: "Autoload foremost document",
+                                       nl: "Autoload foremost document",
+                                       fr: "Autoload foremost document" },
+
+        Autoload_last_used_settings : { en: "Autoload last used settings",
+                                        de: "Autoload last used settings",
+                                        nl: "AAutoload last used settings",
+                                        fr: "Autoload last used settings" },
+
+        Send_to_Photoshop : { en: "Send to Photoshop",
+                              de: "Senden an Photoshop",
+                              nl: "Stuur naar Photoshop",
+                              fr: "Envoyer à Photoshop" },
+
+        Ask_for_PPI_before_sending : { en: "Ask for PPI before sending",
+                                       de: "Ask for PPI before sending",
+                                       nl: "Ask for PPI before sending",
+                                       fr: "Ask for PPI before sending" },
+
+        Plugins : { en: "Plugins",
+                    de: "Plugins",
+                    nl: "Plugins",
+                    fr: "Plugins" },
+
+        Deactivate_Plugin : { en: "Deactivate Plugin",
+                              de: "Deactivate Plugin",
+                              nl: "Deactivate Plugin",
+                              fr: "Deactivate Plugin" },
+
+        Activate_Plugin : { en: "Activate Plugin",
+                            de: "Activate Plugin",
+                            nl: "Activate Plugin",
+                            fr: "Activate Plugin" },
+
+        Getting_State : { en: "Getting State...",
+                          de: "Getting State...",
+                          nl: "Getting State...",
+                          fr: "Getting State..." },
+
+        Autolaunch_after_each_build : { en: "Auto-launch after each build",
+                                        de: "Auto-launch after each build",
+                                        nl: "Auto-launch after each build",
+                                        fr: "Auto-launch after each build" },
+
         New_spine_width : { en: "New spine width",
                             de: "New spine width",
                             nl: "Nieuwe rug dikte",

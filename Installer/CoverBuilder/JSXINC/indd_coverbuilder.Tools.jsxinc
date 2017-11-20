@@ -816,22 +816,14 @@
         return NewC;
     }
 
-    function guessC(myApp, myDoc){
+    function guessC( myApp, myDoc ) {
         // This function expects a valid document for param myDoc
         // It will return a valid C object
         // The function will try and construct a C object from a document not build with CoverBuilder
         // Or return a new empty C object
 
-        if(isBuildWithCoverBuilder(myApp, myDoc)){
-            // myDoc is build with CoverBuilder: Let's retrieve the Cover object
-            return myApp.XMP.retrieveCoverObject(myApp, myDoc);
-        }
-
-        // myDoc is not build with CoverBuilder
-        // ------------------------------------
-
         var NewC = myApp.STools.newC(myApp);
-            NewC.name             = "Conclusion";
+            NewC.name = "Conclusion";
 
         // Check if one of the rulers is in a valid measure unit
         // Then set them both the same and safe the measuereunit
@@ -839,7 +831,7 @@
         if( cUnit == null ){
             cUnit = 0;
         }
-        NewC.measureUnit      = cUnit;
+        NewC.measureUnit = cUnit;
 
         // Safe current document rulers and set both rulers to a valid measure
         var oldRulers = myApp.Tools.setRuler(myDoc, {units : cUnit});
@@ -1867,6 +1859,13 @@
 
     function addTextFrame(myApp, myPage, myBounds, myString, myParagraphStyle, myRotationAngle, myLabel){
         var myTextFrame = myPage.textFrames.add();
+        
+        // Make sure [none] style is applied
+        myTextFrame.applyObjectStyle( myPage.parent.parent.objectStyles[0], true, true );
+        myTextFrame.strokeWeight = 0;
+        myTextFrame.strokeColor = "None";
+        myTextFrame.fillColor   = "None";
+
         app.activeWindow.transformReferencePoint = AnchorPoint.CENTER_ANCHOR;
         myTextFrame.rotationAngle = myRotationAngle;
 
@@ -1894,7 +1893,7 @@
         // myColour {fill:"None",stroke:"None"};
         try {
             // Create rectangle on layer
-            var rect = myPage.rectangles.add(myLayer,{geometricBounds:myBounds, fillColor:myColour.fill, strokeColor:myColour.stroke});
+            var rect = myPage.rectangles.add(myLayer,{geometricBounds:myBounds, appliedObjectStyle: myPage.parent.parent.objectStyles.item(0), fillColor:myColour.fill, strokeColor:myColour.stroke});
         } catch(e){
             alert("Could not add new rectangle to page. (Error 5784930)\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }

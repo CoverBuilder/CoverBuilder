@@ -1,24 +1,13 @@
 
-/*
-
---------------------------------------------
+/* --------------------------------------------
 
     CB_PreferencesUI.jsxinc
     A CoverBuilder Helper Script
-    Version 1.0
+    Version 1.1
 
-    Bruno Herfst 2015
+    Bruno Herfst 2015 – 2017
 
---------------------------------------------
-
-*/
-
-/* TO DO LIST
-
-  – Add font style dropdown
-  - Localise
-
-*/
+-------------------------------------------- */
 
 
 (function() {
@@ -62,18 +51,18 @@
 
       //////////////////////
       // Start General panel
-      var genPanel = leftColumn.add("panel", undefined, "General");
+      var genPanel = leftColumn.add("panel", undefined, String(myApp.Localise.UI['General']) );
           genPanel.preferredSize.width = columnWidth;
           genPanel.margins = 20;
           genPanel.alignChildren = "left";
           genPanel.orientation = 'column';
 
-      var showCBmenuCheckbox = genPanel.add ("checkbox", undefined, "Show CoverBuilder Menu");
+      var showCBmenuCheckbox = genPanel.add ("checkbox", undefined, String(myApp.Localise.UI['Show_CoverBuilder_Menu']) );
           showCBmenuCheckbox.value = myApp.Settings.add_CoverBuilder_Menu;
       
       var slugSizeGroup = genPanel.add('group');
-          slugSizeGroup.add('statictext', undefined, 'Slugs:');
-    
+          slugSizeGroup.add('statictext', undefined, String(myApp.Localise.UI['Slugs']));
+
       var slugText = slugSizeGroup.add('edittext');
           slugText.characters = 5;
           slugText.text = String(myApp.Settings.Slugs.measure);
@@ -99,11 +88,11 @@
           confirmMinSlug();
       }
       
-      var pageSlugCheckbox = genPanel.add ("checkbox", undefined, "Add page sizes to slug area");
+      var pageSlugCheckbox = genPanel.add ("checkbox", undefined, String(myApp.Localise.UI['Add_page_size_info_to_slug_area']) );
           pageSlugCheckbox.value = myApp.Settings.pageSizes_in_Slug;
-      var spreadSlugCheckbox = genPanel.add ("checkbox", undefined, "Add total trim to slug area");
+      var spreadSlugCheckbox = genPanel.add ("checkbox", undefined, String(myApp.Localise.UI['Add_total_trim_info_to_slug_area']) );
           spreadSlugCheckbox.value = myApp.Settings.totalTrim_in_Slug;
-      
+
       // START FONTS
       // -------------------------------------------------
       var regFontFamily = myApp.STools.getRegistrationFontFamilyName(myApp);
@@ -144,7 +133,7 @@
       var fontGroup = genPanel.add('group');
           fontGroup.orientation =  "column";
           fontGroup.alignChildren = "left";
-          fontGroup.add('statictext', undefined, 'Registration font: ');
+          fontGroup.add('statictext', undefined, String(myApp.Localise.UI['Registration_font']) );
           
       var fontFamilyNameDrop = fontGroup.add('dropdownlist',[0,0,180,30],undefined,{items:myFamilyList});
           fontFamilyNameDrop.selection = familySelected;          
@@ -166,23 +155,23 @@
 
       ///////////////////////
       // Start New Cover panel
-      var newCoverPanel = leftColumn.add("panel", undefined, "New Cover");
+      var newCoverPanel = leftColumn.add("panel", undefined, String(myApp.Localise.UI['New_Cover']) );
           newCoverPanel.preferredSize.width = columnWidth;
           newCoverPanel.margins = 20;
           newCoverPanel.alignChildren = "left";
           newCoverPanel.orientation = 'column';
       
-      var autoLoadFrontDocCheckbox = newCoverPanel.add ("checkbox", undefined, "Autoload foremost document");
+      var autoLoadFrontDocCheckbox = newCoverPanel.add ("checkbox", undefined, String(myApp.Localise.UI['Autoload_foremost_document']) );
           autoLoadFrontDocCheckbox.value = myApp.Settings.autoload_front_document;
 
-      var autoLoadLastUsedCheckbox = newCoverPanel.add ("checkbox", undefined, "Autoload last used settings");
+      var autoLoadLastUsedCheckbox = newCoverPanel.add ("checkbox", undefined, String(myApp.Localise.UI['Autoload_last_used_settings']) );
           autoLoadLastUsedCheckbox.value = myApp.Settings.autoload_last_used_settings;
       // End New Cover Panel
       /////////////////////
 
       ////////////////////////
       // Start Photoshop panel
-      var psPanel = leftColumn.add("panel", undefined, "Send to Photoshop");
+      var psPanel = leftColumn.add("panel", undefined, String(myApp.Localise.UI['Send_to_Photoshop']) );
           psPanel.preferredSize.width = columnWidth;
           psPanel.margins = 20;
           psPanel.alignChildren = "left";
@@ -195,14 +184,14 @@
           ppiText.text = myApp.Settings.standardPPI;
           ppiGroup.add('statictext', undefined, 'PPI');
 
-      var resFlagCheckbox = psPanel.add ("checkbox", undefined, "Ask for PPI before sending");
+      var resFlagCheckbox = psPanel.add ("checkbox", undefined, String(myApp.Localise.UI['Ask_for_PPI_before_sending']) );
           resFlagCheckbox.value = myApp.Settings.ask_for_PPI_on_send;
 
       // ADD SHOW THIS AT SEND
       ////////////////////////
 
       // Add colour of preview layers here
-      // No, should be automatically set by getting UIcolour
+      // No, should be automatically set by getting UIcolour so they become 'invissible'
       /*
       var dropshadowCheckbox = psPanel.add ("checkbox", undefined, "Add drop shadow to preview layers");
           dropshadowCheckbox.value = myApp.Settings.add_drop_shadow;
@@ -220,13 +209,14 @@
 
       var plugCount = myApp.Settings.pluginfo.length;;
 
-      var scrollPanel = rightColumn.add("panel", undefined, "Plugins"); // ScrollPluginPanel
+      var scrollPanel = rightColumn.add("panel", undefined, String(myApp.Localise.UI['Plugins']) ); // ScrollPluginPanel
           scrollPanel.alignChildren = "top"; 
           scrollPanel.orientation   = 'row';
 
       var itemHeight  = 75;
       var itemPadding = 10;
-      var scrollbarHeight = (itemHeight * 4) + (itemPadding * 3);
+      var itemCount   = 4;
+      var scrollbarHeight = (itemHeight * itemCount) + (itemPadding * (itemCount-1));
 
       var pluginGroup = scrollPanel.add("group");
           pluginGroup.alignChildren = "left"; 
@@ -236,13 +226,13 @@
 
       var sbar = scrollPanel.add ("scrollbar", [0,0,20,scrollbarHeight]);
           sbar.minvalue = 0;
-          sbar.maxvalue = plugCount-4;
+          sbar.maxvalue = plugCount-itemCount;
           sbar.value = 0;
           sbar.jumpdelta = 1;
           sbar.stepdelta = 1;
 
           sbar.onChanging = function () {
-            showPluginsInUI(this.value, this.value+4);
+            showPluginsInUI(this.value, this.value+itemCount);
           };
 
       function updatePluginData(pluginData, plugIndex){
@@ -260,7 +250,7 @@
         for ( var i=a; i < z; i++ ) {
 
           function pluginData(pluginData, plugIndex) {
-            var BT_activated = ["Deactivate Plugin", "Activate Plugin"]; // button text
+            var BT_activated = [String(myApp.Localise.UI['Deactivate_Plugin']), String(myApp.Localise.UI['Activate_Plugin'])]; // button text
             var PD = pluginData;
             var PI = plugIndex;
 
@@ -270,10 +260,10 @@
                 pluginPanel.alignChildren = "left";
                 pluginPanel.orientation   = 'row';
 
-            var activeBut      = pluginPanel.add ("button", undefined, "Getting State..." );
+            var activeBut      = pluginPanel.add ("button", undefined, String(myApp.Localise.UI['Getting_State']) );
                 activeBut.characters = 18;
 
-            var launchCheckbox        = pluginPanel.add ("checkbox", undefined, "Auto-launch after each build");
+            var launchCheckbox        = pluginPanel.add ("checkbox", undefined, String(myApp.Localise.UI['Autolaunch_after_each_build']) );
                 launchCheckbox.value  = PD.launch_on_load;
 
             launchCheckbox.onClick = function (){

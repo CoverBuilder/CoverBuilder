@@ -1,6 +1,6 @@
 // CoverBuilder UI
-// Bruno Herfst 2014-2015
-// Version 3
+// Bruno Herfst 2014-2017
+// Version 3.1
 
 (function() {
     //////////////
@@ -248,9 +248,34 @@
                 if(flapQBDropdown.selection != 0){
                     var thisQB = parseFloat(myFlapQB.text);
                     if(thisQB < parseFloat(myHinge.text) && thisQB != 0){
+                        myHinge.active = true;
                         alert(String(myApp.Localise.UIalert['Binding_should_cover_Hinge_or_Score']));
                         return null;
                      }
+                }
+
+                // Check wrap and flap settings
+                //------
+                if(parseFloat(myWrap.text) != 0 ) { // Don't bother to check values if value is 0
+                    if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
+                        myWrap.active = true;
+                        return null;
+                    } else if(parseFloat(myBleed.text) >= parseFloat(myWrap.text) && wrapDropdown.selection == 2){
+                        alert(String(myApp.Localise.UIalert['Cant_subtract_bleed_from_wrap']));
+                        myBleed.active = true;
+                        return null;
+                    }
+                }
+                if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
+                    alert(String(myApp.Localise.UIalert['Cant_subtract_hinge_from_cover']));
+                    myHinge.active = true;
+                    return null;
+                }
+                if(parseFloat(myFlapQB.text) <= parseFloat(myFold.text) && flapQBDropdown.selection == 0 && this.selection == 0){
+                    alert(String(myApp.Localise.UIalert['Cant_subtract_foldover_from_flaps']));
+                    myFold.active = true;
+                    return null;
                 }
 
                 // Check for minimal page size: InDesign can't handle pages smaller then 0.5mm
@@ -282,6 +307,7 @@
                     mySpine.active = true;
                     return null;
                 }
+
 
                 // All good. But before we close the user interface
                 // let's safe settings to -last used- preset and set the Cover (C) object
@@ -446,10 +472,10 @@
                 // Don't bother to check values if value is 0
                 if(parseFloat(myWrap.text) != 0){
                     if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
-                        wrapDropdown.selection = 1;
+                        // wrapDropdown.selection = 1;
                         alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
                     } else if(parseFloat(myBleed.text) >= parseFloat(myWrap.text) && wrapDropdown.selection == 2){
-                        wrapDropdown.selection = 1;
+                        // wrapDropdown.selection = 1;
                         alert(String(myApp.Localise.UIalert['Cant_subtract_bleed_from_wrap']));
                     }
                 }
@@ -461,7 +487,7 @@
                 presets.resetSelection();
                 presetBut.text = savePS;
                 if(parseFloat(myWidth.text) <= parseFloat(myHinge.text) && hingeDropdown.selection == 0){
-                    hingeDropdown.selection = 1;
+                    // hingeDropdown.selection = 1;
                     alert(String(myApp.Localise.UIalert['Cant_subtract_hinge_from_cover']));
                 }
             }
@@ -487,7 +513,7 @@
                 presets.resetSelection();
                 presetBut.text = savePS;
                 if(parseFloat(myFlapQB.text) <= parseFloat(myFold.text) && flapQBDropdown.selection == 0 && this.selection == 0){
-                    this.selection = 1;
+                    // this.selection = 1;
                     alert(String(myApp.Localise.UIalert['Cant_subtract_foldover_from_flaps']));
                 }
             }
@@ -522,15 +548,16 @@
                 // Don't bother to check values if value is 0
                 if(parseFloat(myWrap.text) != 0){
                     if(parseFloat(myBleed.text) <= parseFloat(myWrap.text) && wrapDropdown.selection == 0){
-                        wrapDropdown.selection = 1;
+                        // wrapDropdown.selection = 1;
                         alert(String(myApp.Localise.UIalert['Cant_subtract_wrap_from_bleed']));
                     } else if(parseFloat(myBleed.text) >= parseFloat(myWrap.text) && wrapDropdown.selection == 2){
-                        wrapDropdown.selection = 1;
+                        // wrapDropdown.selection = 1;
                         alert(String(myApp.Localise.UIalert['Cant_subtract_bleed_from_wrap']));
                     }
                 }
             }
         }
+
 
         function getCoverObjectFromUI(myApp, newName){
             //This function reads the dialog data and creates a cover object to inspect

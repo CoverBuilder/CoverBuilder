@@ -24,9 +24,9 @@
         try{
             var myCover = myApp.Tools.getActiveCover(myApp, true);
             
-            if(myApp.Tools.isBuildWithCoverBuilder(myApp, myCover)){
-            	// Doc is build with CoverBuilder: Let's retrieve the Cover object
-            	var C = myApp.XMP.retrieveCoverObject(myApp, myCover);
+            if( myApp.Tools.isBuildWithCoverBuilder(myApp, myCover) ){
+                // Doc is build with CoverBuilder: Let's retrieve the Cover object
+                var C = myApp.XMP.retrieveCoverObject(myApp, myCover); // Always returns a valid C object
 
                 // Check if C is good to go
                 if( (C.width > 0) && (!C.resolved) ){
@@ -40,16 +40,16 @@
                     if( !check.message.ok ){
                         alert( "CoverBuilder: " + String(myApp.Localise.UIalert['Beware_Data_Out_of_Date']) + "\n" + check.message.text);
                     }
-                } else { // Not a good C object
+                } else {
                     C = myApp.Tools.guessC(myApp, myCover);
                 }
-        	} else {
-        		// Doc is not build with CoverBuilder: Let's try and guess a Cover object
-        		var C = myApp.Tools.guessC(myApp, myCover);
-        	}
+            } else {
+                // Doc is not build with CoverBuilder: Let's try and guess a Cover object
+                var C = myApp.Tools.guessC(myApp, myCover);
+            }
 
             myApp.UI.CoverOrder(myApp, C);  //UI with C data
-		
+        
         } catch(e) {
             alert("CoverBuilder Load Settings Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
         }
