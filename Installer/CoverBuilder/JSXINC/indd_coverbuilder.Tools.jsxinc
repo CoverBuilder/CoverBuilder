@@ -373,14 +373,22 @@
 
     function createBlueprint(myApp, C) {
         // Make sure C is resolved so all measurements are in the same units
+        
+        // We need to validate C here so it is actually in a shape we can build
+        // Working on it on a diffrent branch!
+  
         if(!C.resolved){
-            C = myApp.STools.resolveSizes(myApp, C);
+            var C = myApp.STools.resolveSizes(myApp, C);
         }
 
         var bluePrint = new Array();
 
         var bindingHinge = 0;
-        var cvr14Hinge   = C.hinge;
+        var cvr14Hinge   = 0;
+
+        if( C.hasOwnProperty(hinge) ) {
+          cvr14Hinge   = C.hinge;
+        }
 
         if(C.spine > 0) {
             // Add spine
@@ -1960,19 +1968,23 @@
     function getSelectAndMoveLayer(doc, name, afterlayerNo){
         return moveLayer(getAndSelectLayer(doc, name), afterlayerNo);
     }
+    
     function getAndSelectLayer(doc, name) {
         return selectLayer(doc, getLayer(doc, name));
     }
+    
     function getLayer(doc, name) {
-        for (i=0; i<doc.layers.length; i++) {
+        for (var i=0; i < doc.layers.length; i++) {
             if (doc.layers[i].name==name) return doc.layers[i];
         }
         return doc.layers.add({name:name});
     }
+    
     function selectLayer(doc, layer){
         doc.activeLayer = layer;
         return layer;
     }
+    
     function moveLayer(layer, afterlayerNo){
         try {
             layer.move(LocationOptions.AFTER,layer.parent.layers[afterlayerNo]);

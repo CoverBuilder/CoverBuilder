@@ -94,14 +94,15 @@
 
         /////////////////////////////////////////////////////////////////////////////
         var minimalGroup = myWindow.add ("group");
-            minimalGroup.margins = [0,extraSpace,0,10+extraSpace];
+            minimalGroup.margins = [0,extraSpace+10,extraSpace,10];
         
         var myHeightLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Height'])+":");
             myHeightLabel.justify = "right";
 
         var myHeight = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
+        var mySwapWH = minimalGroup.add ("button", [0,0,unitHeight,unitHeight], "\u2194");
 
-        var myWidthLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong,unitHeight], String(myApp.Localise.UI['Width'])+":");
+        var myWidthLabel = minimalGroup.add ("statictext", [0,0,unitWidthLong - unitHeight,unitHeight], String(myApp.Localise.UI['Width'])+":");
             myWidthLabel.justify = "right";
 
         var myWidth = minimalGroup.add ("edittext", [0,0,unitWidthShort,unitHeight], "0");
@@ -228,6 +229,15 @@
 
         ////////////// dialog functionality
         
+        mySwapWH.onClick = function () {
+            // swap width and height content
+            var w = myApp.NumCon.NaN20( parseFloat(  myWidth.text) );
+            var h = myApp.NumCon.NaN20( parseFloat( myHeight.text) );
+            myWidth.text = h;
+            myHeight.text = w;
+            presetBut.text = savePS;
+        }
+
         cancelBut.onClick = function () {
             myWindow.close();
         }

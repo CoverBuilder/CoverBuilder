@@ -1,15 +1,14 @@
 /*
-
-     ___  __   __      ___   __  _   _
-      |  |  | |  | |   |  | |  |  \ /
-      |  |  | |  | |   |-<  |  |   *
-      |  |__| |__| |__ |__| |__| _/ \_
-
+   _____                    ____        _ _     _           
+  / ____|                  |  _ \      (_) |   | |          
+ | |     _____   _____ _ __| |_) |_   _ _| | __| | ___ _ __ 
+ | |    / _ \ \ / / _ \ '__|  _ <| | | | | |/ _` |/ _ \ '__|
+ | |___| (_) \ V /  __/ |  | |_) | |_| | | | (_| |  __/ |   
+  \_____\___/ \_/ \___|_|  |____/ \__,_|_|_|\__,_|\___|_|   
 
 */
 
 // Product: CoverBuilder
-// Version: 3.0.6.1
 // Description: InDesign CS5+ Startup JavaScript
 // + Create template book and magazine covers
 // + coverbuilder.brunoherfst.com
@@ -23,36 +22,37 @@
 
 #targetengine "session"
 
-$.localize = true; // enable ExtendScript localisation engine
+var appVersion = "3.0.7";
 
 // While most localised strings live at CoverBuilder.Localise
 // These are some strings needed before we the plugin is loaded
+$.localize = true; // enable ExtendScript localisation engine
 
 var localLocalised = {
-    Unsupported_Platform          : { en: "Unsupported platform: ",
-                                      de: "Unsupported platform: ",
-                                      nl: "Unsupported platform: ",
-                                      fr: "Unsupported platform: " },
+    Unsupported_Platform          : { en: "Platform not supported: ",
+                                      de: "Plattform nicht unterstützte: ",
+                                      nl: "Platform niet ondersteund: ",
+                                      fr: "Plate-forme non supportée: " },
 
     Cant_find_Module              : { en: "Can't find necessary module. ",
-                                      de: "Can't find necessary module. ",
-                                      nl: "Can't find necessary module. ",
-                                      fr: "Can't find necessary module. " },    
+                                      de: "Kann das erforderliche Modul nicht finden. ",
+                                      nl: "Kan de benodigde module niet vinden. ",
+                                      fr: "Impossible de trouver le module nécessaire. " },    
 
     Expected_File_at_Location     : { en: "I expected to find a file at: ",
-                                      de: "I expected to find a file at: ",
-                                      nl: "I expected to find a file at: ",
-                                      fr: "I expected to find a file at: " },
+                                      de: "Ich erwartete eine Datei zu finden unter: ",
+                                      nl: "Ik verwachtte een bestand te vinden op: ",
+                                      fr: "Je m'attendais à trouver un fichier à: " },
 
-    Build_Fail                    : { en: "Failed to build CoverBuilder.",
-                                      de: "Failed to build CoverBuilder.",
-                                      nl: "Failed to build CoverBuilder.",
-                                      fr: "Failed to build CoverBuilder." },  
+    Build_Fail                    : { en: "Could not build CoverBuilder.",
+                                      de: "CoverBuilder kann nicht erstellt werden.",
+                                      nl: "Het bouwen van CoverBuilder is mislukt.",
+                                      fr: "Impossible de créer CoverBuilder." },  
     
-    MenuLoad_Fail                 : { en: "Failed to load CoverBuilder menus.",
-                                      de: "Failed to load CoverBuilder menus.",
-                                      nl: "Failed to load CoverBuilder menus.",
-                                      fr: "Failed to load CoverBuilder menus." }
+    MenuLoad_Fail                 : { en: "Loading of CoverBuilder menus failed.",
+                                      de: "Das Laden von CoverBuilder-Menüs ist fehlgeschlagen.",
+                                      nl: "Het laden van CoverBuilder-menu's is mislukt.",
+                                      fr: "Le chargement des menus de CoverBuilder a échoué." }
 
 }
 
@@ -73,7 +73,7 @@ function getPlatformInfo(){
         var trailSlash = undefined;
         coverBuilderAlert( localLocalised.Unsupported_Platform  + platform );
     }
-    return {name : platform, trailSlash : trailSlash};
+    return {name : platform, trailSlash : trailSlash, appVersion : appVersion};
 }
 
 function cleanPath(p){
@@ -139,9 +139,9 @@ function main(){
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 try {
     main();
-} catch (e) {
-    // Let us know if something does not go to plan.
-    coverBuilderAlert( e.message + " (Line " + e.line + " in file " + e.fileName + ")");
+} catch ( err ) {
+    // Let us know if something does not go to plan
+    coverBuilderAlert( err.message + " (Line " + err.line + " in file " + err.fileName + ")");
 }
 
 // EOF

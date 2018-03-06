@@ -362,7 +362,7 @@
         if(save){
             myApp.JSON.saveFile(myApp, f, obj);
         }
-        return obj;
+        return save;
     }
 
     return JSON;

@@ -483,7 +483,8 @@
         var f = File(myApp.PathTo.preferences);
 
         function resetPresets(){
-            return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, myApp.STools.PresetObj);
+            myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, myApp.STools.PresetObj);
+            return myApp.STools.PresetObj;
         }
 
         if(!f.exists){
@@ -534,7 +535,8 @@
                 }
             }
         }
-        return myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, myApp.STools.PresetObj);
+        myApp.JSON.ask2Safe(myApp, "Your preferences are corrupt, do you want ro reset to factory settings?", f, myApp.STools.PresetObj);
+        return myApp.STools.PresetObj;
     }
 
     function getPluginfoIndex(myApp, pluginfo, plugName){

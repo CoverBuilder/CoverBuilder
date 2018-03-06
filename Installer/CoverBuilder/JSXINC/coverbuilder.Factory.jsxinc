@@ -35,8 +35,6 @@
             try{
                 Settings = myApp.JSON.parse(settings);
             } catch(e){
-                //alert("CoverBuilder\nCan't read settings at " + myApp.PathTo.settings);
-                //Settings = myApp.JSON.ask2Safe(myApp, "CoverBuilder settings seem corrupt!\nWould you like me to overwrite with new settings?", fSettings, NewSettings);
                 Settings = NewSettings;
             }
         } else {
@@ -149,7 +147,7 @@
             var file = files[i];
             if (file instanceof File) {
                 // Ignore hidden files and files without .jsinc extensions
-                if(file.name.indexOf('.') != 0 || file.name.indexOf('.jsxinc') != -1 ) {
+                if(file.name.indexOf('.') != 0 && file.name.indexOf('.jsxinc') != -1 ) {
                     try{
                         var thisPlugin = $.evalFile(new File(file));
                         if(thisPlugin.hasOwnProperty("plugin_name") && thisPlugin.hasOwnProperty("launch_on_load") && thisPlugin.hasOwnProperty("add_to_menu") && thisPlugin.hasOwnProperty("menu_items") ){
