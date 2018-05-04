@@ -22,7 +22,7 @@
 
 #targetengine "session"
 
-var appVersion = "3.0.7";
+var appVersion = "3.0.8";
 
 // While most localised strings live at CoverBuilder.Localise
 // These are some strings needed before we the plugin is loaded

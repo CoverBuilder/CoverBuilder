@@ -387,7 +387,7 @@
         var cvr14Hinge   = 0;
 
         if( C.hasOwnProperty(hinge) ) {
-          cvr14Hinge   = C.hinge;
+          cvr14Hinge   = C.hinge | 0;
         }
 
         if(C.spine > 0) {
@@ -582,7 +582,7 @@
     }
 
     function getMinSlug( myApp, myDoc ){
-        //This function returns the maximum slug size in current measure unit
+        //This function returns the minimum slug size in current measure unit
         if( myApp.Tools.sameRulers(myDoc) ) {
             return Math.min( myDoc.documentPreferences.slugBottomOffset,
                              myDoc.documentPreferences.slugInsideOrLeftOffset,
@@ -612,7 +612,7 @@
         NewC.height = myApp.NumCon.doRound( myApp.Tools.getSpreadSize(myApp, myDoc.spreads[0]).height ,3);
         NewC.ppi    = myApp.Settings.standardPPI;
         NewC.bleed  = myApp.NumCon.doRound( docPrefs.documentBleedTopOffset ,3);
-        NewC.slugs  = myApp.Tools.getMinSlug(myApp, myDoc);
+        NewC.slugs  = myApp.Tools.getMinSlug(myApp, myDoc) - NewC.bleed;
         NewC.margin = guessMarginObj(myApp, myDoc, NewC.measureUnit);
 
         //Let's see if the document might be a cover
@@ -707,7 +707,7 @@
 
         NewC.ppi    = myApp.Settings.standardPPI;
         NewC.bleed  = myApp.Tools.getMaxBleed(myApp, myDoc);
-        NewC.slugs  = myApp.Tools.getMaxSlug(myApp, myDoc);
+        NewC.slugs  = myApp.Tools.getMaxSlug(myApp, myDoc) - NewC.bleed;
         NewC.margin = guessMarginObj(myApp, myDoc, NewC.measureUnit);
 
         var cpage    = myDoc.spreads[0].pages[0];

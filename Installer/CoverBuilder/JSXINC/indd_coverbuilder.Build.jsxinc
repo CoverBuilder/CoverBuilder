@@ -14,10 +14,10 @@
         if(C.slugs >= 0) {
             mySlug  = C.slugs;
         } else { // Slugs == -1 if not set
-            mySlug  = myApp.NumCon.convert(myApp, myApp.Settings.Slugs.measure, myApp.Settings.Slugs.unit, C.measureUnit );
+            mySlug  = myApp.STools.getStandardSlugSize(myApp, C.measureUnit);
             C.slugs = mySlug;
         }
-        
+
         // We will save this in the document so we can always refer back to source settings
         var UIC = myApp.JSON.parse( myApp.JSON.stringify( C ) );
         
@@ -25,7 +25,7 @@
         // Convert Units //
         ///////////////////
         C = myApp.STools.resolveSizes(myApp, C); //resolve the sizes for build
-        
+
         var minimumPageWidth = myApp.Tools.getMinPageWidthINDD(myApp, C.measureUnit); // Minimum page width for indesign
         var maximumPageWidth = myApp.Tools.getMaxPageWidthINDD(myApp, C.measureUnit); // Maximum page width for indesign
         
@@ -56,7 +56,9 @@
         with (app.marginPreferences){
             var M = {};
             M.Y1 = top, M.X1 = left, M.Y2 = bottom, M.X2 = right;
+            M.columnCount = columnCount, M.columnGutter = columnGutter;
             top = 0, left = 0, bottom = 0, right = 0;
+            columnCount = 1, columnGutter = 0;
         }
 
         //Create a new cover
@@ -103,6 +105,8 @@
 
         with(myCover.documentPreferences){
             try{
+                masterTextFrame = false;
+                pagesPerDocument = 1;
                 facingPages = true; //so we can stuff the pages together
                 horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
                 verticalMeasurementUnits = MeasurementUnits.MILLIMETERS;
@@ -123,6 +127,7 @@
         //Reset the application default margin preferences to their former state.
         with (app.marginPreferences){
             top = M.Y1, left = M.X1, bottom = M.Y2, right = M.X2;
+            columnCount = M.columnCount, columnGutter = M.columnGutter;
         }
 
         //masterspread for cover

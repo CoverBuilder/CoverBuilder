@@ -594,7 +594,7 @@
                 //continue
                 myApp.Settings.standardPPI = 300;
             }
-            
+
             return { name: newName,
                      width: myApp.NumCon.NaN20(parseFloat(myWidth.text)),
                      height: myApp.NumCon.NaN20(parseFloat(myHeight.text)),
