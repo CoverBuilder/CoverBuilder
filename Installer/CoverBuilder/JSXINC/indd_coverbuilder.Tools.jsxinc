@@ -386,7 +386,7 @@
         var bindingHinge = 0;
         var cvr14Hinge   = 0;
 
-        if( C.hasOwnProperty(hinge) ) {
+        if( C.hasOwnProperty("hinge") ) {
           cvr14Hinge   = C.hinge | 0;
         }
 
