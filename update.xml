@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionUpdateInformation>
-	<version>3.0.7</version>
+	<version>3.0.8</version>
 	<download>https://github.com/GitBruno/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
-	<description><![CDATA[ Added swap width and height button ]]>
+	<description><![CDATA[ Ignore column-gutter and column-count document preset ]]>
 	</description>
 </ExtensionUpdateInformation>
