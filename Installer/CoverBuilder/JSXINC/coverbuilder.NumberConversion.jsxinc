@@ -61,8 +61,8 @@
 
     function convert(myApp, measure, unitInput, unitOutput, roundDec){
         // validate input can be (localised) string
-        var unitInput = myApp.NumCon.cUnit(myApp, unitInput);
-        var unitInput = myApp.NumCon.cUnit(myApp, unitOutput);
+        var unitInput  = myApp.NumCon.cUnit(myApp, unitInput);
+        var unitOutput = myApp.NumCon.cUnit(myApp, unitOutput);
 
         try{
             var validInput  = myApp.STools.checkMeasureUnit( myApp, unitInput  );
