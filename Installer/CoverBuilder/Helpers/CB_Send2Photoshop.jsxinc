@@ -141,7 +141,11 @@
         // Reset original rulers
         //myApp.Tools.setRuler(myCover, originalRulers);
         //------------------------------
-        
+  
+        // Always use actual document profile as C might be outdated.
+        // Maybe this should be part of UI or ask user when there is a conflict?
+        C.colorProfile = myCover.cmykProfile;
+
         try{
             C.ppi = send2photoshopUI(myApp, C.ppi);
         } catch(e){
