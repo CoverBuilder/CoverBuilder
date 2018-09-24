@@ -1,5 +1,4 @@
-CoverBuilder
-============
+# ![Icon](Icon/CB_icon_32x32.png) CoverBuilder 3
 
 Setting up a cover was always a tedious job. As you needed to calculate with the measurements of a wide variety of templates supplied by the printer. The goal of the interface is to eliminate calculating with these values yourself. Therefore you can include(+) or exclude(-) measurements within reading direction and common sense. CoverBuilder makes the most awkward templates a no-brainer.
 
