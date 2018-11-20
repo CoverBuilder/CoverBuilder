@@ -64,6 +64,7 @@
                 var myIPage       = myApp.Tools.makePageInfoObject(myApp, myCover, mySpread.pages[j], units);
                 var myFrameBounds = new Array (-(textFrameHeight+myCover.documentPreferences.documentBleedTopOffset),0,-myCover.documentPreferences.documentBleedTopOffset,myIPage.w);
                 var myTextFrame   = myApp.Tools.addTextFrame(myApp, myIPage.page, myFrameBounds, myApp.NumCon.doRound(myIPage.w,3).toString(), myParagraphStyle, 0,"pageWidth");
+                checkOverset(myApp, myTextFrame, myCover.documentPreferences.documentBleedTopOffset);
                 myTextFrame.textFramePreferences.autoSizingType = AutoSizingTypeEnum.WIDTH_ONLY;
             }
             // PAGE HEIGHT

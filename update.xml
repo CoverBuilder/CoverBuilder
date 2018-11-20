@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionUpdateInformation>
-	<version>3.0.9</version>
+	<version>3.1.0</version>
 	<download>https://github.com/CoverBuilder/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
-	<description><![CDATA[ Always send colour profile from InDesign to Photoshop ]]>
+	<description><![CDATA[ Update spine now works with any margin setup. ]]>
 	</description>
 </ExtensionUpdateInformation>

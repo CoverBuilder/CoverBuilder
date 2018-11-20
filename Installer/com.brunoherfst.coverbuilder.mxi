@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<macromedia-extension name="CoverBuilder" version="3.0.9" id="com.brunoherfst.coverbuilder" requires-restart="true" icon="EMStore.png">
-	<author name="Bruno Herfst" />
-	<update url="https://raw.github.com/CoverBuilder/CoverBuilder/master/update.xml" />
-	<products>
-		<product familyname="InDesign" primary="true" version="7" />
-	</products>
-	<files>
-		<file source="EMStore.png" destination="$ExtensionSpecificEMStore" />
-		<file source="CoverBuilder" destination="$indesign/Scripts/startup scripts/" familyname="InDesign" file-type="ordinary" shared="true" />
-	</files>
-	<description>
-		<![CDATA[Build solid covers.]]>
-	</description>
+<macromedia-extension name="CoverBuilder" version="3.1.0" id="com.brunoherfst.coverbuilder" requires-restart="true" icon="icon.png">
+    <author name="Bruno Herfst" />
+    <update url="https://raw.github.com/CoverBuilder/CoverBuilder/master/update.xml" />
+    <products>
+        <product familyname="InDesign" primary="true" version="7" />
+    </products>
+    <files>
+        <file source="icon.png" destination="$ExtensionSpecificEMStore" />
+        <file source="CoverBuilder" destination="$indesign/Scripts/startup scripts/" familyname="InDesign" file-type="ordinary" shared="true" />
+    </files>
+    <description>
+        <![CDATA[Build solid covers.]]>
+    </description>
 </macromedia-extension>

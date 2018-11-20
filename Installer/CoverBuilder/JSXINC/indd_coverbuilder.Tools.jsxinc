@@ -1301,21 +1301,49 @@
         var userFacingPages = doc.documentPreferences.facingPages;
         if(!userFacingPages) {
             doc.documentPreferences.facingPages = true;
-        }
+        };
+
+        // Make sure margins will fit, if margins don't fit set them to 0
+        // set + safe original rulers
+        var originalRulers = myApp.Tools.setRuler(doc, {units : "pt"});
+
+        // [float Width, float Height]
+        var marginMax = [myPage.marginPreferences.right + myPage.marginPreferences.left, myPage.marginPreferences.top + myPage.marginPreferences.bottom];
+
+        if( marginMax[0] >= myPointSize[0] ) {
+            myPage.marginPreferences.right = 0;
+            myPage.marginPreferences.left = 0;
+        };
+
+        if( marginMax[0] >= myPointSize[1] ) {
+            myPage.marginPreferences.top = 0;
+            myPage.marginPreferences.bottom = 0;
+        };
+
+        // Check the column gutter
+        if( myPage.marginPreferences.columnCount * myPage.marginPreferences.columnGutter >= myPointSize[0] ) {
+            myPage.marginPreferences.columnGutter = 0;
+        };
+        // Only remove column count when it becomes a problem
+        if( myPage.marginPreferences.columnCount > myPointSize[0] ) {
+            myPage.marginPreferences.columnCount = 1; // minimum value
+        };
 
         try{
             myPage.resize(CoordinateSpaces.INNER_COORDINATES,
                 AnchorPoint.CENTER_ANCHOR,ResizeMethods.REPLACING_CURRENT_DIMENSIONS_WITH, myPointSize);
         } catch (e){
             alert("CoverBuilder Error:\n" + e.message +  " (Line " + e.line + " in file " + e.fileName + ")");
-        }
+        };
 
         //set userPref back
         if(!userFacingPages) {
             // userFacingPages is always false if changed
             doc.documentPreferences.facingPages = userFacingPages;
-        }
-    }
+        };
+
+        myApp.Tools.setRuler(doc, originalRulers);
+    };
 
     function yAlignPages(/*Spread*/spd,/*'top'|'center'|'bottom'*/vRef,/*uint=0*/refPageIndex,  pgs,a,t,i,yRef,dy)
     // This function is written by Marc Autret, thanks!
