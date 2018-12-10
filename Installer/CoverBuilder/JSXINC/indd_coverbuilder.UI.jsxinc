@@ -1,6 +1,6 @@
 // CoverBuilder UI
-// Bruno Herfst 2014-2017
-// Version 3.1
+// Bruno Herfst 2014-2018
+// Version 3.1.1
 
 (function() {
     //////////////
@@ -657,7 +657,7 @@
             mminch.selection        = thisC.measureUnit;
             myWidth.text            = thisC.width;
             myHeight.text           = thisC.height;
-            mySpine.text            = thisC.spine;
+            mySpine.text            = myApp.NumCon.doRound(thisC.spine, 6); // Round conversion errs
             myBleed.text            = thisC.bleed;
             hingeDropdown.selection = thisC.inExCludeHinge;
             myHinge.text            = thisC.hinge;
