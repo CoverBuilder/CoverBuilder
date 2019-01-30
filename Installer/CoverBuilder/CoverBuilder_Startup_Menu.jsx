@@ -20,9 +20,9 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#targetengine "session"
+#targetengine "CoverBuilder"
 
-var appVersion = "3.1.0";
+var appVersion = "3.1.1";
 
 // While most localised strings live at CoverBuilder.Localise
 // These are some strings needed before we the plugin is loaded

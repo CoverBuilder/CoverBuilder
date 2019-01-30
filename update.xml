@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionUpdateInformation>
-	<version>3.1.0</version>
-	<download>https://github.com/CoverBuilder/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
-	<description><![CDATA[ Update spine now works with any margin setup. ]]>
-	</description>
+    <version>3.1.1</version>
+    <download>https://github.com/CoverBuilder/CoverBuilder/raw/master/Installer/com.brunoherfst.coverbuilder.zxp</download>
+    <description><![CDATA[ Update spine now works with any margin setup. ]]>
+    </description>
 </ExtensionUpdateInformation>
